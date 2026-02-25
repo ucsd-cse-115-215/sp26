@@ -1,9 +1,9 @@
 [book]
-authors = ["Joe Politz"]
+authors = ["Joe Politz", "Nadia Polikarpova"]
 language = "en"
 multilingual = false
 src = "src"
-title = "UCSD CSE29 Winter 2026"
+title = "UCSD GenAI and Programming SP26"
 
 [output.html.playground]
 runnable = false

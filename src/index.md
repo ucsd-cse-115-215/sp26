@@ -2,17 +2,15 @@
 
 # UCSD CSE190/291P SP26 Syllabus and Logistics
 
-[Nadia Polikarpova](https://cseweb.ucsd.edu/~npolikarpova/) (Instructor, CSE291P)
-[Joe Gibbs Politz](https://jpolitz.github.io) (Instructor, CSE190)
+- [Nadia Polikarpova](https://cseweb.ucsd.edu/~npolikarpova/) (Instructor, CSE291P)
+- [Joe Gibbs Politz](https://jpolitz.github.io) (Instructor, CSE190)
 
 Generative AI and Programming introduces you to the broad field of programming
-with generative AI tools. This does not mean solely using AI agents to write
-code for you! Instead, we are primarily motivated by identifying _new kinds of
+with generative AI tools. Prompting AI agents to write code for you only
+scratches the surface! We are even more motivated by identifying _new kinds of
 applications_ that would be difficult or impossible to write without generative
-AI as a fundamental component. We aren't trying to push the boundaries of what
-AI systems are possible to build; rather, we want to bring our software
-engineering sensibilities to building useful applications atop existing AI
-tools.
+AI as a fundamental component. We want to bring our software engineering
+sensibilities to bear on building useful applications atop existing AI tools.
 
 This course is:
 
@@ -30,36 +28,20 @@ This course is:
 - Staff office Hours: Refer to calendar
 - Q&A forum: Slack?
 
-# Office Hours Calendar
-
-
 # Schedule
 
 # Course Components
 
 There are two main parts of the course that have a grade: **Assignments** and
-**Demos**.
+**Reviews**.
 
 ## Assignments
 
 The course has several **assignments** that involve programming and writing.
 
-**Grading**: There are 4 points available for each assignment.
+## Reviews
 
-- **4** points: Professional quality code, good documentation, clear
-  functionality, thorough testing, addresses all requirements
-- **3** points: mumble mumble
-- **2** points for design questions (2 points for perfect or nearly-perfect, 1
-  point for minor errors, 0 points for major errors or incomplete)
-
-After each assignment is graded, you'll have a chance to _resubmit_ all
-components based on the feedback you received, which will detail what you need
-to do to increase your score. You can increase your score by up to **3** points
-on a resubmit.
-
-## Demos and Feedback
-
-After the submission of each assignment we will have in-class _demos_ of the work we've done.
+Each assignment will have two deadlines – an _initial deadline_ and a
 
 mumble mumble credit
 
