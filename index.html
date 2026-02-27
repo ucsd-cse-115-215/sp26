@@ -1,0 +1,286 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Generative AI and Programming - UCSD GenAI and Programming SP26</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html" class="active">Generative AI and Programming</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">UCSD GenAI and Programming SP26</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p><img src="./doodle.jpg" alt="doodle" /></p>
+<h1 id="ucsd-cse190291p-sp26-syllabus-and-logistics"><a class="header" href="#ucsd-cse190291p-sp26-syllabus-and-logistics">UCSD CSE190/291P SP26 Syllabus and Logistics</a></h1>
+<ul>
+<li><a href="https://cseweb.ucsd.edu/%7Enpolikarpova/">Nadia Polikarpova</a> (Instructor, CSE291P)</li>
+<li><a href="https://jpolitz.github.io">Joe Gibbs Politz</a> (Instructor, CSE190)</li>
+</ul>
+<p>Generative AI and Programming introduces you to the broad field of programming
+with generative AI tools. Prompting AI agents to write code for you only
+scratches the surface! We are even more motivated by identifying <em>new kinds of
+applications</em> that would be difficult or impossible to write without generative
+AI as a fundamental component. We want to bring our software engineering
+sensibilities to bear on building useful applications atop existing AI tools.</p>
+<p>This course is:</p>
+<ul>
+<li>new</li>
+<li>experimental in format and in content</li>
+<li>not a course where the instructors know all or most of the answers</li>
+</ul>
+<h1 id="basics"><a class="header" href="#basics"><a name="basics"></a> Basics</a></h1>
+<ul>
+<li>Lecture (attend the one you're enrolled in):
+<ul>
+<li>190 section: Tue/Thu 9:30am, WLH2005</li>
+<li>291P section: Tue/Thu 9:30am, FILL</li>
+</ul>
+</li>
+<li>Professor office hours (these are the standard times but check the calendar below for changes!)
+<ul>
+<li>FILL</li>
+</ul>
+</li>
+<li>Staff office Hours: Refer to calendar</li>
+<li>Q&amp;A forum: Slack?</li>
+</ul>
+<h1 id="schedule"><a class="header" href="#schedule">Schedule</a></h1>
+<h1 id="course-components"><a class="header" href="#course-components">Course Components</a></h1>
+<p>There are two main parts of the course that have a grade: <strong>Assignments</strong> and
+<strong>Reviews</strong> that are related.</p>
+<h2 id="assignments-and-reviews"><a class="header" href="#assignments-and-reviews">Assignments and Reviews</a></h2>
+<p>The course has several <strong>assignments</strong> that involve programming and writing.</p>
+<p>Each assignment will have two deadlines – an <em>initial deadline</em>, and a
+<em>post-review deadline</em>. Specific assignments will have different rules for
+working individually or in groups.</p>
+<p>At the initial deadline, your goal is to produce a working implementation of
+the project description that you can demo, and others can try and give feedback
+on. The course staff will give some limited feedback during this period, and
+assign a tentative score from 0-4.</p>
+<p>Your work will then be shared, presented, or demoed (depending on the specific
+week), and other groups will give feedback. This may include:</p>
+<ul>
+<li>Code feedback</li>
+<li>Bug reports</li>
+<li>Feature requests</li>
+</ul>
+<p>Specific assignments will have precise rubrics for what to provide. The course
+staff may also provide feedback in this form.</p>
+<p>Then, for the post-review deadline, you should respond to the feedback. Again,
+we will develop specific requirements for each one of the assignments, but
+required responses may include fixing some or all of the repored bugs, adding
+one or more of the requested features, and describing or updating code that
+people were confused about.</p>
+<p>The course staff will combine the initial submission score and your response to
+the feedback into an overall 0-4 score for the assignment.</p>
+<h2 id="review-you-write"><a class="header" href="#review-you-write">Review you Write</a></h2>
+<p>As described above, you will conduct <em>reviews</em> of other groups' work on a
+regular basis. These also form a part of your grade, and are expected to be
+thoughtful, thorough, and high-quality. We want them to represent your genuine
+human feedback on the programs you work with.</p>
+<p>Some reviewing will happen in-person, and other reviewing will be
+asynchronous. For reviews you write on your own, we ask that you <em>not use
+generative AI to generate you r reviews</em>. To motivate this, we will deduct
+substantial credit (give 0s) if we find obvious factual errors in reviews (AI
+hallucinated or otherwise).</p>
+<p>Specific assignments will have specific instructions on review prompts,
+reflections, and feedback to give.</p>
+<p>Reviewees (the students whose work is reviewed) will give a score for the
+usefulness and thoughtfulness of the feedback. The course staff will take this
+feedback-on-feedback into account when assigning a 0-4 reviewing score on each
+reviewing pass.</p>
+<h2 id="grading"><a class="header" href="#grading">Grading</a></h2>
+<p>Each component of the course has a minimum achievement level to get an A, B, or
+C in the course. You must reach that achievement level in <em>all</em> of the
+categories to get an A, B, or C.</p>
+<ul>
+<li><strong>A</strong> achievement:
+<ul>
+<li>≥85% of assignment points (e.g. likely 4 assignments at 4 points each, so
+14/16 points)</li>
+<li>≥85% of review and feedback points (e.g. likely 4 assignments at 4 points
+each, so 14/16 points)</li>
+</ul>
+</li>
+<li><strong>B</strong> achievement:
+<ul>
+<li>≥75% of assignment points</li>
+<li>≥75% of review and feedback points</li>
+</ul>
+</li>
+<li><strong>C</strong> achievement:
+<ul>
+<li>≥60% of assignment points</li>
+<li>≥60% of review and feedback points</li>
+</ul>
+</li>
+</ul>
+<p>Below C achievement (in any category) is an F/No Pass.</p>
+<p>Requests to change this grading policy (for a specific student or class-wide)
+will be denied with a link to this syllabus section. Consider this: we may, as
+instructors, decide for academic reasons that the most accurate way of
+assigning letter grades in the class needs to change (and we tend to only make
+changes that improve letter grades relative to this starting policy). However,
+it would be inappropriate for us to do so in response to student requests: that
+could create an appearance that we give students the grades they ask for rather
+than the grades they earned.</p>
+<h1 id="policies-and-perspective"><a class="header" href="#policies-and-perspective">Policies and Perspective</a></h1>
+<ul>
+<li>Gen AI is encouraged (but how?)</li>
+<li>Late work just uses resubmission deadlines for assignments, late reviews can
+only get 1/2 credit</li>
+<li>No exams, some backstopping policy about requiring an in-person demo if we
+want to check their work</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>
