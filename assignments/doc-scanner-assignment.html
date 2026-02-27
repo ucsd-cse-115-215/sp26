@@ -1,0 +1,271 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Assignment 2: Document Scanner - UCSD GenAI and Programming SP26</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Generative AI and Programming</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="../assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">1.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="../assignments/doc-scanner-assignment.html" class="active"><strong aria-hidden="true">2.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="../assignments/agent-assignment.html"><strong aria-hidden="true">3.</strong> Assignment 3: Agents and Tools</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">UCSD GenAI and Programming SP26</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="document-scanner-assignment"><a class="header" href="#document-scanner-assignment">Document Scanner Assignment</a></h1>
+<p>Assignment goals:</p>
+<ul>
+<li>Create and manage prompts with multi-modal queries</li>
+<li>Create a useful standalone application around core generative AI
+functionality</li>
+</ul>
+<h2 id="more-than-text"><a class="header" href="#more-than-text">More than Text</a></h2>
+<p>Modern Generative AI systems are capable of working with much more than text.
+They support multi-media queries and are able to “read” and “see” documents
+like PDFs and images, and extract structured information from them.</p>
+<p>For example, <a href="https://github.com/ucsd-cse-115-215/receipt-cli">this repository</a> shows a short example of taking an
+image of a receipt as input and prompting OpenAI to turn it into a CSV file.</p>
+<p>This capability comes with some interesting consequences:</p>
+<ul>
+<li>Like all other interactions with generative AI, the results are
+nondeterministic. Run the CLI example above several times -- you will see
+differences in the reported information from the receipt on each run. In addition, </li>
+<li>Sourcing authentic test data can be more work. It's not obvious how to
+<em>create</em> many examples of images or PDFs for the program, while deploying an
+application that uses this functionality may end up seeing a wide variety of
+inputs from users.</li>
+<li>Applications that work with user images and documents should have extra
+concerns about privacy and security: documents can unintentionally have extra
+information that users may not think about or intend to be shared or stored
+(account numbers, addresses, names, and so on).</li>
+</ul>
+<h2 id="an-application-not-a-demo"><a class="header" href="#an-application-not-a-demo">An Application, not a Demo</a></h2>
+<p>Your task for this assignment is to pick a domain involving documents
+(receipts, transcripts, handwritten notes, chalkboard scans, screenshots –
+many options!) and write a useful application around it.</p>
+<p>Here are just a few ideas:</p>
+<ul>
+<li>
+<p>A receipt tracking app that allows a user to upload receipt files (or
+directly take photos with a camera) and show them there spending on different
+items over time.</p>
+</li>
+<li>
+<p>A note-tracking app that allows a user to take screenshots of the chalkboard
+or whiteboard after a class and get text-based notes and organize them
+throughout the quarter</p>
+</li>
+<li>
+<p>A flashcard app that allows a user to upload a photo or scan of class handouts or lecture notes and automatically generates study flashcards from the key terms and concepts.</p>
+</li>
+<li>
+<p>An app for tutors and TAs that allows them to take a photo of student work
+(e.g. their screen, which may have many windows open including some code and
+error messages) and helps them copy or run the code in another environment,
+as well as keep a journal of what happened with different students during
+their office hours, author frequent issues to send to their team, etc.</p>
+</li>
+</ul>
+<p>You may have your own, please be creative!</p>
+<p>No matter what you pick there are some requirements for what you build:</p>
+<h3 id="user-facing-features"><a class="header" href="#user-facing-features">User-facing Features</a></h3>
+<ul>
+<li>The application must have a GUI (we recommend web-based). It's fine if it's a
+demo that runs on localhost on a laptop, but the course staff should be able
+to easily clone and install it on a reasonable system themselves.</li>
+<li>Support users uploading documents. We should be able to easily try our own
+document on your system.</li>
+<li>Prompt GenAI to get structured information out of the document (sending the
+document to some backend)</li>
+<li>Involve the user in verifying and clarifying ambiguity in the structured
+information, allowing the user to edit or correct it</li>
+<li>Store the structured information somewhere (NOT the document itself)</li>
+<li>Do some useful tasks for the user that involve one or more of:
+<ul>
+<li>Presenting the information in a new or different way than the original
+document</li>
+<li>Aggregating, summarizing, or visualizing data from <em>across</em> all the
+documents that have been uploaded</li>
+<li>Using some of the structured information to drive <em>another</em> GenAI query
+that does some useful work for the user</li>
+</ul>
+</li>
+</ul>
+<h3 id="engineering-and-testing"><a class="header" href="#engineering-and-testing">Engineering and Testing</a></h3>
+<ul>
+<li>You should have at least 20 examples of documents for your application. You
+can make them or find them yourself, and they can by synthetic.</li>
+<li>You should have at least 5 examples of “near miss” documents for your
+application, where things don't work, and aren't really intended to work, but
+a user might plausibly try it. This could be a really bad scan, a garbled
+image, a handwritten receipt, a screenshot of Facebook rather than student
+work, etc.</li>
+<li>The Gen AI prompting part of the system should be <em>separately testable</em> –
+that is, you should be able to run each of your example documents through the
+part of your system that generates structured answers without starting up the
+whole program. You should have an automated system that checks that the 20
+“good” examples produce “good enough” results when run through the
+system, and the 5 “near miss” examples do not.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../assignments/social-media-monitor-assignment.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../assignments/agent-assignment.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../assignments/social-media-monitor-assignment.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../assignments/agent-assignment.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

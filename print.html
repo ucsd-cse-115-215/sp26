@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">1.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="assignments/doc-scanner-assignment.html"><strong aria-hidden="true">2.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="assignments/agent-assignment.html"><strong aria-hidden="true">3.</strong> Assignment 3: Agents and Tools</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -250,6 +250,283 @@ than the grades they earned.</p>
 only get 1/2 credit</li>
 <li>No exams, some backstopping policy about requiring an in-person demo if we
 want to check their work</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
+<p>Assignment goals:</p>
+<ul>
+<li>Use basic LLM APIs for text processing</li>
+<li>Learn to balance cost and quality by combining LLMs with cheaper processing
+stages</li>
+<li>Build an eval harness for an LLM-powered application</li>
+</ul>
+<h2 id="large-scale-semantic-text-processing"><a class="header" href="#large-scale-semantic-text-processing">Large-Scale Semantic Text Processing</a></h2>
+<p>One of the most compelling capabilities of LLMs is their ability to understand
+text at a deep semantic level. This enables a new kind of automation: pipelines
+that perform non-trivial classification and filtering over large volumes of
+text.</p>
+<p>For example, <a href="https://github.com/ucsd-cse-115-215/bluesky-poetry">this repository</a>
+shows a short example of monitoring public posts on BlueSky to identify and
+collect original poetry.</p>
+<p>While hosted LLM APIs (such as the OpenAI API) make it easy to get a prototype
+of such a pipeline running, there are two fundamental challenges:</p>
+<ul>
+<li><strong>Cost.</strong> LLMs are expensive — both in dollar terms for hosted APIs and in
+compute for self-hosted models — and more capable models cost more. To
+process data at scale, you need a multi-stage pipeline that progressively
+funnels the data through increasingly capable (and expensive) filters.</li>
+<li><strong>Reliability.</strong> LLMs are imperfect and unpredictable, so you need an eval
+harness to measure how well your pipeline performs and to systematically
+improve it.</li>
+</ul>
+<h2 id="a-reliable-social-media-monitor"><a class="header" href="#a-reliable-social-media-monitor">A Reliable Social Media Monitor</a></h2>
+<p>Your task for this assignment is to build a social media monitoring system. You
+choose which platform or content source to monitor and what kind of content to
+look for. Our BlueSky poetry detector is just an example; other ideas include:</p>
+<ul>
+<li>As a source, you could try Mastodon, HackerNews, Reddit, Telegram, or even
+GitHub. BlueSky is particularly convenient because it has a public firehose
+API that does not require an account or API key.</li>
+<li>You might be interested in monitoring for:
+<ul>
+<li>internship postings tailored to your interests</li>
+<li>academic paper announcements in a niche area</li>
+<li>event announcements in your city</li>
+</ul>
+</li>
+</ul>
+<p>You may have your own ideas — please be creative!</p>
+<p>Monitoring can be either online (content is streamed in and relevant items are
+displayed as they appear) or offline (content is downloaded at regular intervals
+and filtered in batch). There are no requirements on the UI: it can be a CLI
+application (like our poetry detector) or it can collect results into a table
+or dashboard.</p>
+<p>No matter what you pick, there are some requirements for what you build:</p>
+<h3 id="multi-stage-pipeline"><a class="header" href="#multi-stage-pipeline">Multi-Stage Pipeline</a></h3>
+<ul>
+<li>Whether online or offline, your monitor should be designed to scale to large
+amounts of content.</li>
+<li>As a result, it won't be economical to send everything to a capable LLM; you
+will need to build a multi-stage pipeline.</li>
+<li>You can be creative with what stages you use — this will depend on your
+domain. Common choices include (in order of increasing cost and precision):
+<ul>
+<li>Symbolic filtering by metadata (channel, language, location, etc.)</li>
+<li>Keyword filtering</li>
+<li>Embedding similarity (how close is this content to a set of known positive
+examples); computing embeddings requires an API call, but embeddings are
+orders of magnitude cheaper than LLM inference</li>
+<li>A cheap/small LLM targeting high recall (and low precision), e.g. by
+tuning a classification threshold</li>
+</ul>
+</li>
+</ul>
+<h3 id="evaluation-and-tuning"><a class="header" href="#evaluation-and-tuning">Evaluation and Tuning</a></h3>
+<ul>
+<li>You need to build an eval harness that lets you measure your pipeline's
+performance and compare different configurations.</li>
+<li>The eval harness should measure both quality (precision/recall) and cost.</li>
+<li>You will need a gold dataset of at least 50 labeled examples to measure
+quality. Because your task and data source are unique to your project, you
+will need to build this dataset yourself.</li>
+<li>Invest in tooling that makes labeling data and comparing pipeline
+configurations easy.</li>
+<li>Once you have the eval harness and gold dataset, compare different model
+parameters and prompting techniques (personas, few-shot examples,
+explanations/CoT). Think about which metric to optimize for your domain: F1
+at a given max cost? Recall at a given minimum precision and max cost? Cost
+at a given minimum recall? Different metrics make sense for different
+applications.</li>
+</ul>
+<h3 id="stretch-goal"><a class="header" href="#stretch-goal">Stretch Goal</a></h3>
+<p>As a stretch goal, try using prompt tuning frameworks (DSPy) or &quot;semantic
+operator&quot; frameworks (Lotus, Palimpzest) to implement your pipeline and compare
+its performance with your manually tuned version.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="document-scanner-assignment"><a class="header" href="#document-scanner-assignment">Document Scanner Assignment</a></h1>
+<p>Assignment goals:</p>
+<ul>
+<li>Create and manage prompts with multi-modal queries</li>
+<li>Create a useful standalone application around core generative AI
+functionality</li>
+</ul>
+<h2 id="more-than-text"><a class="header" href="#more-than-text">More than Text</a></h2>
+<p>Modern Generative AI systems are capable of working with much more than text.
+They support multi-media queries and are able to “read” and “see” documents
+like PDFs and images, and extract structured information from them.</p>
+<p>For example, <a href="https://github.com/ucsd-cse-115-215/receipt-cli">this repository</a> shows a short example of taking an
+image of a receipt as input and prompting OpenAI to turn it into a CSV file.</p>
+<p>This capability comes with some interesting consequences:</p>
+<ul>
+<li>Like all other interactions with generative AI, the results are
+nondeterministic. Run the CLI example above several times -- you will see
+differences in the reported information from the receipt on each run. In addition, </li>
+<li>Sourcing authentic test data can be more work. It's not obvious how to
+<em>create</em> many examples of images or PDFs for the program, while deploying an
+application that uses this functionality may end up seeing a wide variety of
+inputs from users.</li>
+<li>Applications that work with user images and documents should have extra
+concerns about privacy and security: documents can unintentionally have extra
+information that users may not think about or intend to be shared or stored
+(account numbers, addresses, names, and so on).</li>
+</ul>
+<h2 id="an-application-not-a-demo"><a class="header" href="#an-application-not-a-demo">An Application, not a Demo</a></h2>
+<p>Your task for this assignment is to pick a domain involving documents
+(receipts, transcripts, handwritten notes, chalkboard scans, screenshots –
+many options!) and write a useful application around it.</p>
+<p>Here are just a few ideas:</p>
+<ul>
+<li>
+<p>A receipt tracking app that allows a user to upload receipt files (or
+directly take photos with a camera) and show them there spending on different
+items over time.</p>
+</li>
+<li>
+<p>A note-tracking app that allows a user to take screenshots of the chalkboard
+or whiteboard after a class and get text-based notes and organize them
+throughout the quarter</p>
+</li>
+<li>
+<p>A flashcard app that allows a user to upload a photo or scan of class handouts or lecture notes and automatically generates study flashcards from the key terms and concepts.</p>
+</li>
+<li>
+<p>An app for tutors and TAs that allows them to take a photo of student work
+(e.g. their screen, which may have many windows open including some code and
+error messages) and helps them copy or run the code in another environment,
+as well as keep a journal of what happened with different students during
+their office hours, author frequent issues to send to their team, etc.</p>
+</li>
+</ul>
+<p>You may have your own, please be creative!</p>
+<p>No matter what you pick there are some requirements for what you build:</p>
+<h3 id="user-facing-features"><a class="header" href="#user-facing-features">User-facing Features</a></h3>
+<ul>
+<li>The application must have a GUI (we recommend web-based). It's fine if it's a
+demo that runs on localhost on a laptop, but the course staff should be able
+to easily clone and install it on a reasonable system themselves.</li>
+<li>Support users uploading documents. We should be able to easily try our own
+document on your system.</li>
+<li>Prompt GenAI to get structured information out of the document (sending the
+document to some backend)</li>
+<li>Involve the user in verifying and clarifying ambiguity in the structured
+information, allowing the user to edit or correct it</li>
+<li>Store the structured information somewhere (NOT the document itself)</li>
+<li>Do some useful tasks for the user that involve one or more of:
+<ul>
+<li>Presenting the information in a new or different way than the original
+document</li>
+<li>Aggregating, summarizing, or visualizing data from <em>across</em> all the
+documents that have been uploaded</li>
+<li>Using some of the structured information to drive <em>another</em> GenAI query
+that does some useful work for the user</li>
+</ul>
+</li>
+</ul>
+<h3 id="engineering-and-testing"><a class="header" href="#engineering-and-testing">Engineering and Testing</a></h3>
+<ul>
+<li>You should have at least 20 examples of documents for your application. You
+can make them or find them yourself, and they can by synthetic.</li>
+<li>You should have at least 5 examples of “near miss” documents for your
+application, where things don't work, and aren't really intended to work, but
+a user might plausibly try it. This could be a really bad scan, a garbled
+image, a handwritten receipt, a screenshot of Facebook rather than student
+work, etc.</li>
+<li>The Gen AI prompting part of the system should be <em>separately testable</em> –
+that is, you should be able to run each of your example documents through the
+part of your system that generates structured answers without starting up the
+whole program. You should have an automated system that checks that the 20
+“good” examples produce “good enough” results when run through the
+system, and the 5 “near miss” examples do not.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="agents-and-tools"><a class="header" href="#agents-and-tools">Agents and Tools</a></h1>
+<p>Assignment goals:</p>
+<ul>
+<li>Use an agent API to provide a chat-based user interface</li>
+<li>Provide tools for an agent to use to take actions</li>
+<li>Constrain an agent's behavior with guardrails and tests (?)</li>
+<li>Explore how to <em>test</em> an agent</li>
+</ul>
+<h2 id="from-llm-to-agent"><a class="header" href="#from-llm-to-agent">From LLM to Agent</a></h2>
+<p>NOTE(joe): Maybe this is lecture content. Thinking about the overall flow of
+the course I feel like this is a good story</p>
+<p>The fundamental component of a GenAI system based on large language models is
+“tokens in, tokens out” – the system produces a stream of resulting text or
+data based on completions of the input.</p>
+<p>AI agent systems do a lot of things, but one fundamental feature is mixing
+token output with structured <em>tool use</em> output. That is, rather than simply
+interpreting prompts and producing text or data for programs to consume, they
+have built-in functionality for taking actions.</p>
+<p>This is not magic: with what we've learned we can imagine building an agent out
+of the simple kinds of prompts we've built before. A simple version is that we
+could ask the agent to generate a bash script, and then run that bash script
+programmatically (with <code>exec</code> or similar). The key feature is that the LLM
+generates <em>responses that are interpreted as code or actions</em>, and the agent
+system is responsible for taking those actions. That means the agent system
+needs to have a well-specified set of possible actions, often called “tools”,
+and the LLM needs to be prompted to generate valid tool instructions.</p>
+<p><em>Without the surrounding agent system, the LLM can take no action</em>. The agent
+system is responsible for enabling the actual actions taken, and the underlying
+LLM is still “just” generating a bunch of tokens.  With an agent, we have
+chosen to write a program that takes those results and turns them into actions
+that affect the world, just like we do any time we make a system call from a
+traditional program.</p>
+<h2 id="programming-an-agent"><a class="header" href="#programming-an-agent">Programming an Agent</a></h2>
+<p>We could try to build an agent from scratch, but agents are well-understood
+enough that there are well-specified APIs for creating them.</p>
+<p>For example, <a href="https://github.com/ucsd-cse-115-215/refactoring-agent/blob/main/README.md">this small
+project</a>
+uses the <a href="https://openai.github.io/openai-agents-python/">OpenAI agents API</a>
+along with a <a href="https://github.com/pappasam/jedi-language-server">Language Server Protocol implementation for
+Python</a> as a tool to create
+an agent that can do small refactorings on Python programs.</p>
+<p>The key thing about this example agent is that it provides a chat-based
+interface to a well-understood problem (refactorings). The actions are
+expressed in terms of the LSP, which does structured edits rather than freeform
+textual edits from an LLM. </p>
+<p>Your task for this assignment is to build an agent that:</p>
+<ul>
+<li>uses tools</li>
+<li>is focused on one small set of tasks</li>
+<li>has some constraints and required user confirmations/interactions</li>
+</ul>
+<p>There are a few options here, we offer these as starting points. As usual you
+are free to pick any project that satisfies the requirements below.</p>
+<ul>
+<li>You could add an agent-based interface to one of your past two projects,
+turning the core functionality into an agent-based flow </li>
+<li>An agent that helps grade an assignment from an intro programming course,
+prompted with the assignment description and using tools to work with the
+student code and give a grade according to a rubric.</li>
+<li>An agent that helps a student un-f&amp;$#k a git repository that is in a strange
+state, equipped with filesystem and git commands to save work and put things
+back in a reasonable state</li>
+<li>A tutor for a narrow topic in a course, for example learning UNIX terminal
+commands, equipped with tools for inspecting the filesystem and checking that
+work is done correctly</li>
+<li>An agent that can pan and zoom around a map equipped with API like the Google
+Maps API in response to text prompts to search for locations, look for
+information on the map, and so on</li>
+</ul>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<ul>
+<li>Your project should use an agent API. You can make requests to it directly or
+use a SDK like the one linked above. Don't build an agent from scratch.</li>
+<li>In terms of operations, you should have:
+<ul>
+<li>An operation that your agent can take safely on its own with no user
+confirmation – reading data, making a query, etc.</li>
+<li>An operation that requires user confirmation – actually changing a file,
+giving away an answer as a tutor, or giving a response that would be hard
+to “take back”</li>
+<li>An operation or kind of data that is <em>disallowed</em> by the agent. For
+example, asking the agent for answers directly in the tutoring system, or
+doing destructive actions in git that would lose work, and so on.</li>
+</ul>
+</li>
+<li>You should also include a script or other code that <em>tests</em> your agent
+programmatically. Include a programmatic test for at least one of each of the
+scenarios above.</li>
+<li>Include in the repository README the transcript or description of how to
+reproduce an interaction where your agent performs very well, to showcase
+everything it can do</li>
 </ul>
 
                     </main>
