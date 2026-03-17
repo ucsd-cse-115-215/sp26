@@ -135,7 +135,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <p><img src="./doodle.jpg" alt="doodle" /></p>
+                        <p><img src="./img/doodle.jpg" alt="doodle" /></p>
 <h1 id="ucsd-cse190291p-sp26-syllabus-and-logistics"><a class="header" href="#ucsd-cse190291p-sp26-syllabus-and-logistics">UCSD CSE190/291P SP26 Syllabus and Logistics</a></h1>
 <ul>
 <li><a href="https://cseweb.ucsd.edu/%7Enpolikarpova/">Nadia Polikarpova</a> (Instructor, CSE291P)</li>
@@ -365,12 +365,22 @@ they let you write programs that process text based on <em>meaning</em>.</p>
  └──────────────┘      └──────────────┘
 </code></pre>
 <p>This pattern is showing up everywhere:
-cloud data warehouses like BigQuery and Snowflake now let you
+cloud data warehouses like <a href="https://cloud.google.com/bigquery/docs/ai-application-overview">BigQuery</a>
+and <a href="https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions">Snowflake</a> now let you
 call LLMs directly from SQL queries on text columns.
 It's becoming a standard part of the data engineering toolkit.</p>
 <hr />
 <h2 id="motivating-example-bluesky-poetry"><a class="header" href="#motivating-example-bluesky-poetry">Motivating Example: BlueSky Poetry</a></h2>
-<p>TODO: add screenshot from our poetry monitor</p>
+<p><strong>TODO:</strong> add screenshot from our poetry monitor</p>
+<pre><code>   Data Source         LLM Processing                           Downstream
+ ┌──────────────┐      ┌──────────────┐                       ┌──────────────┐
+ │              │──┐   │              │                   ┌──▶│              │
+ │ BlueSky      │──┼──▶│  classify    │───────────────────┼──▶│     CLI      │
+ │ firehose API │──┘   │  (poetry /   │        label      └──▶│              │
+ │              │      │  not poetry) │      (boolean)        └──────────────┘
+ └──────────────┘      └──────────────┘
+                        ^ our focus for these two weeks
+</code></pre>
 <hr />
 <h2 id="outline"><a class="header" href="#outline">Outline</a></h2>
 <ol>
@@ -381,6 +391,93 @@ It's becoming a standard part of the data engineering toolkit.</p>
 <li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
 <li><strong>Bonus: Semantic Operator frameworks</strong>: automating semantic processing</li>
 </ol>
+<hr />
+<h2 id="how-do-i-call-an-llm"><a class="header" href="#how-do-i-call-an-llm">How do I call an LLM?</a></h2>
+<p>All of you have used LLMs through a web interface like ChatGPT or Google search.</p>
+<p><strong>TODO:</strong> add screenshots of asking ChatGPT &quot;Is this text poetry?&quot; and getting a response</p>
+<p>But if we want to use LLMs to process text at scale,
+we need to call them <em>programmatically</em> (from our code).</p>
+<p>There are two main options:</p>
+<ul>
+<li><strong>Hosted APIs</strong>: a provider (OpenAI, Anthropic, Google, etc.) runs the model;
+you send HTTP requests and pay per token.
+Setup: create an account, get an API key, start making calls.</li>
+<li><strong>Self-hosted models</strong>: you run an open-source model (e.g. Llama)
+on your own hardware. More control, but you manage the infrastructure.</li>
+</ul>
+<p>In this class we'll use <strong>hosted APIs</strong> — they're the easiest way to get started
+and the most common in production.
+Popular providers include
+<a href="https://platform.openai.com/docs/api-reference">OpenAI</a>,
+<a href="https://docs.anthropic.com/en/api/getting-started">Anthropic</a>,
+and <a href="https://ai.google.dev/gemini-api/docs">Google Gemini</a>.
+Their APIs are very similar, so switching between them is easy.</p>
+<p>In this lecture we'll use OpenAI's API, but you can use any provider in your assignments.</p>
+<p>The basic idea:</p>
+<pre><code>                   HTTP request
+                   (your text)
+ ┌───────────┐  ──────────────────▶  ┌──────────────┐
+ │ your code │                       │ LLM provider │
+ └───────────┘  ◀──────────────────  └──────────────┘
+                   HTTP response
+                  (LLM's output)
+</code></pre>
+<hr />
+<h3 id="api-basics-chat-completions"><a class="header" href="#api-basics-chat-completions">API Basics: Chat Completions</a></h3>
+<p>The core abstraction across all providers is the <strong>chat completion</strong>:
+you send a list of messages, the model sends back a response.</p>
+<pre><code class="language-python">from openai import OpenAI
+client = OpenAI()  # uses OPENAI_API_KEY env variable
+
+response = client.chat.completions.create(
+    model=&quot;gpt-5-mini&quot;,
+    messages=[
+        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry classifier.&quot;},
+        {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: &quot;Is this a poem?\n\nRoses are red,\nviolets are blue.&quot;},
+    ],
+)
+
+print(response.choices[0].message.content)
+# &quot;Yes, this is a poem. It follows a classic ...&quot;
+</code></pre>
+<hr />
+<h3 id="anatomy-of-a-chat-completion"><a class="header" href="#anatomy-of-a-chat-completion">Anatomy of a Chat Completion</a></h3>
+<p><strong>Messages</strong> have <em>roles</em>:</p>
+<ul>
+<li><code>system</code>: instructions to the model (persona, task description, constraints)</li>
+<li><code>user</code>: the input you want the model to process</li>
+<li><code>assistant</code>: the model's previous responses (used in multi-turn conversations)</li>
+</ul>
+<p><strong>Model</strong>: which LLM to use.
+Every provider offers a range from cheap/fast to expensive/powerful.
+For example, OpenAI's lineup ranges from <code>gpt-5-nano</code> (cheapest)
+to <code>gpt-5.2</code> (most capable, ~350x more expensive).
+Other providers have similar tiers (e.g. Anthropic's Haiku vs Sonnet vs Opus).</p>
+<p>We used <code>gpt-5-mini</code> above — for a simple classification like this, it's plenty.</p>
+<p><strong>Response</strong>: the <code>choices</code> array contains the model's output.
+For now we'll always get a single choice back.</p>
+<hr />
+<h3 id="tokens-and-cost"><a class="header" href="#tokens-and-cost">Tokens and Cost</a></h3>
+<p>LLM APIs charge by <strong>tokens</strong> — roughly ¾ of a word.
+You can see how OpenAI tokenizes text using their <a href="https://platform.openai.com/tokenizer">tokenizer</a> web interface.</p>
+<pre><code>&quot;Roses are red, violets are blue&quot; → 9 tokens
+</code></pre>
+<p><img src="lectures/../img/tokens.png" alt="OpenAI Tokenizer splits text into tokens" /></p>
+<p>Both <strong>input</strong> and <strong>output</strong> tokens count, and they're priced differently
+(output is typically more expensive — generating text is harder than reading it).</p>
+<p>Here's what pricing looks like in practice
+(see <a href="https://platform.openai.com/docs/pricing">full pricing</a>):</p>
+<div class="table-wrapper"><table><thead><tr><th>Model</th><th>Input</th><th>Output</th></tr></thead><tbody>
+<tr><td><code>gpt-5-nano</code></td><td>$0.05/M tokens</td><td>$0.40/M tokens</td></tr>
+<tr><td><code>gpt-5-mini</code></td><td>$0.25/M tokens</td><td>$2.00/M tokens</td></tr>
+<tr><td><code>gpt-5</code></td><td>$1.25/M tokens</td><td>$10.00/M tokens</td></tr>
+<tr><td><code>gpt-5.2</code></td><td>$1.75/M tokens</td><td>$14.00/M tokens</td></tr>
+</tbody></table>
+</div>
+<p>That's a <strong>35x</strong> difference on input and output between the cheapest and most expensive.
+This will matter a lot when we get to multi-stage pipelines:
+if you're processing thousands of social media posts,
+your choice of model has a huge impact on your bill.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>Assignment goals:</p>
 <ul>
