@@ -135,6 +135,35 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="semantic-text-processing"><a class="header" href="#semantic-text-processing">Semantic Text Processing</a></h1>
+<p>Programs have always been good at processing text <em>syntactically</em>:
+filtering by keyword, matching a regex, parsing a fixed format.</p>
+<p>But what if you need to understand what the text <em>means</em>?</p>
+<ul>
+<li>Is this support ticket <em>urgent</em>?</li>
+<li>Does this contract clause contain a <em>liability risk</em>?</li>
+<li>Is this product review <em>genuine</em> or <em>astroturfed</em>?</li>
+<li>Does this social media post contain an account of <em>police misconduct</em>?</li>
+</ul>
+<p>These tasks require <strong>semantic understanding</strong> — and until recently,
+the only way to do them at scale was to hire humans.</p>
+<p>LLMs change this:
+they let you write programs that process text based on <em>meaning</em>.</p>
+<pre><code>   Data Sources         LLM Processing                           Downstream
+ ┌──────────────┐      ┌──────────────┐                       ┌──────────────┐
+ │ social media │──┐   │              │                   ┌──▶│ dashboards   │
+ │ documents    │──┼──▶│  classify /  │───────────────────┼──▶│ alerts       │
+ │ support logs │──┘   │  extract /   │ structured output └──▶│ ...          │
+ │ ...          │      │  summarize   │ (labels, scores)      └──────────────┘
+ └──────────────┘      └──────────────┘
+</code></pre>
+<p>This pattern is showing up everywhere:
+cloud data warehouses like BigQuery and Snowflake now let you
+call LLMs directly from SQL queries on text columns.
+It's becoming a standard part of the data engineering toolkit.</p>
+<hr />
+<h2 id="motivating-example-bluesky-poetry"><a class="header" href="#motivating-example-bluesky-poetry">Motivating Example: BlueSky Poetry</a></h2>
+<p>TODO: add screenshot from our poetry monitor</p>
+<hr />
 <h2 id="outline"><a class="header" href="#outline">Outline</a></h2>
 <ol>
 <li><strong>LLM APIs</strong>: calling LLMs programmatically</li>
