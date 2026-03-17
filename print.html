@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/semantic-text-processing.html"><strong aria-hidden="true">2.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">3.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="assignments/doc-scanner-assignment.html"><strong aria-hidden="true">4.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="assignments/agent-assignment.html"><strong aria-hidden="true">5.</strong> Assignment 3: Agents and Tools</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">4.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="assignments/doc-scanner-assignment.html"><strong aria-hidden="true">5.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="assignments/agent-assignment.html"><strong aria-hidden="true">6.</strong> Assignment 3: Agents and Tools</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -165,7 +165,7 @@ sensibilities to bear on building useful applications atop existing AI tools.</p
 </ul>
 <h1 id="schedule"><a class="header" href="#schedule">Schedule</a></h1>
 <div class="table-wrapper"><table><thead><tr><th>Date</th><th>Topic</th></tr></thead><tbody>
-<tr><td>3/31</td><td><a href="./lectures/semantic-text-processing.html">Semantic Text Processing</a></td></tr>
+<tr><td>3/31</td><td><a href="./lectures/00-intro.html">Introduction</a> + <a href="./lectures/01-semantic-text-processing.html">Semantic Text Processing</a></td></tr>
 <tr><td>4/2</td><td>Semantic Text Processing (cont.)</td></tr>
 <tr><td>4/7</td><td>Semantic Text Processing (cont.)</td></tr>
 <tr><td>4/9</td><td>Demo Session: Social Media Monitor</td></tr>
@@ -342,7 +342,120 @@ yet! If you know that you <strong>do not</strong> want to enroll, please let us 
 can admit additional students.</p>
 <p>Best,
 Joe and Nadia</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="semantic-text-processing"><a class="header" href="#semantic-text-processing">Semantic Text Processing</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unit-0-welcome-to-cse190291p"><a class="header" href="#unit-0-welcome-to-cse190291p">Unit 0: Welcome to CSE190/291P</a></h1>
+<h2 id="what-is-this-class-about"><a class="header" href="#what-is-this-class-about">What is this class about?</a></h2>
+<p>This class is about <strong>AI-powered systems</strong>:
+software systems that integrate generative AI as a core component.</p>
+<p>About 5 years ago, systems like these were
+either impossible or required a team of ML specialists:</p>
+<ul>
+<li>A medical records system that <em>reads doctor's notes and extracts diagnoses</em></li>
+<li>A document scanner that <em>looks at a photo of a receipt and itemizes expenses</em></li>
+<li>A developer tool that <em>helps users navigate a complex API through conversation</em></li>
+<li>A language learning app that <em>generates exercises and evaluates free-form answers</em></li>
+</ul>
+<p>Today, you can build these by plugging an LLM into a larger software system.
+The LLM handles the parts that require <em>understanding</em> or <em>generation</em>;
+the rest is regular software engineering.</p>
+<p>This is <strong>not</strong> a class about using ChatGPT to write code faster.
+It's about building <strong>new kinds of programs</strong> that weren't possible before —
+and we (Joe and Nadia) have been having a lot of fun building them.
+This class is about sharing that experience with you.</p>
+<hr />
+<h2 id="class-philosophy"><a class="header" href="#class-philosophy">Class philosophy</a></h2>
+<p>We don't claim to be experts — this field is evolving fast
+and we're learning alongside you.</p>
+<p>What we <em>do</em> have is experience building these applications
+and strong opinions about doing it well:
+testing, evaluation, cost management, code quality.</p>
+<p><strong>We welcome your contributions.</strong>
+If you find a better tool, a better technique, a better way to think about something —
+bring it to class.</p>
+<hr />
+<h2 id="structure"><a class="header" href="#structure">Structure</a></h2>
+<p>The class is organized around <strong>4 units</strong>,
+each dedicated to an application domain:</p>
+<ol>
+<li><strong>Semantic text processing</strong> — classifying, extracting, summarizing text at scale</li>
+<li><strong>Image/document processing</strong> — working with PDFs, photos, scanned documents</li>
+<li><strong>Agents and tools</strong> — building conversational interfaces to existing systems</li>
+<li><em>TBD</em> — to be shaped by what we learn along the way</li>
+</ol>
+<p>Each unit follows the same rhythm:</p>
+<ul>
+<li><strong>~3 lectures</strong> of material</li>
+<li><strong>1 assignment</strong> where you build something</li>
+<li><strong>Demo session</strong> where you present your work</li>
+<li><strong>Peer review</strong> where you give and receive feedback</li>
+</ul>
+<hr />
+<h2 id="logistics"><a class="header" href="#logistics">Logistics</a></h2>
+<ul>
+<li><strong>Lectures</strong> (attend the one you're enrolled in):
+<ul>
+<li>CSE190: Tue/Thu 9:30am, WLH2005</li>
+<li>CSE291P: Tue/Thu 9:30am, YORK2622</li>
+</ul>
+</li>
+<li><strong>Office hours</strong>: see the course calendar</li>
+<li><strong>Q&amp;A</strong>: Slack (link on course page)</li>
+</ul>
+<hr />
+<h2 id="assignments-and-grading"><a class="header" href="#assignments-and-grading">Assignments and grading</a></h2>
+<p>Each assignment has two deadlines:</p>
+<ol>
+<li><strong>Initial deadline</strong>: produce a working implementation you can demo
+<ul>
+<li>Course staff gives a tentative score (0–4)</li>
+</ul>
+</li>
+<li><strong>Post-review deadline</strong>: respond to peer feedback
+<ul>
+<li>Fix bugs, add features, clarify code</li>
+<li>Final score combines initial submission + response to feedback</li>
+</ul>
+</li>
+</ol>
+<p><strong>Reviews you write</strong> are also graded (0–4) —
+they should be thoughtful, thorough, and genuinely useful.</p>
+<p>We ask that you <strong>do not use AI to write your reviews</strong>.
+We will give 0s for reviews with obvious factual errors.</p>
+<hr />
+<h2 id="oral-exams"><a class="header" href="#oral-exams">Oral exams</a></h2>
+<p>Twice during the quarter you'll meet with course staff for an <strong>oral exam/demo</strong>:</p>
+<ul>
+<li>Show your assignment</li>
+<li>Walk through the feedback you got</li>
+<li>Explain how you responded to it</li>
+</ul>
+<p>Scored 0–4; if you score below 4, you get feedback and can retry.</p>
+<hr />
+<h2 id="grade-thresholds"><a class="header" href="#grade-thresholds">Grade thresholds</a></h2>
+<p>You must meet the threshold in <strong>all</strong> categories:</p>
+<div class="table-wrapper"><table><thead><tr><th></th><th>Assignments</th><th>Reviews</th><th>Oral exams</th></tr></thead><tbody>
+<tr><td><strong>A</strong></td><td>≥85%</td><td>≥85%</td><td>≥6/8</td></tr>
+<tr><td><strong>B</strong></td><td>≥75%</td><td>≥75%</td><td>≥5/8</td></tr>
+<tr><td><strong>C</strong></td><td>≥60%</td><td>≥60%</td><td>≥4/8</td></tr>
+</tbody></table>
+</div>
+<p>Below C in any category → F/No Pass.</p>
+<hr />
+<h2 id="costs"><a class="header" href="#costs">Costs</a></h2>
+<p>We don't have special funding for AI API usage.
+You'll need accounts on services like OpenAI, Anthropic, Google Gemini, etc.</p>
+<p><strong>Estimated cost</strong>: ~$100 for the whole quarter.
+Please reach out if this is a barrier for you.</p>
+<hr />
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
+<p>We expect you to be comfortable with (or able to figure out):</p>
+<ul>
+<li>Managing API keys and environment variables</li>
+<li>Using git and GitHub (PRs, issues)</li>
+<li>Writing multi-file programs from scratch, including tests</li>
+<li>Basic command-line interfaces</li>
+<li>Basic understanding of web servers and web pages</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unit-1-semantic-text-processing"><a class="header" href="#unit-1-semantic-text-processing">Unit 1: Semantic Text Processing</a></h1>
 <p>Programs have always been good at processing text <em>syntactically</em>:
 filtering by keyword, matching a regex, parsing a fixed format.</p>
 <p>But what if you need to understand what the text <em>means</em>?</p>
@@ -568,6 +681,44 @@ applications.</li>
 <p>As a stretch goal, try using prompt tuning frameworks (DSPy) or &quot;semantic
 operator&quot; frameworks (Lotus, Palimpzest) to implement your pipeline and compare
 its performance with your manually tuned version.</p>
+<h2 id="deliverables"><a class="header" href="#deliverables">Deliverables</a></h2>
+<p><strong>Working arrangement.</strong> You may work solo or in pairs. Pairs share one repo and one submission. At review day, one partner demos while the other takes notes on feedback received.</p>
+<p><strong>Repo setup.</strong> Accept the GitHub Classroom assignment link (posted on Canvas) to create your repo. All work must be pushed there — this is how staff accesses your submission.</p>
+<hr />
+<h3 id="initial-submission--due-tuesday-week-2-1159pm"><a class="header" href="#initial-submission--due-tuesday-week-2-1159pm">Initial Submission — due Tuesday, Week 2, 11:59pm</a></h3>
+<p>Push to your GitHub Classroom repo:</p>
+<ul>
+<li><strong>Code</strong> that runs your pipeline and eval harness</li>
+<li><strong><code>README.md</code></strong> (see requirements below)</li>
+<li><strong><code>transcripts/</code></strong> folder with exported chat logs from any AI assistants (Claude, Copilot, Gemini, etc.) you used during development</li>
+</ul>
+<p>Your README must include: a YouTube unlisted link to your 3–5 minute demo video, eval results (precision/recall and cost per stage), setup instructions, run instructions, and a brief description of each pipeline stage. See <a href="assignments/social-media-monitor-assignment.html#readme-requirements">README requirements</a> below.</p>
+<hr />
+<h3 id="review-day--thursday-week-2-in-class"><a class="header" href="#review-day--thursday-week-2-in-class">Review Day — Thursday, Week 2 (in class)</a></h3>
+<p>Triad assignments and a seating chart will be posted Wednesday evening on Canvas. Find your seat when you arrive — you'll spend the full 80 minutes with the same two other teams.</p>
+<p><strong>Structure:</strong> 3 rounds of ~20 minutes each. Each round, one team presents while the other two review. You will present once and review twice.</p>
+<p><strong>Presenting:</strong> Run your system on your laptop and let your reviewers interact with it directly. Be ready to show your code and prompts, walk through your eval results, and discuss cost. Your demo video is a fallback if anything breaks.</p>
+<p><strong>If your system doesn't run:</strong> show your demo video and walk through your code. Reviewers will note in their review what they couldn't verify live.</p>
+<p><strong>Reviewing:</strong> Take notes during the session. For each project you review, file a GitHub Issue using the review template (linked below) by <strong>end of day Thursday</strong>.</p>
+<hr />
+<h3 id="revision--due-tuesday-week-3-1159pm"><a class="header" href="#revision--due-tuesday-week-3-1159pm">Revision — due Tuesday, Week 3, 11:59pm</a></h3>
+<p>Push to your GitHub Classroom repo:</p>
+<ul>
+<li><strong>Revised code</strong> reflecting changes made in response to feedback</li>
+<li><strong><code>FEEDBACK-RESPONSE.md</code></strong> — for each GitHub Issue you received, state what you did (fixed, partially addressed, or declined) and why, with links to relevant commits</li>
+</ul>
+<hr />
+<h3 id="readme-requirements"><a class="header" href="#readme-requirements">README Requirements</a></h3>
+<p>Your README must include:</p>
+<ul>
+<li><strong>Project description</strong> — what platform, what content, what you're looking for (2–4 sentences)</li>
+<li><strong>Setup</strong> — step-by-step install and API key configuration; include a <code>.env.example</code> showing required keys</li>
+<li><strong>How to run</strong> — commands to run the pipeline and the eval harness separately</li>
+<li><strong>Demo video</strong> — YouTube unlisted link (3–5 min: pipeline running, eval results, code/prompt walkthrough)</li>
+<li><strong>Eval results</strong> — table of precision, recall, and cost per stage and end-to-end</li>
+<li><strong>Pipeline stages</strong> — brief description of each stage and why you chose it</li>
+<li><strong>AI transcripts</strong> — pointer to <code>transcripts/</code> folder</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="document-scanner-assignment"><a class="header" href="#document-scanner-assignment">Document Scanner Assignment</a></h1>
 <p>Assignment goals:</p>
 <ul>

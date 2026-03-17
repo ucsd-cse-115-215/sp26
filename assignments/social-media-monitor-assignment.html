@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="../lectures/semantic-text-processing.html"><strong aria-hidden="true">2.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="../assignments/social-media-monitor-assignment.html" class="active"><strong aria-hidden="true">3.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="../assignments/doc-scanner-assignment.html"><strong aria-hidden="true">4.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="../assignments/agent-assignment.html"><strong aria-hidden="true">5.</strong> Assignment 3: Agents and Tools</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="../lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="../assignments/social-media-monitor-assignment.html" class="active"><strong aria-hidden="true">4.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="../assignments/doc-scanner-assignment.html"><strong aria-hidden="true">5.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="../assignments/agent-assignment.html"><strong aria-hidden="true">6.</strong> Assignment 3: Agents and Tools</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -224,12 +224,50 @@ applications.</li>
 <p>As a stretch goal, try using prompt tuning frameworks (DSPy) or &quot;semantic
 operator&quot; frameworks (Lotus, Palimpzest) to implement your pipeline and compare
 its performance with your manually tuned version.</p>
+<h2 id="deliverables"><a class="header" href="#deliverables">Deliverables</a></h2>
+<p><strong>Working arrangement.</strong> You may work solo or in pairs. Pairs share one repo and one submission. At review day, one partner demos while the other takes notes on feedback received.</p>
+<p><strong>Repo setup.</strong> Accept the GitHub Classroom assignment link (posted on Canvas) to create your repo. All work must be pushed there — this is how staff accesses your submission.</p>
+<hr />
+<h3 id="initial-submission--due-tuesday-week-2-1159pm"><a class="header" href="#initial-submission--due-tuesday-week-2-1159pm">Initial Submission — due Tuesday, Week 2, 11:59pm</a></h3>
+<p>Push to your GitHub Classroom repo:</p>
+<ul>
+<li><strong>Code</strong> that runs your pipeline and eval harness</li>
+<li><strong><code>README.md</code></strong> (see requirements below)</li>
+<li><strong><code>transcripts/</code></strong> folder with exported chat logs from any AI assistants (Claude, Copilot, Gemini, etc.) you used during development</li>
+</ul>
+<p>Your README must include: a YouTube unlisted link to your 3–5 minute demo video, eval results (precision/recall and cost per stage), setup instructions, run instructions, and a brief description of each pipeline stage. See <a href="#readme-requirements">README requirements</a> below.</p>
+<hr />
+<h3 id="review-day--thursday-week-2-in-class"><a class="header" href="#review-day--thursday-week-2-in-class">Review Day — Thursday, Week 2 (in class)</a></h3>
+<p>Triad assignments and a seating chart will be posted Wednesday evening on Canvas. Find your seat when you arrive — you'll spend the full 80 minutes with the same two other teams.</p>
+<p><strong>Structure:</strong> 3 rounds of ~20 minutes each. Each round, one team presents while the other two review. You will present once and review twice.</p>
+<p><strong>Presenting:</strong> Run your system on your laptop and let your reviewers interact with it directly. Be ready to show your code and prompts, walk through your eval results, and discuss cost. Your demo video is a fallback if anything breaks.</p>
+<p><strong>If your system doesn't run:</strong> show your demo video and walk through your code. Reviewers will note in their review what they couldn't verify live.</p>
+<p><strong>Reviewing:</strong> Take notes during the session. For each project you review, file a GitHub Issue using the review template (linked below) by <strong>end of day Thursday</strong>.</p>
+<hr />
+<h3 id="revision--due-tuesday-week-3-1159pm"><a class="header" href="#revision--due-tuesday-week-3-1159pm">Revision — due Tuesday, Week 3, 11:59pm</a></h3>
+<p>Push to your GitHub Classroom repo:</p>
+<ul>
+<li><strong>Revised code</strong> reflecting changes made in response to feedback</li>
+<li><strong><code>FEEDBACK-RESPONSE.md</code></strong> — for each GitHub Issue you received, state what you did (fixed, partially addressed, or declined) and why, with links to relevant commits</li>
+</ul>
+<hr />
+<h3 id="readme-requirements"><a class="header" href="#readme-requirements">README Requirements</a></h3>
+<p>Your README must include:</p>
+<ul>
+<li><strong>Project description</strong> — what platform, what content, what you're looking for (2–4 sentences)</li>
+<li><strong>Setup</strong> — step-by-step install and API key configuration; include a <code>.env.example</code> showing required keys</li>
+<li><strong>How to run</strong> — commands to run the pipeline and the eval harness separately</li>
+<li><strong>Demo video</strong> — YouTube unlisted link (3–5 min: pipeline running, eval results, code/prompt walkthrough)</li>
+<li><strong>Eval results</strong> — table of precision, recall, and cost per stage and end-to-end</li>
+<li><strong>Pipeline stages</strong> — brief description of each stage and why you chose it</li>
+<li><strong>AI transcripts</strong> — pointer to <code>transcripts/</code> folder</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../lectures/semantic-text-processing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../lectures/01-semantic-text-processing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                             <a rel="next" href="../assignments/doc-scanner-assignment.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
@@ -241,7 +279,7 @@ its performance with your manually tuned version.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../lectures/semantic-text-processing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../lectures/01-semantic-text-processing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                     <a rel="next" href="../assignments/doc-scanner-assignment.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
