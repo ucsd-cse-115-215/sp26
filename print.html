@@ -458,13 +458,15 @@ Please reach out if this is a barrier for you.</p>
 <li>Basic understanding of web servers and web pages</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="unit-1-semantic-text-processing"><a class="header" href="#unit-1-semantic-text-processing">Unit 1: Semantic Text Processing</a></h1>
+<blockquote>
+<p><strong>Q:</strong> Think of examples of existing software that processes text. Does this software only care about the <em>form</em> of the text or also the <em>meaning</em>?</p>
+</blockquote>
 <p>Programs have always been good at processing text <em>syntactically</em>:
 filtering by keyword, matching a regex, parsing a fixed format.</p>
 <p>But what if you need to understand what the text <em>means</em>?</p>
 <ul>
 <li>Is this support ticket <em>urgent</em>?</li>
 <li>Does this contract clause contain a <em>liability risk</em>?</li>
-<li>Is this product review <em>genuine</em> or <em>astroturfed</em>?</li>
 <li>Does this social media post contain an account of <em>police misconduct</em>?</li>
 </ul>
 <p>These tasks require <strong>semantic understanding</strong> — and until recently,
@@ -496,6 +498,9 @@ It's becoming a standard part of the data engineering toolkit.</p>
  └──────────────┘      └──────────────┘
                         ^ our focus for these two weeks
 </code></pre>
+<blockquote>
+<p><strong>Q:</strong> What makes something a poem? Could you write down a precise set of rules to detect poetry programmatically?</p>
+</blockquote>
 <hr />
 <h2 id="outline"><a class="header" href="#outline">Outline</a></h2>
 <ol>
@@ -537,6 +542,9 @@ Their APIs are very similar, so switching between them is easy.</p>
                    HTTP response
                   (LLM's output)
 </code></pre>
+<blockquote>
+<p><strong>Q:</strong> Why would anyone self-host a model if hosted APIs are so much easier?</p>
+</blockquote>
 <hr />
 <h3 id="api-basics-chat-completions"><a class="header" href="#api-basics-chat-completions">API Basics: Chat Completions</a></h3>
 <p>The core abstraction across all providers is the <strong>chat completion</strong>:
@@ -553,8 +561,10 @@ response = client.chat.completions.create(
 )
 
 print(response.choices[0].message.content)
-# &quot;Yes, this is a poem. It follows a classic ...&quot;
 </code></pre>
+<blockquote>
+<p><strong>Q:</strong> What do you think the model will respond? (Let's find out.)</p>
+</blockquote>
 <hr />
 <h3 id="anatomy-of-a-chat-completion"><a class="header" href="#anatomy-of-a-chat-completion">Anatomy of a Chat Completion</a></h3>
 <p><strong>Messages</strong> have <em>roles</em>:</p>
@@ -589,10 +599,16 @@ You can see how OpenAI tokenizes text using their <a href="https://platform.open
 <tr><td><code>gpt-5.2</code></td><td>$1.75/M tokens</td><td>$14.00/M tokens</td></tr>
 </tbody></table>
 </div>
-<p>That's a <strong>35x</strong> difference on input and output between the cheapest and most expensive.
-This will matter a lot when we get to multi-stage pipelines:
-if you're processing thousands of social media posts,
-your choice of model has a huge impact on your bill.</p>
+<p><strong>Example:</strong></p>
+<p>BlueSky firehose produces ~1.4M posts/day.
+Let's assume each post is ~50 tokens on average, and we want to generate 1 token of output.</p>
+<div class="table-wrapper"><table><thead><tr><th>Model</th><th>Input cost</th><th>Output cost</th><th>Total</th></tr></thead><tbody>
+<tr><td><code>gpt-5-nano</code></td><td>1.4M × 50 × $0.05/M = $3.5</td><td>1.4M × $0.40/M = $0.56</td><td><strong>~$4.06</strong></td></tr>
+<tr><td><code>gpt-5.2</code></td><td>1.4M × 50 × $1.75/M = $122.5</td><td>1.4M × $14.00/M = $19.6</td><td><strong>~$142.1</strong></td></tr>
+</tbody></table>
+</div>
+<p>That's a <strong>35x</strong> difference in cost!
+This is why model choice and pipeline design matter — we'll come back to this.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>Assignment goals:</p>
 <ul>
