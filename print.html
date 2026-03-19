@@ -369,7 +369,7 @@ testing, evaluation, cost management, code quality.</p>
 If you find a better tool, a better technique, a better way to think about something —
 bring it to class.</p>
 <hr />
-<h2 id="structure"><a class="header" href="#structure">Structure</a></h2>
+<h2 id="topics"><a class="header" href="#topics">Topics</a></h2>
 <p>The class is organized around <strong>4 units</strong>,
 each dedicated to an application domain:</p>
 <ol>
@@ -378,77 +378,18 @@ each dedicated to an application domain:</p>
 <li><strong>Agents and tools</strong> — building conversational interfaces to existing systems</li>
 <li><em>TBD</em> — to be shaped by what we learn along the way</li>
 </ol>
-<p>Each unit follows the same rhythm:</p>
+<p>Each units spans 2 or 3 weeks and follows a similar structure:</p>
 <ul>
-<li><strong>~3 lectures</strong> of material</li>
-<li><strong>1 assignment</strong> where you build something</li>
-<li><strong>Demo session</strong> where you present your work</li>
-<li><strong>Peer review</strong> where you give and receive feedback</li>
+<li><strong>~3-5 lectures</strong> of material</li>
+<li><strong>1 assignment</strong> released at the beginning of the unit</li>
+<li><strong>Demo &amp; peer review session</strong> at the end of the unit (during lecture), where you present your assignment and review each other's work</li>
 </ul>
 <hr />
 <h2 id="logistics"><a class="header" href="#logistics">Logistics</a></h2>
-<ul>
-<li><strong>Lectures</strong> (attend the one you're enrolled in):
-<ul>
-<li>CSE190: Tue/Thu 9:30am, WLH2005</li>
-<li>CSE291P: Tue/Thu 9:30am, YORK2622</li>
-</ul>
-</li>
-<li><strong>Office hours</strong>: see the course calendar</li>
-<li><strong>Q&amp;A</strong>: Slack (link on course page)</li>
-</ul>
-<hr />
-<h2 id="assignments-and-grading"><a class="header" href="#assignments-and-grading">Assignments and grading</a></h2>
-<p>Each assignment has two deadlines:</p>
-<ol>
-<li><strong>Initial deadline</strong>: produce a working implementation you can demo
-<ul>
-<li>Course staff gives a tentative score (0–4)</li>
-</ul>
-</li>
-<li><strong>Post-review deadline</strong>: respond to peer feedback
-<ul>
-<li>Fix bugs, add features, clarify code</li>
-<li>Final score combines initial submission + response to feedback</li>
-</ul>
-</li>
-</ol>
-<p><strong>Reviews you write</strong> are also graded (0–4) —
-they should be thoughtful, thorough, and genuinely useful.</p>
-<p>We ask that you <strong>do not use AI to write your reviews</strong>.
-We will give 0s for reviews with obvious factual errors.</p>
-<hr />
-<h2 id="integrity-interviews-1"><a class="header" href="#integrity-interviews-1">Integrity interviews</a></h2>
-<p>No scheduled exams. We may ask you to meet during finals week to walk through your work. Most students won't be asked — but be ready to explain your code and design decisions.</p>
-<hr />
-<h2 id="grade-thresholds"><a class="header" href="#grade-thresholds">Grade thresholds</a></h2>
-<p>You must meet the threshold in <strong>both</strong> categories:</p>
-<div class="table-wrapper"><table><thead><tr><th></th><th>Assignments</th><th>Reviews</th></tr></thead><tbody>
-<tr><td><strong>A</strong></td><td>≥85%</td><td>≥85%</td></tr>
-<tr><td><strong>B</strong></td><td>≥75%</td><td>≥75%</td></tr>
-<tr><td><strong>C</strong></td><td>≥60%</td><td>≥60%</td></tr>
-</tbody></table>
-</div>
-<p>Below C in either category → F/No Pass.</p>
-<hr />
-<h2 id="costs"><a class="header" href="#costs">Costs</a></h2>
-<p>We don't have special funding for AI API usage.
-You'll need accounts on services like OpenAI, Anthropic, Google Gemini, etc.</p>
-<p><strong>Estimated cost</strong>: ~$100 for the whole quarter.
-Please reach out if this is a barrier for you.</p>
-<hr />
-<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
-<p>We expect you to be comfortable with (or able to figure out):</p>
-<ul>
-<li>Managing API keys and environment variables</li>
-<li>Using git and GitHub (PRs, issues)</li>
-<li>Writing multi-file programs from scratch, including tests</li>
-<li>Basic command-line interfaces</li>
-<li>Basic understanding of web servers and web pages</li>
-</ul>
+<p>See <a href="lectures/../index.html">homepage</a> for details on lectures, office hours, assignments, and more.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="unit-1-semantic-text-processing"><a class="header" href="#unit-1-semantic-text-processing">Unit 1: Semantic Text Processing</a></h1>
 <blockquote>
-<p><strong>Q:</strong> Think of examples of existing software that processes text. Does this software only care about the <em>form</em> of the text or also the <em>meaning</em>?</p>
+<p><strong>Q:</strong> Think of examples of existing software that processes text. What operations does it perform on strings of text to categorize them or extract information?</p>
 </blockquote>
 <p>Programs have always been good at processing text <em>syntactically</em>:
 filtering by keyword, matching a regex, parsing a fixed format.</p>
@@ -488,7 +429,7 @@ It's becoming a standard part of the data engineering toolkit.</p>
                         ^ our focus for these two weeks
 </code></pre>
 <blockquote>
-<p><strong>Q:</strong> What makes something a poem? Could you write down a precise set of rules to detect poetry programmatically?</p>
+<p><strong>Q:</strong> What makes something a poem? Could you use the string operations from your answer to the previous question to detect poetry programmatically?</p>
 </blockquote>
 <hr />
 <h2 id="outline"><a class="header" href="#outline">Outline</a></h2>
@@ -549,7 +490,8 @@ response = client.chat.completions.create(
     ],
 )
 
-print(response.choices[0].message.content)
+answer = response.choices[0].message.content
+print(answer)
 </code></pre>
 <blockquote>
 <p><strong>Q:</strong> What do you think the model will respond? (Let's find out.)</p>
@@ -598,6 +540,149 @@ Let's assume each post is ~50 tokens on average, and we want to generate 1 token
 </div>
 <p>That's a <strong>35x</strong> difference in cost!
 This is why model choice and pipeline design matter — we'll come back to this.</p>
+<hr />
+<h2 id="outline-1"><a class="header" href="#outline-1">Outline</a></h2>
+<ol>
+<li><del><strong>LLM APIs</strong>: calling LLMs programmatically</del> <strong>[done]</strong></li>
+<li><strong>Structured Output</strong>: getting JSON out of LLMs reliably</li>
+<li><strong>Evaluation</strong>: measuring if the LLM is doing well</li>
+<li><strong>Prompting</strong>: the craft of making the LLM do better</li>
+<li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
+<li><strong>Bonus: Semantic Operator frameworks</strong>: automating semantic processing</li>
+</ol>
+<hr />
+<h2 id="structured-output"><a class="header" href="#structured-output">Structured Output</a></h2>
+<p>We called the LLM and got a response. Now what?
+We want to <em>use</em> that response in our code:</p>
+<pre><code class="language-python">answer = response.choices[0].message.content
+
+if answer == &quot;Yes&quot;:
+    print(&quot;Found a poem!&quot;)
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> Will this work? What could go wrong?</p>
+</blockquote>
+<hr />
+<h3 id="the-problem-with-free-form-text"><a class="header" href="#the-problem-with-free-form-text">The problem with free-form text</a></h3>
+<p>The model might respond with:</p>
+<ul>
+<li><code>&quot;Yes&quot;</code></li>
+<li><code>&quot;Yes, this is a poem.&quot;</code></li>
+<li><code>&quot;Yes, this is a poem. It follows a classic rhyming pattern...&quot;</code></li>
+<li><code>&quot;Certainly! This is indeed a poem.&quot;</code></li>
+</ul>
+<p>All of these <em>mean</em> yes, but <code>answer == &quot;Yes&quot;</code> only matches the first one.
+We could try <code>answer.startswith(&quot;Yes&quot;)</code> or <code>&quot;yes&quot; in answer.lower()</code>,
+but this is fragile — we're back to syntactic text processing!</p>
+<p>We need to tell the model <em>how</em> to respond, not just <em>what</em> to respond about.</p>
+<hr />
+<h3 id="attempt-1-ask-nicely"><a class="header" href="#attempt-1-ask-nicely">Attempt 1: Ask nicely</a></h3>
+<p>The simplest approach: just add instructions to the prompt.</p>
+<pre><code class="language-python">response = client.chat.completions.create(
+    model=&quot;gpt-5-mini&quot;,
+    messages=[
+        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry classifier. &quot;
+                                       &quot;Respond with only 'true' or 'false'.&quot;},
+        {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: &quot;Is this a poem?\n\nRoses are red,\nviolets are blue.&quot;},
+    ],
+)
+
+answer = response.choices[0].message.content
+print(answer)  # &quot;true&quot;
+</code></pre>
+<p>This works... most of the time.
+But &quot;most of the time&quot; might not be good enough.</p>
+<blockquote>
+<p><strong>Q:</strong> If the model follows your formatting instructions 99% of the time, is that good enough? What if you're processing 1.4 million posts?</p>
+</blockquote>
+<hr />
+<h3 id="we-need-more-structure"><a class="header" href="#we-need-more-structure">We need more structure</a></h3>
+<p>A single boolean is the simplest case, but real applications often need richer output.
+For our poetry monitor, we might want:</p>
+<ul>
+<li>Whether the post is a poem</li>
+<li>The type of poem (haiku, sonnet, free verse, ...)</li>
+<li>A confidence level</li>
+</ul>
+<p>The industry standard for this is <strong>JSON</strong>:</p>
+<pre><code class="language-json">{
+  &quot;is_poem&quot;: true,
+  &quot;poem_type&quot;: &quot;rhyming couplet&quot;,
+  &quot;confidence&quot;: 0.95
+}
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> Have you worked with JSON before? How would you parse this in Python?</p>
+</blockquote>
+<p>JSON is convenient because:</p>
+<ul>
+<li>Every language has a library to parse it (<code>json.loads</code> in Python)</li>
+<li>It has a well-defined schema (types, required fields, nesting)</li>
+<li>Modern LLMs are trained extensively on JSON and are good at producing it</li>
+</ul>
+<hr />
+<h3 id="asking-nicely-for-json"><a class="header" href="#asking-nicely-for-json">Asking nicely for JSON</a></h3>
+<p>We can update our prompt to request JSON output:</p>
+<pre><code class="language-python">response = client.chat.completions.create(
+    model=&quot;gpt-5-mini&quot;,
+    messages=[
+        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;&quot;&quot;You are a poetry classifier.
+Respond with a JSON object with the following fields:
+- is_poem: boolean
+- poem_type: string (e.g. &quot;haiku&quot;, &quot;sonnet&quot;, &quot;free verse&quot;, &quot;rhyming couplet&quot;)
+- confidence: number between 0 and 1&quot;&quot;&quot;},
+        {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: &quot;Is this a poem?\n\nRoses are red,\nviolets are blue.&quot;},
+    ],
+)
+
+import json
+answer = response.choices[0].message.content
+result = json.loads(answer)
+print(result[&quot;is_poem&quot;])       # True
+print(result[&quot;poem_type&quot;])     # &quot;rhyming couplet&quot;
+print(result[&quot;confidence&quot;])    # 0.95
+</code></pre>
+<p>This works well with modern models.
+But what happens when <code>json.loads</code> fails because the model
+slipped in some extra text around the JSON?</p>
+<hr />
+<h3 id="attempt-2-constrained-decoding"><a class="header" href="#attempt-2-constrained-decoding">Attempt 2: Constrained decoding</a></h3>
+<p>Instead of <em>asking</em> the model to produce JSON and hoping for the best,
+we can <em>force</em> it. This is called <strong>constrained decoding</strong>:
+the API restricts which tokens the model can generate
+so that the output is guaranteed to be valid JSON.</p>
+<pre><code class="language-python">response = client.chat.completions.create(
+    model=&quot;gpt-5-mini&quot;,
+    messages=[
+        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry classifier.&quot;},
+        {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: &quot;Is this a poem?\n\nRoses are red,\nviolets are blue.&quot;},
+    ],
+    response_format={
+        &quot;type&quot;: &quot;json_schema&quot;,
+        &quot;json_schema&quot;: {
+            &quot;name&quot;: &quot;poetry_classification&quot;,
+            &quot;schema&quot;: {
+                &quot;type&quot;: &quot;object&quot;,
+                &quot;properties&quot;: {
+                    &quot;is_poem&quot;:     {&quot;type&quot;: &quot;boolean&quot;},
+                    &quot;poem_type&quot;:   {&quot;type&quot;: &quot;string&quot;},
+                    &quot;confidence&quot;:  {&quot;type&quot;: &quot;number&quot;},
+                },
+                &quot;required&quot;: [&quot;is_poem&quot;, &quot;poem_type&quot;, &quot;confidence&quot;],
+            },
+        },
+    },
+)
+
+answer = response.choices[0].message.content
+result = json.loads(answer)  # guaranteed to work
+</code></pre>
+<p>Now <code>json.loads</code> will <strong>never</strong> fail — the API guarantees the output matches your schema.</p>
+<p>Constrained decoding is a deeper topic we may revisit later.
+But for now, the practical takeaway is: use <code>response_format</code>
+when you need reliable structured output.</p>
+<p>(That said, with state-of-the-art models, even asking nicely works well
+for simple schemas. Use constrained decoding when reliability at scale matters.)</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>Assignment goals:</p>
 <ul>
