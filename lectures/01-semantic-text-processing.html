@@ -430,6 +430,220 @@ But for now, the practical takeaway is: use <code>response_format</code>
 when you need reliable structured output.</p>
 <p>(That said, with state-of-the-art models, even asking nicely works well
 for simple schemas. Use constrained decoding when reliability at scale matters.)</p>
+<hr />
+<h2 id="outline-2"><a class="header" href="#outline-2">Outline</a></h2>
+<ol>
+<li><del><strong>LLM APIs</strong>: calling LLMs programmatically</del> <strong>[done]</strong></li>
+<li><del><strong>Structured Output</strong>: getting JSON out of LLMs reliably</del> <strong>[done]</strong></li>
+<li><strong>Evaluation</strong>: measuring if the LLM is doing well</li>
+<li><strong>Prompting</strong>: the craft of making the LLM do better</li>
+<li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
+<li><strong>Bonus: Semantic Operator frameworks</strong>: automating semantic processing</li>
+</ol>
+<hr />
+<h2 id="evaluation"><a class="header" href="#evaluation">Evaluation</a></h2>
+<p>Let's put together what we have so far:</p>
+<pre><code class="language-python">def is_poem(post: str) -&gt; bool:
+    response = client.chat.completions.create(
+        model=&quot;gpt-5-mini&quot;,
+        messages=[
+            {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry classifier. &quot;
+                                           &quot;Respond with only 'poem' or 'trash'.&quot;},
+            {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: f&quot;Is this a poem?\n\n{post}&quot;},
+        ],
+    )
+    return response.choices[0].message.content.strip().lower() == &quot;poem&quot;
+
+while True:
+    post = get_next_post()  # from the BlueSky firehose
+    if is_poem(post):
+        print(post)
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> Are we done? How would you assess if this is any good?</p>
+</blockquote>
+<hr />
+<h3 id="the-hard-part-has-shifted"><a class="header" href="#the-hard-part-has-shifted">The hard part has shifted</a></h3>
+<blockquote>
+<p><strong>Insight:</strong> With modern LLMs, getting code that &quot;works&quot; is easy.
+You can go from idea to prototype in minutes.</p>
+<p>The hard parts of building AI-powered systems are now:</p>
+<ul>
+<li><strong>Measuring</strong> how well it works</li>
+<li><strong>Making it work reliably</strong> at scale</li>
+</ul>
+<p>This is a fundamental shift in software engineering.</p>
+</blockquote>
+<hr />
+<h3 id="what-does-evaluation-look-like"><a class="header" href="#what-does-evaluation-look-like">What does evaluation look like?</a></h3>
+<p>Evaluation looks very different depending on the task:</p>
+<ul>
+<li><strong>Classification</strong> (is this a poem? is this urgent?):
+compare against labeled examples</li>
+<li><strong>Extraction</strong> (pull dates from a contract):
+compare extracted fields against known answers</li>
+<li><strong>Generation</strong> (summarize this article, write a reply):
+harder — may need human judgment or LLM-based evaluation</li>
+</ul>
+<p>Our poetry classifier is a classification task,
+so we can measure it by comparing its predictions against correct labels.</p>
+<hr />
+<h3 id="evaluation-datasets"><a class="header" href="#evaluation-datasets">Evaluation datasets</a></h3>
+<p>We need a set of examples where we <em>know the right answer</em>:</p>
+<div class="table-wrapper"><table><thead><tr><th>Post</th><th>Expected</th></tr></thead><tbody>
+<tr><td>&quot;Roses are red / violets are blue&quot;</td><td><code>poem</code></td></tr>
+<tr><td>&quot;Just had the best coffee of my life&quot;</td><td><code>trash</code></td></tr>
+<tr><td>&quot;the fog comes / on little cat feet&quot;</td><td><code>poem</code></td></tr>
+<tr><td>&quot;My cat is sitting on my keyboard again&quot;</td><td><code>trash</code></td></tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>Q:</strong> Where would you get data like this for poetry detection? What are pros and cons of different approaches?</p>
+</blockquote>
+<p>Options:</p>
+<ul>
+<li><strong>Hand-label</strong> a sample from the firehose (most reliable, slow)</li>
+<li><strong>Find existing datasets</strong> (poetry corpora exist, but may not match BlueSky style)</li>
+<li><strong>Use a more capable model as oracle</strong> (fast, but introduces its own biases)</li>
+</ul>
+<p>The important thing is that the dataset is <strong>representative</strong>
+of what your system will actually encounter.</p>
+<blockquote>
+<p><strong>Q:</strong> Can you combine these approaches?</p>
+</blockquote>
+<hr />
+<h3 id="metrics-precision-and-recall"><a class="header" href="#metrics-precision-and-recall">Metrics: precision and recall</a></h3>
+<p>Given an evaluation dataset, we can run our classifier and compare predicted and expected labels:</p>
+<div class="table-wrapper"><table><thead><tr><th>Post</th><th>Expected</th><th>Predicted</th><th>Result</th></tr></thead><tbody>
+<tr><td>&quot;Roses are red / violets are blue&quot;</td><td><code>poem</code></td><td><code>poem</code></td><td>TP</td></tr>
+<tr><td>&quot;Just had the best coffee of my life&quot;</td><td><code>trash</code></td><td><code>trash</code></td><td>TN</td></tr>
+<tr><td>&quot;the fog comes / on little cat feet&quot;</td><td><code>poem</code></td><td><code>trash</code></td><td>FN</td></tr>
+<tr><td>&quot;My cat is sitting on my keyboard again&quot;</td><td><code>trash</code></td><td><code>poem</code></td><td>FP</td></tr>
+</tbody></table>
+</div>
+<ul>
+<li><strong>True positives (TP)</strong>: poems our user will see</li>
+<li><strong>True negatives (TN)</strong>: trash no one will see</li>
+<li><strong>False positives (FP)</strong>: trash that slips through and annoys users</li>
+<li><strong>False negatives (FN)</strong>: poems our user will miss</li>
+</ul>
+<p>From these:</p>
+<ul>
+<li><strong>Precision</strong> = TP / (TP + FP) — &quot;Of the posts the user sees, how many are actually poems?&quot;</li>
+<li><strong>Recall</strong> = TP / (TP + FN) — &quot;Of all the poems out there, how many does the user see?&quot;</li>
+</ul>
+<p>In terms of user experience:</p>
+<ul>
+<li>Low precision → your feed is full of trash</li>
+<li>Low recall → you miss real poems</li>
+</ul>
+<blockquote>
+<p><strong>Q:</strong> Which matters more for our poetry monitor — precision or recall?</p>
+</blockquote>
+<p>There's no universal right answer — it depends on what you're building and who it's for.</p>
+<hr />
+<h3 id="running-eval-in-code"><a class="header" href="#running-eval-in-code">Running eval in code</a></h3>
+<pre><code class="language-python">import json
+
+# Load evaluation dataset
+with open(&quot;eval_data.json&quot;) as f:
+    eval_data = json.load(f)
+# eval_data = [{&quot;post&quot;: &quot;Roses are red...&quot;, &quot;expected&quot;: true}, ...]
+
+tp = fp = fn = 0
+for example in eval_data:
+    predicted = is_poem(example[&quot;post&quot;])
+    expected = example[&quot;expected&quot;]
+
+    if predicted and expected:
+        tp += 1
+    elif predicted and not expected:
+        fp += 1
+    elif not predicted and expected:
+        fn += 1
+
+precision = tp / (tp + fp) if (tp + fp) &gt; 0 else 0
+recall    = tp / (tp + fn) if (tp + fn) &gt; 0 else 0
+
+print(f&quot;Precision: {precision:.2f}&quot;)
+print(f&quot;Recall:    {recall:.2f}&quot;)
+</code></pre>
+<p>Now we have a <strong>repeatable measurement</strong>.
+Every time we change the prompt, the model, or the pipeline,
+we can re-run this and see if things got better or worse.</p>
+<blockquote>
+<p><strong>Q:</strong> What's wrong with this eval setup? Think about what happens as you iterate on your system.</p>
+</blockquote>
+<hr />
+<h3 id="building-eval-infrastructure"><a class="header" href="#building-eval-infrastructure">Building eval infrastructure</a></h3>
+<p>Problems with our current setup:</p>
+<ul>
+<li>We want to try <strong>different models and prompts</strong> — the eval code is tangled with the classifier</li>
+<li>Each API call <strong>costs money</strong> — re-running the same model on the same data is wasteful</li>
+<li>We want to <strong>compare experiments</strong> — printing numbers to the console doesn't scale</li>
+</ul>
+<hr />
+<h3 id="step-1-separate-classification-from-evaluation"><a class="header" href="#step-1-separate-classification-from-evaluation">Step 1: Separate classification from evaluation</a></h3>
+<pre><code class="language-python">def classify(posts: list[str], model: str) -&gt; list[bool]:
+    &quot;&quot;&quot;Run the classifier on a batch of posts. Returns predictions.&quot;&quot;&quot;
+    return [is_poem(post, model=model) for post in posts]
+
+def evaluate(predictions: list[bool], expected: list[bool]) -&gt; dict:
+    &quot;&quot;&quot;Compute precision and recall from predictions and expected labels.&quot;&quot;&quot;
+    tp = sum(p and e for p, e in zip(predictions, expected))
+    fp = sum(p and not e for p, e in zip(predictions, expected))
+    fn = sum(not p and e for p, e in zip(predictions, expected))
+    return {
+        &quot;precision&quot;: tp / (tp + fp) if (tp + fp) &gt; 0 else 0,
+        &quot;recall&quot;:    tp / (tp + fn) if (tp + fn) &gt; 0 else 0,
+    }
+</code></pre>
+<hr />
+<h3 id="step-2-cache-predictions"><a class="header" href="#step-2-cache-predictions">Step 2: Cache predictions</a></h3>
+<p>Re-running a model on the same data is expensive and wasteful.
+Save predictions to a file so you can re-evaluate without re-calling the API:</p>
+<pre><code class="language-python">import json, os
+
+def run_experiment(posts, expected, model):
+    &quot;&quot;&quot;Run classifier and save results. Skip if already cached.&quot;&quot;&quot;
+    cache_file = f&quot;results/{model}.json&quot;
+
+    if os.path.exists(cache_file):
+        with open(cache_file) as f:
+            predictions = json.load(f)
+    else:
+        predictions = classify(posts, model)
+        with open(cache_file, &quot;w&quot;) as f:
+            json.dump(predictions, f)
+
+    metrics = evaluate(predictions, expected)
+    metrics[&quot;model&quot;] = model
+    return metrics
+</code></pre>
+<hr />
+<h3 id="step-3-compare-experiments"><a class="header" href="#step-3-compare-experiments">Step 3: Compare experiments</a></h3>
+<p>Now we can run multiple experiments and collect results:</p>
+<pre><code class="language-python">models = [&quot;gpt-5-nano&quot;, &quot;gpt-5-mini&quot;, &quot;gpt-5.2&quot;]
+
+results = []
+for model in models:
+    result = run_experiment(posts, expected, model)
+    results.append(result)
+
+# Save results to a JSON file for analysis
+with open(&quot;results/experiment_results.json&quot;, &quot;w&quot;) as f:
+    json.dump(results, f)
+</code></pre>
+<p>Now you can analyze the results in a notebook where you can plot and compare across experiments.</p>
+<hr />
+<h3 id="visualizing-the-precisionrecall-tradeoff"><a class="header" href="#visualizing-the-precisionrecall-tradeoff">Visualizing the precision/recall tradeoff</a></h3>
+<p><strong>TODO:</strong> add scatter plot of precision vs recall for different models/prompts</p>
+<blockquote>
+<p><strong>Q:</strong> Looking at this plot, which model/prompt configuration would you pick? Why?</p>
+</blockquote>
+<p>There's often no single &quot;best&quot; configuration —
+you're trading off precision, recall, and cost.
+The right choice depends on your application and your users.</p>
 
                     </main>
 
