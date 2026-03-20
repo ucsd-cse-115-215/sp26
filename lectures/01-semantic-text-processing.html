@@ -511,6 +511,13 @@ of what your system will actually encounter.</p>
 <blockquote>
 <p><strong>Q:</strong> Can you combine these approaches?</p>
 </blockquote>
+<blockquote>
+<p><strong>Q:</strong> How many labeled examples do we need? 10? 100? 1000?</p>
+</blockquote>
+<p>Too few and your metrics are noisy — one misclassification can swing precision by 10%.
+Too many and you've spent a week labeling BlueSky posts.
+In practice, 50–200 well-chosen examples is often a good starting point for a classification task.
+You can always add more later as you discover failure modes.</p>
 <hr />
 <h3 id="metrics-precision-and-recall"><a class="header" href="#metrics-precision-and-recall">Metrics: precision and recall</a></h3>
 <p>Given an evaluation dataset, we can run our classifier and compare predicted and expected labels:</p>
