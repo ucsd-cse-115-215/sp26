@@ -1,0 +1,18 @@
+## Review by [your name]
+
+Maybe need to put more ID info here for us to write scripts
+
+### 1. Prepared flow
+_What did you learn from the team's prepared trace? Did the prompt trace make the pipeline's behavior clear? Were the cost and stats numbers credible? Note anything surprising._
+
+### 2. Ad-hoc input
+_What input did your group suggest? What happened when they ran it? How did the results compare to the prepared flow — any differences in quality, cost, or behavior? Link to the relevant entry in the team's session log._
+
+### 3. Gold dataset spot-check
+_Read 10 random labeled examples from the project's gold dataset. How many do you agree with? For any disagreements, explain why you'd label it differently._
+
+### 4. Feature suggestion
+_What user-facing modification did you propose during Phase 3? Why would it matter for the use case? What parts of the pipeline would need to change to support it?_
+
+### 5. Overall
+_One specific thing this project does well. One specific area for improvement._

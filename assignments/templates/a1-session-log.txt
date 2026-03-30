@@ -1,0 +1,67 @@
+## Session Log
+
+### Prepared flow
+
+_Fill this in before review day._
+
+**Input:** _What content/query did you run through the pipeline?_
+
+(Make this more social-media monitor specific for what an input/query is – an idea could be to keep the posts the same and vary the query among reviewers. Revieweres make a good-faith effort (green team not red team))
+
+**Prompt trace:** _For each stage that uses an LLM, paste the prompt sent and the response received._
+
+- Stage: ___
+  - Prompt:
+  - Response:
+- Stage: ___
+  - Prompt:
+  - Response:
+
+**Output:** _What was the final result? (screenshot or paste)_
+
+**Cost:** _Cost per stage for this request._
+
+| Stage | Cost |
+|-------|------|
+| | |
+
+**Stats:** _How many items entered each stage? How many passed through?_
+
+| Stage | In | Out |
+|-------|-----|------|
+| | | |
+
+---
+
+### Reviewer-suggested inputs
+
+_During the session, reviewers will suggest inputs. Run each one and paste the results below._
+
+#### Input 1
+
+**Suggested by:** _reviewer name(s)_
+
+**Input:** _what they asked you to run_
+
+**Prompt trace:**
+
+- Stage: ___
+  - Prompt:
+  - Response:
+- Stage: ___
+  - Prompt:
+  - Response:
+
+**Output:** _(screenshot or paste)_
+
+**Cost:**
+
+| Stage | Cost |
+|-------|------|
+| | |
+
+---
+
+#### Input 2
+
+_Copy the structure above for additional inputs._
