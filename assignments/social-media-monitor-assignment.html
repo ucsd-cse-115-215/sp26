@@ -143,7 +143,7 @@ stages</li>
 <li>Build an eval harness for an LLM-powered application</li>
 </ul>
 <h2 id="large-scale-semantic-text-processing"><a class="header" href="#large-scale-semantic-text-processing">Large-Scale Semantic Text Processing</a></h2>
-<p>One of the most compelling capabilities of LLMs is their ability to understand
+<p>One of the most compelling capabilities of LLMs is their ability to work with
 text at a deep semantic level. This enables a new kind of automation: pipelines
 that perform non-trivial classification and filtering over large volumes of
 text.</p>
@@ -204,13 +204,18 @@ tuning a classification threshold</li>
 </li>
 </ul>
 <h3 id="evaluation-and-tuning"><a class="header" href="#evaluation-and-tuning">Evaluation and Tuning</a></h3>
+<p>You need to build an eval harness that lets you measure your pipeline's
+performance and compare different configurations:</p>
 <ul>
-<li>You need to build an eval harness that lets you measure your pipeline's
-performance and compare different configurations.</li>
 <li>The eval harness should measure both quality (precision/recall) and cost.</li>
 <li>You will need a gold dataset of at least 50 labeled examples to measure
 quality. Because your task and data source are unique to your project, you
-will need to build this dataset yourself.</li>
+will need to build this dataset yourself. These can be real or synthetic
+examples that you create.</li>
+</ul>
+<p><strong>NOTE(joe):</strong> The next two bullets say a lot of things that I'd expect us to
+need to talk about in class:</p>
+<ul>
 <li>Invest in tooling that makes labeling data and comparing pipeline
 configurations easy.</li>
 <li>Once you have the eval harness and gold dataset, compare different model
@@ -220,38 +225,22 @@ at a given max cost? Recall at a given minimum precision and max cost? Cost
 at a given minimum recall? Different metrics make sense for different
 applications.</li>
 </ul>
-<h3 id="stretch-goal"><a class="header" href="#stretch-goal">Stretch Goal</a></h3>
-<p>As a stretch goal, try using prompt tuning frameworks (DSPy) or &quot;semantic
-operator&quot; frameworks (Lotus, Palimpzest) to implement your pipeline and compare
-its performance with your manually tuned version.</p>
 <h2 id="deliverables"><a class="header" href="#deliverables">Deliverables</a></h2>
 <p><strong>Working arrangement.</strong> You may work solo or in pairs. Pairs share one repo and one submission. At review day, one partner demos while the other takes notes on feedback received.</p>
 <p><strong>Repo setup.</strong> Accept the GitHub Classroom assignment link (posted on Canvas) to create your repo. All work must be pushed there — this is how staff accesses your submission.</p>
 <hr />
 <h3 id="initial-submission--due-tuesday-week-2-1159pm"><a class="header" href="#initial-submission--due-tuesday-week-2-1159pm">Initial Submission — due Tuesday, Week 2, 11:59pm</a></h3>
-<p>Push to your GitHub Classroom repo:</p>
+<p>Push to your GitHub Classroom repo <em>and</em> submit on Gradescope:</p>
 <ul>
 <li><strong>Code</strong> that runs your pipeline and eval harness</li>
 <li><strong><code>README.md</code></strong> (see requirements below)</li>
-<li><strong><code>transcripts/</code></strong> folder with exported chat logs from any AI assistants (Claude, Copilot, Gemini, etc.) you used during development</li>
+<li><strong><code>transcripts/</code></strong> folder that contains 3 interesting exported chat logs
+from any AI assistants (Claude, Copilot, Gemini, etc.) you used during
+development.</li>
+<li><strong><code>DESIGN.md</code></strong> a file that includes descriptions of 3 cases where a <em>design
+decision</em> was made. Describe the decision and how much you feel YOU made it,
+vs an agentic coding tool.</li>
 </ul>
-<p>Your README must include: a YouTube unlisted link to your 3–5 minute demo video, eval results (precision/recall and cost per stage), setup instructions, run instructions, and a brief description of each pipeline stage. See <a href="#readme-requirements">README requirements</a> below.</p>
-<hr />
-<h3 id="review-day--thursday-week-2-in-class"><a class="header" href="#review-day--thursday-week-2-in-class">Review Day — Thursday, Week 2 (in class)</a></h3>
-<p>Triad assignments and a seating chart will be posted Wednesday evening on Canvas. Find your seat when you arrive — you'll spend the full 80 minutes with the same two other teams.</p>
-<p><strong>Structure:</strong> 3 rounds of ~20 minutes each. Each round, one team presents while the other two review. You will present once and review twice.</p>
-<p><strong>Presenting:</strong> Before review day, create a <strong>Session Log</strong> Issue on your repo using the <a href="templates/a1-session-log.txt">session log template</a> and pre-fill the &quot;Prepared flow&quot; section. During the session, run your system on your laptop and let your reviewers interact with it directly. Be ready to show your code and prompts, walk through your eval results, and discuss cost. Your demo video is a fallback if anything breaks.</p>
-<p><strong>If your system doesn't run:</strong> show your demo video and walk through your code. Reviewers will note in their review what they couldn't verify live.</p>
-<p><strong>Reviewing:</strong> Take notes during the session. For each project you review, file a GitHub Issue using the <a href="templates/a1-review-issue.txt">review template</a> by <strong>Friday, 11:59pm</strong>.</p>
-<hr />
-<h3 id="revision--due-wednesday-week-3-1159pm"><a class="header" href="#revision--due-wednesday-week-3-1159pm">Revision — due Wednesday, Week 3, 11:59pm</a></h3>
-<p>Push to your GitHub Classroom repo:</p>
-<ul>
-<li><strong>Revised code</strong> reflecting changes made in response to feedback</li>
-<li><strong><code>FEEDBACK-RESPONSE.md</code></strong> — for each GitHub Issue you received, state what you did (fixed, partially addressed, or declined) and why, with links to relevant commits</li>
-</ul>
-<hr />
-<h3 id="readme-requirements"><a class="header" href="#readme-requirements">README Requirements</a></h3>
 <p>Your README must include:</p>
 <ul>
 <li><strong>Project description</strong> — what platform, what content, what you're looking for (2–4 sentences)</li>
@@ -262,6 +251,44 @@ its performance with your manually tuned version.</p>
 <li><strong>Pipeline stages</strong> — brief description of each stage and why you chose it</li>
 <li><strong>AI transcripts</strong> — pointer to <code>transcripts/</code> folder</li>
 </ul>
+<p>Before review day you must also complete the <strong>Session Log</strong> Github issue
+<a href="templates/a1-session-log.txt">session log template</a>.</p>
+<hr />
+<h3 id="review-day--thursday-week-2-in-class"><a class="header" href="#review-day--thursday-week-2-in-class">Review Day — Thursday, Week 2 (in class)</a></h3>
+<p>Review group assignments and a seating chart will be posted Wednesday evening
+on Piazza. Find your seat when you arrive — you'll spend the full 80 minutes
+with the same two other teams.</p>
+<p><strong>Structure:</strong> 3 rounds of ~20 minutes each. Each round, one team presents
+while the other two review. You will present once and review twice.</p>
+<p><strong>Presenting:</strong> Before review day, create a <strong>Session Log</strong> Issue on your repo
+using the <a href="templates/a1-session-log.txt">session log template</a> and pre-fill the
+&quot;Prepared flow&quot; section. During the session, run your system on your laptop and
+let your reviewers interact with it directly. Be ready to show your code and
+prompts, walk through your eval results, and discuss cost. Your demo video is a
+fallback if anything breaks.</p>
+<p><strong>If your system doesn't run:</strong> show your demo video and walk through your
+code. Reviewers will note in their review what they couldn't verify live.</p>
+<h3 id="reviews--due-friday-week-2-1159pm"><a class="header" href="#reviews--due-friday-week-2-1159pm">Reviews – due Friday, Week 2, 11:59pm</a></h3>
+<p><strong>Reviewing:</strong> Take notes during the session. For each project you review, file
+a GitHub Issue using the <a href="templates/a1-review-issue.txt">review template</a> by
+<strong>Friday, 11:59pm</strong>. You must <em>also</em> copy and paste your review into the
+Gradescope assignment (which we will use to assign grades).</p>
+<hr />
+<h3 id="revision--due-wednesday-week-3-1159pm"><a class="header" href="#revision--due-wednesday-week-3-1159pm">Revision — due Wednesday, Week 3, 11:59pm</a></h3>
+<p>Push to your GitHub Classroom repo <em>and</em> submit on Gradescope:</p>
+<ul>
+<li><strong>Revised code</strong> reflecting changes made in response to feedback</li>
+<li>At least 2 more transcripts of sessions with a coding agent to process all the feedback</li>
+<li>Updated <strong>README.md</strong> and <strong>DESIGN.md</strong> to reflect chagnes</li>
+<li><strong><code>FEEDBACK-RESPONSE.md</code></strong> — for each GitHub Issue you received, state what
+you did (fixed, partially addressed, or declined) and why, with links to
+relevant commits</li>
+</ul>
+<hr />
+<h3 id="stretch-goal"><a class="header" href="#stretch-goal">Stretch Goal</a></h3>
+<p>As a stretch goal, try using prompt tuning frameworks (DSPy) or &quot;semantic
+operator&quot; frameworks (Lotus, Palimpzest) to implement your pipeline and compare
+its performance with your manually tuned version.</p>
 
                     </main>
 
