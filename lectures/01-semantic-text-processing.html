@@ -165,7 +165,8 @@ call LLMs directly from SQL queries on text columns.
 It's becoming a standard part of the data engineering toolkit.</p>
 <hr />
 <h2 id="motivating-example-bluesky-poetry"><a class="header" href="#motivating-example-bluesky-poetry">Motivating Example: BlueSky Poetry</a></h2>
-<p><strong>TODO:</strong> add screenshot from our poetry monitor</p>
+<p>What if we wanted to monitor all poems being posted on BlueSky in real time?</p>
+<p><img src="../img/bluesky_poetry.png" alt="Screenshot from our BlueSky poetry monitor" /></p>
 <pre><code>   Data Source         LLM Processing                           Downstream
  ┌──────────────┐      ┌──────────────┐                       ┌──────────────┐
  │              │──┐   │              │                   ┌──▶│              │
@@ -191,7 +192,7 @@ It's becoming a standard part of the data engineering toolkit.</p>
 <hr />
 <h2 id="how-do-i-call-an-llm"><a class="header" href="#how-do-i-call-an-llm">How do I call an LLM?</a></h2>
 <p>All of you have used LLMs through a web interface like ChatGPT or Google search.</p>
-<p><strong>TODO:</strong> add screenshots of asking ChatGPT &quot;Is this text poetry?&quot; and getting a response</p>
+<p><img src="../img/chatgpt.png" alt="Using ChatGpt as a poetry classifier" /></p>
 <p>But if we want to use LLMs to process text at scale,
 we need to call them <em>programmatically</em> (from our code).</p>
 <p>There are two main options:</p>
