@@ -963,10 +963,18 @@ with open(&quot;results/experiment_results.json&quot;, &quot;w&quot;) as f:
 <p>Now you can analyze the results in a notebook where you can plot and compare across experiments.</p>
 <hr />
 <h3 id="visualizing-the-precisionrecall-tradeoff"><a class="header" href="#visualizing-the-precisionrecall-tradeoff">Visualizing the precision/recall tradeoff</a></h3>
-<p><strong>TODO:</strong> add scatter plot of precision vs recall for different models/prompts</p>
+<p><img src="lectures/../img/precision_recall.png" alt="Precision/Recall Curve" /></p>
 <blockquote>
 <p><strong>Q:</strong> Looking at this plot, which model/prompt configuration would you pick? Why?</p>
 </blockquote>
+<p>Precision and recall capture different aspects of quality, but sometimes we want a single number to compare configurations.
+The <strong>F1 score</strong> is the harmonic mean of precision and recall:</p>
+<blockquote>
+<p><strong>F1 = 2 · precision · recall / (precision + recall)</strong></p>
+</blockquote>
+<p>It ranges from 0 (worst) to 1 (best) and is high only when <em>both</em> precision and recall are high,
+which often makes it a useful summary metric for choosing among configurations.</p>
+<p><img src="lectures/../img/cost_f1.png" alt="F2 vs Cost" /></p>
 <p>There's often no single &quot;best&quot; configuration —
 you're trading off precision, recall, and cost.
 The right choice depends on your application and your users.</p>
