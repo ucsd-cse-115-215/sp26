@@ -522,29 +522,58 @@ Setup: create an account, get an API key, start making calls.</li>
 on your own hardware. More control, but you manage the infrastructure.</li>
 </ul>
 <p>In this class we'll use <strong>hosted APIs</strong> — they're the easiest way to get started
-and the most common in production.
-Popular providers include
+and the most common in production. The basic idea of hosted APIs:</p>
+<pre><code>                             HTTP request
+        (&quot;Is this a poem?\n\nRoses are red,\nviolets are blue.&quot;)
+ ┌───────────┐  ─────────────────────────────────────▶  ┌──────────────┐
+ │ your code │                                          │ LLM provider │
+ └───────────┘  ◀─────────────────────────────────────  └──────────────┘
+                             HTTP response
+                             (LLM: &quot;Yes&quot;)
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> What are the pros and cons of hosted vs self-hosted?</p>
+</blockquote>
+<p>Popular providers include
 <a href="https://platform.openai.com/docs/api-reference">OpenAI</a>,
 <a href="https://docs.anthropic.com/en/api/getting-started">Anthropic</a>,
 and <a href="https://ai.google.dev/gemini-api/docs">Google Gemini</a>.
-Their APIs are very similar, so switching between them is easy.</p>
-<p>In this lecture we'll use OpenAI's API, but you can use any provider in your assignments.</p>
-<p>The basic idea:</p>
-<pre><code>                   HTTP request
-                   (your text)
- ┌───────────┐  ──────────────────▶  ┌──────────────┐
- │ your code │                       │ LLM provider │
- └───────────┘  ◀──────────────────  └──────────────┘
-                   HTTP response
-                  (LLM's output)
+You can use any provider in your assignments.
+UCSD also provides <a href="https://tritonai-api.ucsd.edu/ui/">TritonAI</a>
+which lets you access multiple providers from your UCSD account and gives you some free credits.</p>
+<hr />
+<h3 id="tokens-and-cost"><a class="header" href="#tokens-and-cost">Tokens and Cost</a></h3>
+<p>LLM APIs charge by <strong>tokens</strong> — roughly ¾ of a word.
+You can see how OpenAI tokenizes text using their <a href="https://platform.openai.com/tokenizer">tokenizer</a> web interface.</p>
+<pre><code>&quot;Roses are red, violets are blue&quot; → 9 tokens
 </code></pre>
-<blockquote>
-<p><strong>Q:</strong> Why would anyone self-host a model if hosted APIs are so much easier?</p>
-</blockquote>
+<p><img src="lectures/../img/tokens.png" alt="OpenAI Tokenizer splits text into tokens" /></p>
+<p>Both <strong>input</strong> and <strong>output</strong> tokens count, and they're priced differently
+(output is typically more expensive — generating text is harder than reading it).</p>
+<p>Here's what pricing looks like in practice
+(see <a href="https://platform.openai.com/docs/pricing">full pricing</a>):</p>
+<div class="table-wrapper"><table><thead><tr><th>Model</th><th>Input</th><th>Output</th></tr></thead><tbody>
+<tr><td><code>gpt-5-nano</code></td><td>$0.05/M tokens</td><td>$0.40/M tokens</td></tr>
+<tr><td><code>gpt-5-mini</code></td><td>$0.25/M tokens</td><td>$2.00/M tokens</td></tr>
+<tr><td><code>gpt-5.4</code></td><td>$2.50/M tokens</td><td>$15.00/M tokens</td></tr>
+</tbody></table>
+</div>
+<p>That's a <strong>50x</strong> difference in input cost!</p>
+<p>Other providers have similar tiers (e.g. Anthropic's Haiku vs Sonnet vs Opus).</p>
+<p><strong>Example:</strong></p>
+<p>BlueSky firehose produces ~1.4M posts/day.
+Let's assume each post is ~50 tokens on average, and we want to generate 1 token of output.</p>
+<div class="table-wrapper"><table><thead><tr><th>Model</th><th>Input cost</th><th>Output cost</th><th>Total</th></tr></thead><tbody>
+<tr><td><code>gpt-5-nano</code></td><td>1.4M × 50 × $0.05/M = $3.5</td><td>1.4M × $0.40/M = $0.56</td><td><strong>~$4.06</strong></td></tr>
+<tr><td><code>gpt-5.4</code></td><td>1.4M × 50 × $2.50/M = $175.0</td><td>1.4M × $15.00/M = $21.0</td><td><strong>~$196.0</strong></td></tr>
+</tbody></table>
+</div>
+<p>This is why model choice and pipeline design matter — we'll come back to this.</p>
 <hr />
 <h3 id="api-basics-chat-completions"><a class="header" href="#api-basics-chat-completions">API Basics: Chat Completions</a></h3>
 <p>The core abstraction across all providers is the <strong>chat completion</strong>:
 you send a list of messages, the model sends back a response.</p>
+<p>Here's how it looks in Python using OpenAI's API:</p>
 <pre><code class="language-python">from openai import OpenAI
 client = OpenAI()  # uses OPENAI_API_KEY env variable
 
@@ -570,42 +599,31 @@ print(answer)
 <li><code>user</code>: the input you want the model to process</li>
 <li><code>assistant</code>: the model's previous responses (used in multi-turn conversations)</li>
 </ul>
-<p><strong>Model</strong>: which LLM to use.
-Every provider offers a range from cheap/fast to expensive/powerful.
-For example, OpenAI's lineup ranges from <code>gpt-5-nano</code> (cheapest)
-to <code>gpt-5.2</code> (most capable, ~350x more expensive).
-Other providers have similar tiers (e.g. Anthropic's Haiku vs Sonnet vs Opus).</p>
-<p>We used <code>gpt-5-mini</code> above — for a simple classification like this, it's plenty.</p>
+<p><strong>Model</strong>: which LLM to use.</p>
 <p><strong>Response</strong>: the <code>choices</code> array contains the model's output.
 For now we'll always get a single choice back.</p>
 <hr />
-<h3 id="tokens-and-cost"><a class="header" href="#tokens-and-cost">Tokens and Cost</a></h3>
-<p>LLM APIs charge by <strong>tokens</strong> — roughly ¾ of a word.
-You can see how OpenAI tokenizes text using their <a href="https://platform.openai.com/tokenizer">tokenizer</a> web interface.</p>
-<pre><code>&quot;Roses are red, violets are blue&quot; → 9 tokens
+<h3 id="unified-llm-apis"><a class="header" href="#unified-llm-apis">Unified LLM APIs</a></h3>
+<p>We used OpenAI's API above, but what if we want to experiment with different providers?
+It would be annoying to rewrite our code just for that.</p>
+<p>There are libraries/frameworks that provide a unified API layer over multiple providers;
+the simplest one is <a href="https://github.com/BerriAI/litellm">LiteLLM</a>.
+It is <em>very similar</em> to OpenAI's API, but now we can switch e.g. to a model from Anthropic:</p>
+<pre><code class="language-python">from litellm import LiteLLM
+# No client initialization needed!
+
+response = litellm.completion( # The only change is this line
+    # model=&quot;gpt-5-mini&quot;,
+    model=&quot;claude-haiku-4-5&quot;, # switching to an Anthropic model
+    messages=[
+        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry classifier.&quot;},
+        {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: &quot;Is this a poem?\n\nRoses are red,\nviolets are blue.&quot;},
+    ],
+)
+
+answer = response.choices[0].message.content
+print(answer)
 </code></pre>
-<p><img src="lectures/../img/tokens.png" alt="OpenAI Tokenizer splits text into tokens" /></p>
-<p>Both <strong>input</strong> and <strong>output</strong> tokens count, and they're priced differently
-(output is typically more expensive — generating text is harder than reading it).</p>
-<p>Here's what pricing looks like in practice
-(see <a href="https://platform.openai.com/docs/pricing">full pricing</a>):</p>
-<div class="table-wrapper"><table><thead><tr><th>Model</th><th>Input</th><th>Output</th></tr></thead><tbody>
-<tr><td><code>gpt-5-nano</code></td><td>$0.05/M tokens</td><td>$0.40/M tokens</td></tr>
-<tr><td><code>gpt-5-mini</code></td><td>$0.25/M tokens</td><td>$2.00/M tokens</td></tr>
-<tr><td><code>gpt-5</code></td><td>$1.25/M tokens</td><td>$10.00/M tokens</td></tr>
-<tr><td><code>gpt-5.2</code></td><td>$1.75/M tokens</td><td>$14.00/M tokens</td></tr>
-</tbody></table>
-</div>
-<p><strong>Example:</strong></p>
-<p>BlueSky firehose produces ~1.4M posts/day.
-Let's assume each post is ~50 tokens on average, and we want to generate 1 token of output.</p>
-<div class="table-wrapper"><table><thead><tr><th>Model</th><th>Input cost</th><th>Output cost</th><th>Total</th></tr></thead><tbody>
-<tr><td><code>gpt-5-nano</code></td><td>1.4M × 50 × $0.05/M = $3.5</td><td>1.4M × $0.40/M = $0.56</td><td><strong>~$4.06</strong></td></tr>
-<tr><td><code>gpt-5.2</code></td><td>1.4M × 50 × $1.75/M = $122.5</td><td>1.4M × $14.00/M = $19.6</td><td><strong>~$142.1</strong></td></tr>
-</tbody></table>
-</div>
-<p>That's a <strong>35x</strong> difference in cost!
-This is why model choice and pipeline design matter — we'll come back to this.</p>
 <hr />
 <h2 id="outline-1"><a class="header" href="#outline-1">Outline</a></h2>
 <ol>
@@ -644,7 +662,7 @@ but this is fragile — we're back to syntactic text processing!</p>
 <hr />
 <h3 id="attempt-1-ask-nicely"><a class="header" href="#attempt-1-ask-nicely">Attempt 1: Ask nicely</a></h3>
 <p>The simplest approach: just add instructions to the prompt.</p>
-<pre><code class="language-python">response = client.chat.completions.create(
+<pre><code class="language-python">response = litellm.completion(
     model=&quot;gpt-5-mini&quot;,
     messages=[
         {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry classifier. &quot;
@@ -657,24 +675,21 @@ answer = response.choices[0].message.content
 print(answer)  # &quot;true&quot;
 </code></pre>
 <p>This works... most of the time.
-But &quot;most of the time&quot; might not be good enough.</p>
-<blockquote>
-<p><strong>Q:</strong> If the model follows your formatting instructions 99% of the time, is that good enough? What if you're processing 1.4 million posts?</p>
-</blockquote>
+But &quot;most of the time&quot; is annoying to deal with in code (you need error handling and retry logic).</p>
 <hr />
 <h3 id="we-need-more-structure"><a class="header" href="#we-need-more-structure">We need more structure</a></h3>
 <p>A single boolean is the simplest case, but real applications often need richer output.
 For our poetry monitor, we might want:</p>
 <ul>
 <li>Whether the post is a poem</li>
-<li>The type of poem (haiku, sonnet, free verse, ...)</li>
 <li>A confidence level</li>
+<li>Explanation of the model's reasoning</li>
 </ul>
 <p>The industry standard for this is <strong>JSON</strong>:</p>
 <pre><code class="language-json">{
   &quot;is_poem&quot;: true,
-  &quot;poem_type&quot;: &quot;rhyming couplet&quot;,
-  &quot;confidence&quot;: 0.95
+  &quot;confidence&quot;: 0.95,
+  &quot;explanation&quot;: &quot;The text follows a classic rhyming pattern with a consistent meter.&quot;
 }
 </code></pre>
 <blockquote>
@@ -689,14 +704,16 @@ For our poetry monitor, we might want:</p>
 <hr />
 <h3 id="asking-nicely-for-json"><a class="header" href="#asking-nicely-for-json">Asking nicely for JSON</a></h3>
 <p>We can update our prompt to request JSON output:</p>
-<pre><code class="language-python">response = client.chat.completions.create(
+<pre><code class="language-python">response = litellm.completion(
     model=&quot;gpt-5-mini&quot;,
     messages=[
         {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;&quot;&quot;You are a poetry classifier.
 Respond with a JSON object with the following fields:
-- is_poem: boolean
-- poem_type: string (e.g. &quot;haiku&quot;, &quot;sonnet&quot;, &quot;free verse&quot;, &quot;rhyming couplet&quot;)
-- confidence: number between 0 and 1&quot;&quot;&quot;},
+{
+  &quot;is_poem&quot;: true/false,
+  &quot;confidence&quot;: 0.0-1.0,
+  &quot;explanation&quot;: &quot;brief reason (&lt;30 words)&quot;
+}&quot;&quot;&quot;},
         {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: &quot;Is this a poem?\n\nRoses are red,\nviolets are blue.&quot;},
     ],
 )
@@ -705,24 +722,25 @@ import json
 answer = response.choices[0].message.content
 result = json.loads(answer)
 print(result[&quot;is_poem&quot;])       # True
-print(result[&quot;poem_type&quot;])     # &quot;rhyming couplet&quot;
 print(result[&quot;confidence&quot;])    # 0.95
+print(result[&quot;explanation&quot;])   # &quot;The text follows a classic rhyming pattern with a consistent meter.&quot;
 </code></pre>
-<p>This works well with modern models.
-But what happens when <code>json.loads</code> fails because the model
-slipped in some extra text around the JSON?</p>
+<p>This works well with modern models, but again works <em>most of the time</em>
+(e.g. some models like to put backticks around the JSON, which breaks <code>json.loads</code>).</p>
+<p>If you add <code>response_format={&quot;type&quot;: &quot;json_object&quot;}</code> to your API call,
+some providers will do their best to ensure the output is valid JSON,
+but there is no guarantee about which fields it will have.</p>
 <hr />
 <h3 id="attempt-2-constrained-decoding"><a class="header" href="#attempt-2-constrained-decoding">Attempt 2: Constrained decoding</a></h3>
 <p>Instead of <em>asking</em> the model to produce JSON and hoping for the best,
-we can <em>force</em> it. This is called <strong>constrained decoding</strong>:
-the API restricts which tokens the model can generate
-so that the output is guaranteed to be valid JSON.</p>
-<pre><code class="language-python">response = client.chat.completions.create(
-    model=&quot;gpt-5-mini&quot;,
-    messages=[
-        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry classifier.&quot;},
-        {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: &quot;Is this a poem?\n\nRoses are red,\nviolets are blue.&quot;},
-    ],
+we can <em>force</em> it. This is called <strong>constrained decoding</strong>:</p>
+<ul>
+<li>the API restricts the output to match a specified schema</li>
+<li>it also does a system-level prompt injection to tell the model about the schema</li>
+</ul>
+<pre><code class="language-python">response = litellm.completion(
+    model=...,
+    messages=..., # NO NEED TO INCLUDE JSON INSTRUCTIONS IN THE PROMPT ANYMORE!
     response_format={
         &quot;type&quot;: &quot;json_schema&quot;,
         &quot;json_schema&quot;: {
@@ -731,24 +749,40 @@ so that the output is guaranteed to be valid JSON.</p>
                 &quot;type&quot;: &quot;object&quot;,
                 &quot;properties&quot;: {
                     &quot;is_poem&quot;:     {&quot;type&quot;: &quot;boolean&quot;},
-                    &quot;poem_type&quot;:   {&quot;type&quot;: &quot;string&quot;},
                     &quot;confidence&quot;:  {&quot;type&quot;: &quot;number&quot;},
+                    &quot;explanation&quot;: {&quot;type&quot;: &quot;string&quot;}
                 },
-                &quot;required&quot;: [&quot;is_poem&quot;, &quot;poem_type&quot;, &quot;confidence&quot;],
+                &quot;required&quot;: [&quot;is_poem&quot;, &quot;confidence&quot;, &quot;explanation&quot;],
             },
         },
     },
 )
 
 answer = response.choices[0].message.content
-result = json.loads(answer)  # guaranteed to work
+result = json.loads(answer)
+print(result[&quot;is_poem&quot;])     # guaranteed to work
 </code></pre>
-<p>Now <code>json.loads</code> will <strong>never</strong> fail — the API guarantees the output matches your schema.</p>
+<p>Now <code>json.loads</code> will <strong>never</strong> fail.</p>
 <p>Constrained decoding is a deeper topic we may revisit later.
 But for now, the practical takeaway is: use <code>response_format</code>
 when you need reliable structured output.</p>
-<p>(That said, with state-of-the-art models, even asking nicely works well
-for simple schemas. Use constrained decoding when reliability at scale matters.)</p>
+<p>OpenAI API also provides syntactic sugar that lets you parse the response directly into a Python object using Pydantic:</p>
+<pre><code class="language-python">from pydantic import BaseModel
+
+class PoemResult(BaseModel):
+    is_poem: bool
+    confidence: float
+    explanation: str
+
+response = await client.beta.chat.completions.parse(
+    model=...,
+    messages=...,
+    response_format=PoemResult,
+  )
+
+answer = response.choices[0].message.parsed
+print(answer.is_poem)     # bool
+</code></pre>
 <hr />
 <h2 id="outline-2"><a class="header" href="#outline-2">Outline</a></h2>
 <ol>
@@ -762,21 +796,26 @@ for simple schemas. Use constrained decoding when reliability at scale matters.)
 <hr />
 <h2 id="evaluation"><a class="header" href="#evaluation">Evaluation</a></h2>
 <p>Let's put together what we have so far:</p>
-<pre><code class="language-python">def is_poem(post: str) -&gt; bool:
-    response = client.chat.completions.create(
-        model=&quot;gpt-5-mini&quot;,
-        messages=[
-            {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry classifier. &quot;
-                                           &quot;Respond with only 'poem' or 'trash'.&quot;},
-            {&quot;role&quot;: &quot;user&quot;,   &quot;content&quot;: f&quot;Is this a poem?\n\n{post}&quot;},
-        ],
-    )
-    return response.choices[0].message.content.strip().lower() == &quot;poem&quot;
+<pre><code class="language-python">def detect_poem(text):
+  response = await client.beta.chat.completions.parse(
+    model=&quot;gpt-5-mini&quot;,
+    messages=[
+      { &quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a poetry detector. Given the text of a social media post, determine if it is a poem.&quot;},
+        &quot;role&quot;: &quot;user&quot;, &quot;content&quot;: text }
+    ],
+    response_format=PoemResult,
+  )
+  return response.choices[0].message.parsed
 
+# In practice this would be async, but simplified here:
 while True:
-    post = get_next_post()  # from the BlueSky firehose
-    if is_poem(post):
-        print(post)
+    text = get_post()
+    result = detect_poem(text)
+    if result.is_poem:
+        print(&quot;POEM DETECTED!&quot;)
+        print(text)
+        print(result.explanation)
+        print(&quot;-&quot; * 40)
 </code></pre>
 <blockquote>
 <p><strong>Q:</strong> Are we done? How would you assess if this is any good?</p>
@@ -869,6 +908,7 @@ You can always add more later as you discover failure modes.</p>
 <p>There's no universal right answer — it depends on what you're building and who it's for.</p>
 <hr />
 <h3 id="running-eval-in-code"><a class="header" href="#running-eval-in-code">Running eval in code</a></h3>
+<p>We can now run our detector on the evaluation dataset and compute precision and recall:</p>
 <pre><code class="language-python">import json
 
 # Load evaluation dataset
@@ -878,89 +918,26 @@ with open(&quot;eval_data.json&quot;) as f:
 
 tp = fp = fn = 0
 for example in eval_data:
-    predicted = is_poem(example[&quot;post&quot;])
+    predicted = detect_poem(example[&quot;post&quot;]).is_poem
     expected = example[&quot;expected&quot;]
+    ... // accumulate TP, FP, FN counts ...
 
-    if predicted and expected:
-        tp += 1
-    elif predicted and not expected:
-        fp += 1
-    elif not predicted and expected:
-        fn += 1
-
-precision = tp / (tp + fp) if (tp + fp) &gt; 0 else 0
-recall    = tp / (tp + fn) if (tp + fn) &gt; 0 else 0
+precision, recall = compute_metrics(tp, fp, fn)
 
 print(f&quot;Precision: {precision:.2f}&quot;)
 print(f&quot;Recall:    {recall:.2f}&quot;)
 </code></pre>
-<p>Now we have a <strong>repeatable measurement</strong>.
-Every time we change the prompt, the model, or the pipeline,
-we can re-run this and see if things got better or worse.</p>
 <blockquote>
-<p><strong>Q:</strong> What's wrong with this eval setup? Think about what happens as you iterate on your system.</p>
+<p><strong>Q:</strong> What would you want your eval infrastructure to have?</p>
 </blockquote>
 <hr />
 <h3 id="building-eval-infrastructure"><a class="header" href="#building-eval-infrastructure">Building eval infrastructure</a></h3>
-<p>Problems with our current setup:</p>
+<p>Things you probably want to do:</p>
 <ul>
-<li>We want to try <strong>different models and prompts</strong> — the eval code is tangled with the classifier</li>
-<li>Each API call <strong>costs money</strong> — re-running the same model on the same data is wasteful</li>
-<li>We want to <strong>compare experiments</strong> — printing numbers to the console doesn't scale</li>
+<li>We want to try <strong>different models and prompts</strong> - need to separate classification from analysis</li>
+<li>Each API call <strong>costs money</strong> — need to cache classification results so you can iterate on analysis without re-calling the API (can also use batch APIs!)</li>
+<li>We want to <strong>compare experiments</strong> — printing numbers to the console doesn't scale, we probably want a notebook with plots and tables</li>
 </ul>
-<hr />
-<h3 id="step-1-separate-classification-from-evaluation"><a class="header" href="#step-1-separate-classification-from-evaluation">Step 1: Separate classification from evaluation</a></h3>
-<pre><code class="language-python">def classify(posts: list[str], model: str) -&gt; list[bool]:
-    &quot;&quot;&quot;Run the classifier on a batch of posts. Returns predictions.&quot;&quot;&quot;
-    return [is_poem(post, model=model) for post in posts]
-
-def evaluate(predictions: list[bool], expected: list[bool]) -&gt; dict:
-    &quot;&quot;&quot;Compute precision and recall from predictions and expected labels.&quot;&quot;&quot;
-    tp = sum(p and e for p, e in zip(predictions, expected))
-    fp = sum(p and not e for p, e in zip(predictions, expected))
-    fn = sum(not p and e for p, e in zip(predictions, expected))
-    return {
-        &quot;precision&quot;: tp / (tp + fp) if (tp + fp) &gt; 0 else 0,
-        &quot;recall&quot;:    tp / (tp + fn) if (tp + fn) &gt; 0 else 0,
-    }
-</code></pre>
-<hr />
-<h3 id="step-2-cache-predictions"><a class="header" href="#step-2-cache-predictions">Step 2: Cache predictions</a></h3>
-<p>Re-running a model on the same data is expensive and wasteful.
-Save predictions to a file so you can re-evaluate without re-calling the API:</p>
-<pre><code class="language-python">import json, os
-
-def run_experiment(posts, expected, model):
-    &quot;&quot;&quot;Run classifier and save results. Skip if already cached.&quot;&quot;&quot;
-    cache_file = f&quot;results/{model}.json&quot;
-
-    if os.path.exists(cache_file):
-        with open(cache_file) as f:
-            predictions = json.load(f)
-    else:
-        predictions = classify(posts, model)
-        with open(cache_file, &quot;w&quot;) as f:
-            json.dump(predictions, f)
-
-    metrics = evaluate(predictions, expected)
-    metrics[&quot;model&quot;] = model
-    return metrics
-</code></pre>
-<hr />
-<h3 id="step-3-compare-experiments"><a class="header" href="#step-3-compare-experiments">Step 3: Compare experiments</a></h3>
-<p>Now we can run multiple experiments and collect results:</p>
-<pre><code class="language-python">models = [&quot;gpt-5-nano&quot;, &quot;gpt-5-mini&quot;, &quot;gpt-5.2&quot;]
-
-results = []
-for model in models:
-    result = run_experiment(posts, expected, model)
-    results.append(result)
-
-# Save results to a JSON file for analysis
-with open(&quot;results/experiment_results.json&quot;, &quot;w&quot;) as f:
-    json.dump(results, f)
-</code></pre>
-<p>Now you can analyze the results in a notebook where you can plot and compare across experiments.</p>
 <hr />
 <h3 id="visualizing-the-precisionrecall-tradeoff"><a class="header" href="#visualizing-the-precisionrecall-tradeoff">Visualizing the precision/recall tradeoff</a></h3>
 <p><img src="lectures/../img/precision_recall.png" alt="Precision/Recall Curve" /></p>
