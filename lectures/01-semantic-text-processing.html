@@ -616,7 +616,7 @@ print(f&quot;Recall:    {recall:.2f}&quot;)
 <h3 id="building-eval-infrastructure"><a class="header" href="#building-eval-infrastructure">Building eval infrastructure</a></h3>
 <p>Things you probably want to do:</p>
 <ul>
-<li>We want to try <strong>different models and prompts</strong> - need to separate classification from analysis</li>
+<li>We want to try <strong>different models, confidence thresholds, and prompts</strong> - need to separate classification from analysis</li>
 <li>Each API call <strong>costs money</strong> — need to cache classification results so you can iterate on analysis without re-calling the API (can also use batch APIs!)</li>
 <li>We want to <strong>compare experiments</strong> — printing numbers to the console doesn't scale, we probably want a notebook with plots and tables</li>
 </ul>
