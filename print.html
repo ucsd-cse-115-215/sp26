@@ -505,6 +505,7 @@ It's becoming a standard part of the data engineering toolkit.</p>
 <li><strong>Evaluation</strong>: measuring if the LLM is doing well</li>
 <li><strong>Prompt Engineering</strong>: the craft of making the LLM do better</li>
 <li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
+<li><strong>Implementation</strong>: from design to code with coding agents</li>
 </ol>
 <hr />
 <h2 id="how-do-i-call-an-llm"><a class="header" href="#how-do-i-call-an-llm">How do I call an LLM?</a></h2>
@@ -789,6 +790,7 @@ print(answer.is_poem)     # bool
 <li><strong>Evaluation</strong>: measuring if the LLM is doing well</li>
 <li><strong>Prompt Engineering</strong>: the craft of making the LLM do better</li>
 <li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
+<li><strong>Implementation</strong>: from design to code with coding agents</li>
 </ol>
 <hr />
 <h2 id="evaluation"><a class="header" href="#evaluation">Evaluation</a></h2>
@@ -960,6 +962,7 @@ The right choice depends on your application and your users.</p>
 <li><del><strong>Evaluation</strong>: measuring if the LLM is doing well</del> <strong>[done]</strong></li>
 <li><strong>Prompt Engineering</strong>: the craft of making the LLM do better</li>
 <li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
+<li><strong>Implementation</strong>: from design to code with coding agents</li>
 </ol>
 <hr />
 <p>Now that we know <em>how well</em> we're doing, we can start thinking about <em>how to do better</em> (in terms of both quality and cost).</p>
@@ -1008,6 +1011,7 @@ but now it increasingly encompasses model parameters too.</p>
 <li><del><strong>Evaluation</strong>: measuring if the LLM is doing well</del> <strong>[done]</strong></li>
 <li><del><strong>Prompt Engineering</strong>: the craft of making the LLM do better</del> <strong>[done]</strong></li>
 <li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
+<li><strong>Implementation</strong>: from design to code with coding agents</li>
 </ol>
 <hr />
 <h3 id="does-our-poetry-detector-scale"><a class="header" href="#does-our-poetry-detector-scale">Does our poetry detector scale?</a></h3>
@@ -1043,6 +1047,7 @@ This is:</p>
 </ul>
 <hr />
 <h3 id="pipeline-design"><a class="header" href="#pipeline-design">Pipeline design</a></h3>
+<p>A reasonable pipeline for the poetry detector might look like this:</p>
 <pre><code>                1.4M posts/day
                       │
                       ▼
@@ -1081,6 +1086,181 @@ This is:</p>
 <p>By adding cheap pre-filters and a two-tier LLM strategy, we reduced the
 expensive LLM calls from <strong>1.4M to ~6K per day</strong> — and the total pipeline
 costs roughly <strong>~$2/day</strong> instead of <strong>~$196/day</strong>.</p>
+<hr />
+<h2 id="outline-5"><a class="header" href="#outline-5">Outline</a></h2>
+<ol>
+<li><del><strong>LLM APIs</strong>: calling LLMs programmatically</del> <strong>[done]</strong></li>
+<li><del><strong>Structured Output</strong>: getting JSON out of LLMs reliably</del> <strong>[done]</strong></li>
+<li><del><strong>Evaluation</strong>: measuring if the LLM is doing well</del> <strong>[done]</strong></li>
+<li><del><strong>Prompt Engineering</strong>: the craft of making the LLM do better</del> <strong>[done]</strong></li>
+<li><del><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</del> <strong>[done]</strong></li>
+<li><strong>Implementation</strong>: from design to code with coding agents</li>
+</ol>
+<hr />
+<h2 id="vibe-coding-vs-co-design"><a class="header" href="#vibe-coding-vs-co-design">Vibe Coding vs Co-Design</a></h2>
+<p>We know what we want to build; now what?
+You'll probably build it with a <strong>coding agent</strong> — and a system this size
+is small enough to build in a single session.</p>
+<p>Should you just <strong>vibe code</strong> it?</p>
+<blockquote>
+<p><strong>Vibe coding:</strong> describe what you want in natural language,
+let the AI generate code, and accept the result
+without fully reading or understanding it.</p>
+</blockquote>
+<p>Recent studies paint a clear picture:</p>
+<ul>
+<li>Vibe coding is <strong>fast but flawed</strong>: practitioners are drawn to the speed,
+but 68% perceive the resulting code as fragile or error-prone,
+and 36% skip quality assurance entirely
+<a href="https://arxiv.org/abs/2510.00328">(Fawzy et al., 2025)</a>.</li>
+<li>Professional developers <strong>don't vibe</strong> — they control.
+In a study of 99 experienced developers, not a single one
+said agents could replace human decision-making.
+Instead, they plan before coding, review every change,
+and leverage their SE expertise to supervise the agent
+<a href="https://arxiv.org/abs/2512.14012">(Huang et al., 2025)</a>.</li>
+</ul>
+<p>In this class we teach you to <strong>co-design software with coding agents</strong>:
+you bring the design thinking — abstraction, modularity, and engineering judgment —
+and the agent brings the speed.</p>
+<hr />
+<h3 id="starting-point"><a class="header" href="#starting-point">Starting point</a></h3>
+<p>Here's our simple script that listens to the BlueSky firehose
+and classifies every post:</p>
+<pre><code class="language-python">async def listen_to_websocket() -&gt; None:
+  async with websockets.connect(uri) as websocket:
+    while True:
+      text = await get_post(websocket)
+      result = await classify_post(text)
+      if result.is_poem:
+        print(text)
+</code></pre>
+<p>Now we want to turn this into a real system that implements
+our multi-stage pipeline design. You hand this to a coding agent and say
+&quot;add the pipeline stages we discussed.&quot; Here is some code it might produce.</p>
+<hr />
+<h3 id="snippet-1-the-pipeline"><a class="header" href="#snippet-1-the-pipeline">Snippet 1: The pipeline</a></h3>
+<pre><code class="language-python">async def process_post(text: str) -&gt; Classification | None:
+    # Stage 1: metadata filter
+    if len(text) &lt; 20 or detect_language(text) != &quot;en&quot;:
+        return None
+
+    # Stage 2: shape filter
+    lines = text.strip().split(&quot;\n&quot;)
+    if len(lines) &lt; 3 or avg_line_length(lines) &gt; 60:
+        return None
+
+    # Stage 3: profanity filter
+    if contains_profanity(text):
+        return None
+
+    # Stage 4: cheap LLM
+    cheap_result = await classify_with_llm(text, model=&quot;gpt-5-mini&quot;)
+    if cheap_result.confidence &lt; 0.8:
+        return None
+
+    # Stage 5: smart LLM
+    return await classify_with_llm(text, model=&quot;gpt-5.4&quot;)
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> What's wrong with this?</p>
+</blockquote>
+<hr />
+<h3 id="problem-no-abstraction-over-pipeline-stages"><a class="header" href="#problem-no-abstraction-over-pipeline-stages">Problem: no abstraction over pipeline stages</a></h3>
+<p>Every stage is a different function with a different signature,
+and the pipeline logic (the sequence of filters) is tangled with the filtering logic.</p>
+<p>What if we want to:</p>
+<ul>
+<li><strong>Reorder</strong> stages? We have to move code blocks around.</li>
+<li><strong>Add/remove</strong> a stage? We edit the middle of a function.</li>
+<li><strong>Reuse</strong> a stage in a different pipeline? We copy-paste.</li>
+<li><strong>Test</strong> a single stage in isolation? Awkward.</li>
+</ul>
+<p><strong>Better design:</strong> make &quot;pipeline stage&quot; an explicit abstraction.</p>
+<pre><code class="language-python">class Stage:
+    &quot;&quot;&quot;A single stage in the classification pipeline.&quot;&quot;&quot;
+    name: str
+
+    def matches(self, text: str) -&gt; bool:
+        &quot;&quot;&quot;Returns True if the post should pass through to the next stage.&quot;&quot;&quot;
+        ...
+
+class MetadataFilter(Stage):
+    name = &quot;metadata&quot;
+
+    def matches(self, text: str) -&gt; bool:
+        return len(text) &gt;= 20 and detect_language(text) == &quot;en&quot;
+
+class ShapeFilter(Stage):
+    ...
+
+class LLMFilter(Stage):
+    def __init__(self, model: str, threshold: float):
+        self.model = model
+        self.threshold = threshold
+
+    async def matches(self, text: str) -&gt; bool:
+        result = await classify_with_llm(text, self.model)
+        return result.confidence &gt;= self.threshold
+</code></pre>
+<p>Now the pipeline is just a list:</p>
+<pre><code class="language-python">pipeline: list[Stage] = [
+    MetadataFilter(),
+    ShapeFilter(),
+    ProfanityFilter(),
+    LLMFilter(model=&quot;gpt-5-mini&quot;, threshold=0.8),
+    LLMFilter(model=&quot;gpt-5.4&quot;,   threshold=0.5),
+]
+</code></pre>
+<p>Configurable, testable, extensible — all because we named the abstraction.</p>
+<hr />
+<h3 id="snippet-2-the-main-loop"><a class="header" href="#snippet-2-the-main-loop">Snippet 2: The main loop</a></h3>
+<pre><code class="language-python">async def listen_to_websocket() -&gt; None:
+  async with websockets.connect(uri) as websocket:
+    while True:
+      text = await get_post(websocket)
+      result = await run_pipeline(text, pipeline)
+      if result is not None and result.is_poem:
+        print(text)
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> What's wrong with this?</p>
+</blockquote>
+<hr />
+<h3 id="problem-were-processing-posts-one-at-a-time"><a class="header" href="#problem-were-processing-posts-one-at-a-time">Problem: we're processing posts one at a time</a></h3>
+<p>The firehose produces ~16 posts/second. Each LLM call takes ~0.5–2 seconds.
+We're <code>await</code>-ing each post before reading the next one —
+which means we fall further behind with every second.</p>
+<p><strong>Better design:</strong> decouple reading from processing
+with a <strong>producer-consumer</strong> pattern.</p>
+<pre><code class="language-python">queue: asyncio.Queue[str] = asyncio.Queue(maxsize=1000)
+
+async def producer(queue: asyncio.Queue[str]) -&gt; None:
+    &quot;&quot;&quot;Reads posts from the firehose and enqueues them.&quot;&quot;&quot;
+    async with websockets.connect(uri) as websocket:
+        while True:
+            text = await get_post(websocket)
+            await queue.put(text)
+
+async def consumer(queue: asyncio.Queue[str], pipeline: list[Stage]) -&gt; None:
+    &quot;&quot;&quot;Takes posts from the queue and runs them through the pipeline.&quot;&quot;&quot;
+    while True:
+        text = await queue.get()
+        result = await run_pipeline(text, pipeline)
+        if result is not None and result.is_poem:
+            print(text)
+
+async def main() -&gt; None:
+    queue = asyncio.Queue(maxsize=1000)
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(producer(queue))
+        # Multiple consumers to parallelize LLM calls
+        for _ in range(10):
+            tg.create_task(consumer(queue, pipeline))
+</code></pre>
+<p>Now we have one producer filling the queue,
+and 10 consumers draining it in parallel — each one independently
+making LLM calls without blocking the others.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
 for this assignment (e.g. ugrad/ugrad, ugrad/grad, and grad/grad pairs all
