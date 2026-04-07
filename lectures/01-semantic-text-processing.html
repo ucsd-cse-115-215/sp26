@@ -185,9 +185,8 @@ It's becoming a standard part of the data engineering toolkit.</p>
 <li><strong>LLM APIs</strong>: calling LLMs programmatically</li>
 <li><strong>Structured Output</strong>: getting JSON out of LLMs reliably</li>
 <li><strong>Evaluation</strong>: measuring if the LLM is doing well</li>
-<li><strong>Prompting</strong>: the craft of making the LLM do better</li>
+<li><strong>Prompt Engineering</strong>: the craft of making the LLM do better</li>
 <li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
-<li><strong>Bonus: Semantic Operator frameworks</strong>: automating semantic processing</li>
 </ol>
 <hr />
 <h2 id="how-do-i-call-an-llm"><a class="header" href="#how-do-i-call-an-llm">How do I call an LLM?</a></h2>
@@ -312,9 +311,8 @@ print(answer)
 <li><del><strong>LLM APIs</strong>: calling LLMs programmatically</del> <strong>[done]</strong></li>
 <li><strong>Structured Output</strong>: getting JSON out of LLMs reliably</li>
 <li><strong>Evaluation</strong>: measuring if the LLM is doing well</li>
-<li><strong>Prompting</strong>: the craft of making the LLM do better</li>
+<li><strong>Prompt Engineering</strong>: the craft of making the LLM do better</li>
 <li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
-<li><strong>Bonus: Semantic Operator frameworks</strong>: automating semantic processing</li>
 </ol>
 <hr />
 <h2 id="structured-output"><a class="header" href="#structured-output">Structured Output</a></h2>
@@ -471,9 +469,8 @@ print(answer.is_poem)     # bool
 <li><del><strong>LLM APIs</strong>: calling LLMs programmatically</del> <strong>[done]</strong></li>
 <li><del><strong>Structured Output</strong>: getting JSON out of LLMs reliably</del> <strong>[done]</strong></li>
 <li><strong>Evaluation</strong>: measuring if the LLM is doing well</li>
-<li><strong>Prompting</strong>: the craft of making the LLM do better</li>
+<li><strong>Prompt Engineering</strong>: the craft of making the LLM do better</li>
 <li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
-<li><strong>Bonus: Semantic Operator frameworks</strong>: automating semantic processing</li>
 </ol>
 <hr />
 <h2 id="evaluation"><a class="header" href="#evaluation">Evaluation</a></h2>
@@ -633,10 +630,139 @@ The <strong>F1 score</strong> is the harmonic mean of precision and recall:</p>
 </blockquote>
 <p>It ranges from 0 (worst) to 1 (best) and is high only when <em>both</em> precision and recall are high,
 which often makes it a useful summary metric for choosing among configurations.</p>
-<p><img src="../img/cost_f1.png" alt="F2 vs Cost" /></p>
+<p><img src="../img/cost_f1.png" alt="F1 vs Cost" /></p>
 <p>There's often no single &quot;best&quot; configuration —
 you're trading off precision, recall, and cost.
 The right choice depends on your application and your users.</p>
+<hr />
+<h2 id="outline-3"><a class="header" href="#outline-3">Outline</a></h2>
+<ol>
+<li><del><strong>LLM APIs</strong>: calling LLMs programmatically</del> <strong>[done]</strong></li>
+<li><del><strong>Structured Output</strong>: getting JSON out of LLMs reliably</del> <strong>[done]</strong></li>
+<li><del><strong>Evaluation</strong>: measuring if the LLM is doing well</del> <strong>[done]</strong></li>
+<li><strong>Prompt Engineering</strong>: the craft of making the LLM do better</li>
+<li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
+</ol>
+<hr />
+<p>Now that we know <em>how well</em> we're doing, we can start thinking about <em>how to do better</em> (in terms of both quality and cost).</p>
+<blockquote>
+<p><strong>Q:</strong> What can we tweak in our call to the LLM to improve the quality of our poetry detector?</p>
+</blockquote>
+<p>Some options:</p>
+<ul>
+<li>Change the prompt
+<ul>
+<li>Add more precise instructions</li>
+<li>If you have a complex condition (e.g. &quot;either rhymes or is a haiku&quot;), ask about each separately and then combine the results in code</li>
+<li>Add a persona to the system prompt (e.g. &quot;You are a literary critic with a deep knowledge of poetry.&quot;)</li>
+<li>Add <em>few-shot examples</em> of poems and non-poems</li>
+<li>Use prompting techniques like <em>chain-of-thought</em> to encourage the model to think before answering</li>
+</ul>
+</li>
+<li>Use a more capable model (e.g. <code>gpt-5.4</code> instead of <code>gpt-5-mini</code>)</li>
+<li>Change model parameters
+<ul>
+<li>Older models had &quot;temperature&quot; to control randomness</li>
+<li>Newer models have &quot;reasoning effort&quot; to control how hard the model thinks before answering</li>
+</ul>
+</li>
+</ul>
+<p>All of this tweaking is part of the black art of <strong>prompt engineering</strong>.
+Historically, this term only referred to tweaking the prompt,
+but now it increasingly encompasses model parameters too.</p>
+<p>We are not going to spend much time on this, because it's a black art and not science.</p>
+<ul>
+<li>If you want to learn about advanced prompting techniques, check out the <a href="https://www.promptingguide.ai/">Prompting Guide</a></li>
+<li>There are also tools like <a href="https://github.com/stanfordnlp/dspy">DSPy</a> that automatically optimize your prompt (e.g. by adding few-shot examples to maximize performance on your eval set)</li>
+</ul>
+<p>Just out of curiosity, let's see if can improve on our best performing baseline, <code>gpt-5.4</code>, by:</p>
+<ol>
+<li>Adding medium reasoning effort</li>
+<li>Adding manual chain-of-thought by asking the model to explain its reasoning <em>before</em> giving the answer (instead of after)</li>
+</ol>
+<p><img src="../img/precision_recall_cot.png" alt="Precision/Recall with Prompt Tweaks" /></p>
+<p><img src="../img/cost_f1_cot.png" alt="Cost vs F1 with Prompt Tweaks" /></p>
+<hr />
+<h2 id="outline-4"><a class="header" href="#outline-4">Outline</a></h2>
+<ol>
+<li><del><strong>LLM APIs</strong>: calling LLMs programmatically</del> <strong>[done]</strong></li>
+<li><del><strong>Structured Output</strong>: getting JSON out of LLMs reliably</del> <strong>[done]</strong></li>
+<li><del><strong>Evaluation</strong>: measuring if the LLM is doing well</del> <strong>[done]</strong></li>
+<li><del><strong>Prompt Engineering</strong>: the craft of making the LLM do better</del> <strong>[done]</strong></li>
+<li><strong>Multi-Stage Pipelines</strong>: scaling up semantic processing</li>
+</ol>
+<hr />
+<h3 id="does-our-poetry-detector-scale"><a class="header" href="#does-our-poetry-detector-scale">Does our poetry detector scale?</a></h3>
+<pre><code> ┌──────────────┐             ┌──────────────┐
+ │              │──┐  1.4M    │              │
+ │ Bluesky      │──┼─────────▶│     LLM      │──▶ ...
+ │ firehose API │──┘ posts /  │  (poetry /   │
+ │              │     day     │  not poetry) │
+ └──────────────┘             └──────────────┘
+</code></pre>
+<p>If we ran our current best-performing implementation in production,
+we'd be calling <code>gpt-5.4</code> 1.4 million times per day.
+This is:</p>
+<ul>
+<li><strong>expensive</strong></li>
+<li><strong>slow</strong></li>
+<li>and likely <strong>unnecessary</strong> (most BlueSky posts are obviously not poems)</li>
+</ul>
+<hr />
+<h3 id="multi-stage-pipelines"><a class="header" href="#multi-stage-pipelines">Multi-stage pipelines</a></h3>
+<p><strong>Idea:</strong> use cheap pre-filters to filter out obvious trash!</p>
+<blockquote>
+<p><strong>Q:</strong> What criteria would you use to filter out obvious non-poems?</p>
+</blockquote>
+<p>Some ideas:</p>
+<ul>
+<li>Filter by metadata (e.g. language, if we only want English poems)</li>
+<li>Shape-based filter (min 3 lines? limit average line length? no bullet points? etc.)</li>
+<li>Keyword-based filter (could be used as a negative filter for poetry)</li>
+<li>Not for poetry, but for other tasks: filter by similarity to known-good examples using a cheap embedding model</li>
+<li>Use a cheaper LLM (e.g. <code>gpt-5-nano</code> or <code>gpt-5-mini</code>) with a high-recall setting</li>
+<li>Use a simpler prompt with a high-recall setting</li>
+</ul>
+<hr />
+<h3 id="pipeline-design"><a class="header" href="#pipeline-design">Pipeline design</a></h3>
+<pre><code>                1.4M posts/day
+                      │
+                      ▼
+            ┌───────────────────┐
+            │  Metadata filter  │  &gt; 20 chars, language = en       $0
+            │                   │
+            └─────────┬─────────┘
+               ~60%   │   840K posts/day
+                      ▼
+            ┌───────────────────┐
+            │  Shape filter     │  ≥ 3 lines, avg line &lt; 60 chars  $0
+            │                   │
+            └─────────┬─────────┘
+                ~8%   │   67K posts/day
+                      ▼
+            ┌───────────────────┐
+            │  Profanity filter │  keyword-based                   $0
+            │                   │
+            └─────────┬─────────┘
+               ~90%   │   60K posts/day
+                      ▼
+            ┌───────────────────┐
+            │  Cheap LLM filter │  gpt-5-mini, threshold 0.8     ~$1
+            │                   │
+            └─────────┬─────────┘
+               ~10%   │   6K posts/day
+                      ▼
+            ┌───────────────────┐
+            │  Smart LLM filter │  gpt-5.4                        ~$1
+            │  (poetry / not)   │
+            └─────────┬─────────┘
+                      │
+                      ▼
+                   poems!
+</code></pre>
+<p>By adding cheap pre-filters and a two-tier LLM strategy, we reduced the
+expensive LLM calls from <strong>1.4M to ~6K per day</strong> — and the total pipeline
+costs roughly <strong>~$2/day</strong> instead of <strong>~$196/day</strong>.</p>
 
                     </main>
 
