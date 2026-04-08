@@ -1,6 +1,5 @@
-## Review by [your name]
-
-Maybe need to put more ID info here for us to write scripts
+## Review by [your name], [your pid]
+## Review of [review group name(s)]
 
 ### 1. Prepared flow
 _What did you learn from the team's prepared trace? Did the prompt trace make the pipeline's behavior clear? Were the cost and stats numbers credible? Note anything surprising._
