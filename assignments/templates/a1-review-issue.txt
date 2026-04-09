@@ -11,7 +11,7 @@ _What input did your group suggest? What happened when they ran it? How did the 
 _Read 10 random labeled examples from the project's gold dataset. How many do you agree with? For any disagreements, explain why you'd label it differently._
 
 ### 4. Feature suggestion
-_What user-facing modification did you propose during Phase 3? Why would it matter for the use case? What parts of the pipeline would need to change to support it?_
+_Propose a user-facing modification based on what you saw. Why would it matter for the use case? What parts of the pipeline would need to change to support it?_
 
 ### 5. Overall
 _One specific thing this project does well. One specific area for improvement._
