@@ -6,6 +6,8 @@
         <title>UCSD GenAI and Programming SP26</title>
         <meta name="robots" content="noindex" />
         <!-- Custom HTML head -->
+<link rel="stylesheet" type="text/css" href="js/asciinema-player.css" />
+<script src="js/asciinema-player.min.js"></script>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,6 +28,7 @@
         <link rel="stylesheet" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="src/css/margin-notes.css">
     </head>
     <body>
         <!-- Provide site root to javascript -->
@@ -76,7 +79,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">4.</strong> Assignment 1: Social Media Monitor</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">5.</strong> Assignment 1: Social Media Monitor</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -1260,6 +1263,336 @@ async def main() -&gt; None:
 <p>Now we have one producer filling the queue,
 and 10 consumers draining it in parallel — each one independently
 making LLM calls without blocking the others.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unit-2-document-scanner"><a class="header" href="#unit-2-document-scanner">Unit 2: Document Scanner</a></h1>
+<p>In the first unit, we talked about how LLMs make previously challenging tasks
+involving the semantics of text tractable and cheap. The interpretive abilities
+of GenAI systems continue to impress in domains beyond plain text-based
+understanding -- next we will revisit the capabilities we can expect from our
+programs in working with <strong>rich documents and images</strong>.</p>
+<p>People have a broad range of PDFs, images, presentations, spreadsheets, and so
+on in their workflows. Until now, working with documents in these formats
+required tools like:</p>
+<ul>
+<li>Specialized parsers and editors for each file format</li>
+<li>Models trained for a specific task (e.g. OCR or “optical character
+recognition”, recognizing faces or people in images)</li>
+</ul>
+<p>While tools like these are still useful, many use cases can be served by
+sending files to a LLM having it extract structured data.
+<a href="https://chatgpt.com/use-cases/chat-with-pdfs/">ChatGPT</a> and <a href="https://platform.claude.com/docs/en/build-with-claude/pdf-support">Claude
+Code</a>
+explicitly advertise this feature, for example, and applications are showing up
+to summarize notes, do professional workflows like quotes and billing, people
+talk about using ChatGPT to review their tax returns, and it's clear that AI
+systems can do basic image recognition and text extraction tasks.</p>
+<hr />
+<h2 id="motivating-example-track-spending-on-paper-receipts"><a class="header" href="#motivating-example-track-spending-on-paper-receipts">Motivating Example: Track Spending on Paper Receipts</a></h2>
+<p>What if we wanted to track our spending (on groceries, clothes, etc), but we
+mostly have paper receipts, not digital transactions? It would be useful to have
+a <em>scanning app</em> that can take photos of our receipts and recover structured
+data from them, and then put the user in the loop to correct errors and provide
+guidance on categorization.</p>
+<p><img src="lectures/../img/receipt-example.png" alt="Receipt Scanner Example" /></p>
+<blockquote>
+<p><strong>Q:</strong> What mistakes do you see in the above structured data?</p>
+</blockquote>
+<pre><code>   Data Source         LLM Processing                          User Review           Downstream
+ ┌──────────────┐      ┌──────────────┐                       ┌──────────────┐      ┌──────────────┐
+ │              │      │              │                       │              │      │              │
+ │  photos /    │─────▶│  extract     │──────────────────────▶│  verify /    │─────▶│  store /     │
+ │  scans /     │      │  structured  │   structured output   │  correct     │      │  aggregate / │
+ │  PDFs        │      │  data        │   (items, totals,     │              │      │  visualize   │
+ │              │      │              │    dates, ...)        └──────┬───────┘      └──────────────┘
+ └──────────────┘      └──────────────┘                              │
+                              ▲                                      │
+                              │          user corrections,           │
+                              └──────────  categories, metadata ─────┘
+</code></pre>
+<hr />
+<h2 id="outline-6"><a class="header" href="#outline-6">Outline</a></h2>
+<ol>
+<li><strong>Mixed-media queries</strong>: Sending documents programatically</li>
+<li><strong>Extraction schemas</strong>: Defining, and evaluating, richer output data</li>
+<li><strong>Traditional (and important!) software engineering</strong>:</li>
+</ol>
+<ul>
+<li>Building a full application quickly and responsibly</li>
+<li>Separating the AI pipeline into its own component</li>
+<li>Storing user documents and images</li>
+</ul>
+<ol start="4">
+<li><strong>User in the loop</strong>: Having the user give corrections and guidance for extraction</li>
+</ol>
+<ul>
+<li>Presenting extractions to the user for corrections</li>
+<li>Having the user provide input (categories, metadata) to the prompt</li>
+<li>Prompt injection (not just for SQL anymore)</li>
+</ul>
+<h2 id="mixed-media-queries"><a class="header" href="#mixed-media-queries">Mixed-media Queries</a></h2>
+<p>Modern models support mixes of text, images, and other inputs. Passing images
+directly with a request is broadly available:</p>
+<ul>
+<li><a href="https://developers.openai.com/api/docs/guides/images-vision?format=base64-encoded#giving-a-model-images-as-input">OpenAI: Giving a model images as input</a></li>
+<li><a href="https://platform.claude.com/docs/en/build-with-claude/vision#base64-encoded-image-example">Claude: Base64-encoded image example</a></li>
+<li><a href="https://ai.google.dev/gemini-api/docs/image-understanding">Gemini: Passing inline image data</a></li>
+</ul>
+<p>Similar APIs exist for documents like PDFs (<a href="https://ai.google.dev/gemini-api/docs/document-processing">Gemini
+docs</a>), and even
+speech, audio, and video.</p>
+<p>Documents and images are an extremely broad category of data, ranging from
+candid photos to cartoons to artwork to structured data like receipts (above)
+to academic papers and more. Each application that works with documents in a
+semantic likely picks a subset and either looks for or imposes some structure
+on them.</p>
+<p>For these notes, we're going to focus on a particular kind of structured
+document: images of paper receipts like the one above. We will build a web
+application, targeted at fairly general users, for doing this.</p>
+<p>We will make a few assumptions; a truly mass-market app would probably need to
+generalize these eventually. In particular, we'll assume a US/English context,
+so expect $USD on receipts, and no language options. We'll build it as a web
+application that could eventually make its way into a phone app.</p>
+<h2 id="starting-from-scratch-with-an-agent"><a class="header" href="#starting-from-scratch-with-an-agent">Starting from Scratch with an Agent</a></h2>
+<p>Let's start from an empty directory, and just the discussion above to guide us.
+My current favorite coding assistant is Claude Code; I'm curious what progress
+we can make quickly, and what decision points come up.</p>
+<blockquote>
+<p><strong>Q:</strong> What are some decisions you expect to have to make?</p>
+</blockquote>
+<p>There are a few strategies we could use for working with the agent. We could
+just write a short sentence saying what we want:</p>
+<div class="cast" data-src="../casts/no-status.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5"></div>
+<p>That's a lot of decisions to make! Also, Claude doesn't always give us the same
+options; small changes in what we say produce different reactions:</p>
+<div class="cast" data-src="../casts/another-blank-prompt2.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5"></div>
+<blockquote>
+<p><strong>Q:</strong> What are some differences? How might they affect the long-term
+trajectory of the app?</p>
+</blockquote>
+<blockquote>
+<p><strong>Q:</strong> Which of the mentioned tools have you heard of? Which haven't you
+heard of?</p>
+</blockquote>
+<blockquote>
+<p><strong>Q:</strong> How do these responses make you feel?</p>
+</blockquote>
+<p>The prompt we gave is a good one for getting a sense of the landscape of the
+application. However, it's a bad one for having Claude do work. In particular
+I'm extremely suspicious of “Let me know and I'll get building” in the second
+interaction -- I am nowhere near ready to “build” all of that!</p>
+<p>One thing we have done with this interaction is learned that we need to think
+about a few things. We may not have thought of these, or maybe we did,
+depending on our experience as developers of this kind of application.</p>
+<ul>
+<li>The frontend (the stuff that runs in the user's browser)</li>
+<li>The backend (the stuff that runs on a server somewhere)</li>
+<li>The storage (the place where user data is persisted on disk)</li>
+<li>The GenAI part (the Image -&gt; ReceiptData function)</li>
+</ul>
+<p>As an engineer, my preference is to try to build things incrementally. This is
+what Claude is hinting at with the “MVP” in the first interaction (jargon
+meaning “Minimum Viable Product”). I tend to find it useful to work on
+components I know well, and then for anything I <em>dont't</em> know, see how it
+connects to the component I understand well.</p>
+<p>Given where we are situated in this class, we can assume we know something
+about building the GenAI part: we need to set up API tokens, make API calls to
+a model with prompts and responses, think about evaluation and test inputs, and
+so on. We can keep in mind that this will be in the context of a larger
+application as we do that.</p>
+<p>So let's proceed with that in mind:</p>
+<div class="cast" data-src="../casts/stop-working.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-end-at="92"></div>
+<p>Two things happened here:</p>
+<ol>
+<li>I made a choice to use a JavaScript-focused implementation (TypeScript).
+This is a bit of a matter of taste: I have experience with it, I like static
+types, but also it's useful in the context of this class to show that even if
+you were more comfortable with Python, <em>Claude</em> is perfectly comfortable with
+TypeScript.</li>
+<li>Claude rushed into trying to set up a whole TypeScript project, ending on a
+prompt to run <code>npm init</code>, which is the setup command for creating a Node.js
+project. I'm not ready for that!</li>
+</ol>
+<h2 id="pushing-back"><a class="header" href="#pushing-back">Pushing Back</a></h2>
+<p>So, I decided to tell Claude that it should not do this anymore!</p>
+<pre><code>❯ I would like to know more about what you're going to do
+  and why. Can you write out the plan for this part to a
+  receipt-design.md file?
+
+⏺ Write(receipt-design.md)
+  ⎿  Wrote 81 lines to receipt-design.md
+      1 # Receipt Parser — Design
+     … +71 lines (ctrl+o to expand)
+
+  Recalled 1 memory, wrote 3 memories (ctrl+o to expand)
+⏺ Written to receipt-design.md. The highlights:
+
+  - Claude vision + tool use to extract structured receipt
+  data in one step [...]
+  Take a look and let me know if you'd like to change
+  anything before I start building.
+
+❯ What memories did you just write?
+
+⏺ I saved one feedback memory: &quot;Explain before coding&quot; — a
+  note that you want me to present the design and reasoning
+  before jumping into implementation, based on you stopping
+  me when I started running commands without explaining.
+
+❯ Oh interesting. Can you put that in Claude.md?
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Write(CLAUDE.md)
+  ⎿  Wrote 3 lines to CLAUDE.md
+      1 # Project Guidelines
+      2
+      3 - Present the design and rationale before jum
+        ping into code. For any non-trivial piece of
+        work, explain the approach and get buy-in bef
+        ore implementing.
+
+⏺ Now I'll remove the memory version since CLAUDE.md is the
+  better home for it — it's loaded automatically and doesn't
+   need the memory system.
+ ⏺ Bash(rm
+      /Users/joe/.claude/projects/-Users-joe-src-receipt-sca
+      nner-demo/memory/feedback_explain_before_coding.md)
+  ⎿  Done
+
+  Recalled 1 memory, wrote 1 memory (ctrl+o to expand)
+
+⏺ Done. The guideline is now in CLAUDE.md at the project
+  root and the memory entry has been cleaned up.
+</code></pre>
+<p>There's a few things that just happened, mostly having to do with my workflow
+preferences. You might have different ones, but <strong>you should have some</strong>.
+Coding agents come with defaults that push us along a particular workflow
+– you do not have to and should not accept this default without questioning
+it.</p>
+<p>Here's what happened and why I did it:</p>
+<ol>
+<li>I asked it to save the design to a file rather than just having it in chat.
+Now I can commit and push the design, more easily share it with teammates,
+refer to it in a new session, etc.</li>
+<li>I had it <strong>save the design file in the repository</strong>. Claude has its own
+notion of state (I've seen it make plan files in <code>~/.claude</code>). For some
+workflows that is probably good... but if I code on another computer (or my
+teammate does), we and our agents benefit from access to it.</li>
+<li>I pushed back on Claude's bias towards implementing. Not only do I not want
+it to do so here, but I don't want it to do so in general on this project! One
+thing that is cool is that Claude picked up on my pushback without me writing a
+separate message: in other interactions I've had to say more explicitly “I
+don't like it when you prompt me to generate code right away. Remember this
+preference.”</li>
+<li>I noticed (paying attention to the output) that Claude saved it to a
+“memory” and asked about it. Now, I really dislike how memories get
+configured! Memories are stored in <em>state local to the user</em>, again in
+something like <code>~/.claude/projects/.../memory/...</code>. As an engineer, I want
+(most of) my settings to be per-project and version controlled, not per-machine or per-user. (This
+might be more up to taste: maybe some teammates want Claude to act differently
+than others.)</li>
+<li>I pointed this out to Claude and it moved it for me and “admitted” that
+<code>CLAUDE.md</code> was a better place for it! My take on this line—“CLAUDE.md is the
+better home for it”—is not that Claude “thinks” this is “globally true”
+or anything (if it did it wouldn't have put it in a memory). Rather, it's
+agreeing with me; these tools tend towards agreeing with us because (a) it
+would be way more frustrating if they didn't (b) different programmers do have preferences and good arguments that conflict, so the tool follows your lead, and (c) likely some indirect
+effects of it making us feel good and continue to use the product.</li>
+</ol>
+<blockquote>
+<p><strong>Q:</strong> Have you used memories or CLAUDE.md or the equivalent for your
+favorite agent?</p>
+</blockquote>
+<blockquote>
+<p><strong>Q:</strong> Have you ever felt “rushed along” by your coding agent?</p>
+</blockquote>
+<blockquote>
+<p><strong>Q:</strong> What other strategies have you used to manage design documents with
+your coding agent?</p>
+</blockquote>
+<h2 id="designing-and-learning-with-claude"><a class="header" href="#designing-and-learning-with-claude">Designing, and Learning, with Claude</a></h2>
+<aside class="margin-note">This is a place where programming assignments,
+despite their many virtues, don't really capture the experience of “owning” a
+product.</aside> With that useful setup work done, let's move on to building.
+When I work on a new project, I find that I do a lot of _learning about the
+system I'm building_.
+<p>One of the best ways to develop that understanding is to <em>build incrementally</em>.
+Claude listed a lot of things we need – persistent storage, a fronted, a
+backend, the AI subsystem for parsing, and so on. Some of these we may
+understand better than others. Let's build one at a time; I'm going to start
+with the AI subsystem, and then later build the user experience on top of it.</p>
+<p>Notice that I'm not trying to fully engage with the broad design file yet. It's
+useful context, but I want to build one step at a time.</p>
+<blockquote>
+<p><strong>Q:</strong> What's a good prompt to move forward with that? What information is
+the agent likely to ask for in a followup?</p>
+</blockquote>
+<p>Let's try something:</p>
+<div class="cast" data-end-at="270" data-src="../casts/ai-cli.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.2"></div>
+<p>This churns for a while and <a href="https://github.com/ucsd-cse-115-215/receipt-scanner-demo/commit/badaac05bf84808f429cd8d76f78dce4cc3de810">produces a running starting point</a></p>
+<p>A few things to notice:</p>
+<ul>
+<li>I provided the sample code for using the TritonAI stuff, and the docs page
+for the models</li>
+<li>I didn't provide a ton of information about what I wanted out of the CLI. I
+could have done a lot more work to spec this out! But also it's useful to see
+something working (e.g. can these vision APIs do what I want with a receipt?)</li>
+</ul>
+<p>Along the way:</p>
+<ul>
+<li>I provided a sample image (similar to the one in the screenshot above) to
+test on when prompted by Claude. I just copy-pasted a photo I had of a
+receipt in my house.</li>
+<li>Claude got error messages relating to the model. I realized I had given
+out-of-date model information and 401 errors came back. Claude itself went
+and used the discovery API on TritonAI by itself, and figured out which
+models should be used.</li>
+<li>For now it chose claude-opus, which is rather self-serving of Anthropic 🙃,
+and is fairly expensive. We may want to revisit this.</li>
+<li>Claude got TypeScript error messages. It had not included some dependencies
+(like <code>dotenv</code>) and it made a few small errors about JavaScript/TypeScript
+setup. It fixed them and rewrote code.</li>
+</ul>
+<p>We should take a moment to acknowledge how impressive this is! My sample was in
+Python, I asked it to adapt it to TypeScript and test it out, and it generated
+a running example. It took about 2-3 minutes. I'm a pretty fast typer and a
+pretty reasonable tool user; getting something like this set up takes me much
+more than 2-3 minutes!</p>
+<p>Of course, along the way Claude made a <em>ton</em> of design decisions without
+consulting us. It picked a system prompt, picked default categories for items
+on receipts, picked data representations for items, and more.</p>
+<blockquote>
+<p><strong>Q</strong>: What should we do next?</p>
+</blockquote>
+<blockquote>
+<p><strong>Q</strong>: Look a the <a href="https://github.com/ucsd-cse-115-215/receipt-scanner-demo/commit/badaac05bf84808f429cd8d76f78dce4cc3de810">commit Claude made</a>. What is a design decision you agree with? One you don't agree with?</p>
+</blockquote>
+<p>My choice was to next do some work on eval. I want to know where the good and
+bad receipt parsing is. If you're interested, here's a long-ish capture where I
+go through that (for a more casual reading, you don't have to look at the whole
+thing):</p>
+<div class="cast" data-src="../casts/eval.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5"></div>
+<p>The summary was this:</p>
+<ul>
+<li>I had a handful of personal receipts to use as eval data</li>
+<li>The Opus model is fairly trustworthy – a good way to make test data was for
+me to run the script with opus and check the difference to the receipt
+myself.</li>
+<li><code>api-mistral-small-3.2-2506</code> made more mistakes, but is dramatically cheaper
+and faster. So my general strategy is to get close-to-ground-truth data with
+opus, and then eval that data against other models</li>
+<li>The definition of a “match” is tricky: models are non-deterministic and
+sometimes return a string like <code>&quot;YOGURT STRAW BANAN&quot;</code> vs <code>&quot;6 Pack Yogurt Straw Banana&quot;</code> or other variations. I went back and forth with Claude on
+different choices of fuzzy string matching to get something plausible</li>
+<li>It seems unlikely the models will usefully get the human item name that a
+user wants, and noise is inevitable. Receipts have line items for things like
+bottle deposits or discounts, weird abbreviations like <code>VNYANDARC</code> (which
+refers to vineyard for a bottle of wine), and more. We can improve this long
+tail with prompting and smart logic, but this kind of thing is where the user
+comes in.</li>
+</ul>
+<p>You can see the relevant changes at <a href="https://github.com/ucsd-cse-genai-programming-sp26/receipt-scanner-demo/commit/a9fc2df52fefcaef89adc6873173863b6f25df7c">this commit</a></p>
+<h2 id="a-user-interface-and-putting-the-user-in-the-loop"><a class="header" href="#a-user-interface-and-putting-the-user-in-the-loop">A User Interface and Putting the User in the Loop</a></h2>
+<p>Coming soon!</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
 for this assignment (e.g. ugrad/ugrad, ugrad/grad, and grad/grad pairs all
@@ -1482,6 +1815,7 @@ information on these topics. </li>
         <script src="book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
+        <script type="text/javascript" src="src/js/asciinema-init.js"></script>
         <script type="text/javascript">
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);

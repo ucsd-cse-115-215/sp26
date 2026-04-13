@@ -1,0 +1,37 @@
+/* Margin notes — Tufte-style sidenotes in the right margin */
+
+:root {
+  --margin-note-width: 200px;
+  --margin-note-gutter: 24px;
+}
+
+/* Push main content left to make room for the margin */
+.content main {
+  max-width: 750px;
+}
+
+aside.margin-note {
+  float: right;
+  clear: right;
+  width: var(--margin-note-width);
+  margin-right: calc(-1 * (var(--margin-note-width) + var(--margin-note-gutter)));
+  margin-bottom: 0.5em;
+  font-size: 0.85em;
+  line-height: 1.4;
+  color: var(--sidebar-fg);
+  border-left: 2px solid var(--sidebar-active);
+  padding-left: 10px;
+}
+
+/* Narrow screens: collapse inline */
+@media (max-width: 1300px) {
+  aside.margin-note {
+    float: none;
+    width: auto;
+    margin: 0.75em 0;
+    margin-right: 0;
+    padding: 0.5em 0.75em;
+    background: var(--quote-bg);
+    border-radius: 4px;
+  }
+}
