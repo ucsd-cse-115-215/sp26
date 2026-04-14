@@ -79,7 +79,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">5.</strong> Assignment 1: Social Media Monitor</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">5.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="assignments/doc-scanner-assignment.html"><strong aria-hidden="true">6.</strong> Assignment 2: Document Scanner</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -177,7 +177,7 @@ sensibilities to bear on building useful applications atop existing AI tools.</p
 <tr><td>4/2</td><td>Semantic Text Processing (cont.)</td><td></td><td></td></tr>
 <tr><td>4/7</td><td>Semantic Text Processing (cont.)</td><td></td><td>A1 initial submission</td></tr>
 <tr><td>4/9</td><td>A1 Review Day</td><td></td><td>A1 reviews (Fri 4/10)</td></tr>
-<tr><td>4/14</td><td>Planning and Coding Applications with an Agent</td><td>A2</td><td>A1 final submission (Fri 4/17)</td></tr>
+<tr><td>4/14</td><td>Planning and Coding Applications with an Agent</td><td><a href="./assignments/doc-scanner-assignment.html">A2: Document Scanner</a></td><td>A1 final submission (Fri 4/17)</td></tr>
 <tr><td>4/16</td><td>Mixed-media and Richer Extraction</td><td></td><td></td></tr>
 <tr><td>4/21</td><td>User in the Loop Prompts</td><td></td><td>A2 initial submission</td></tr>
 <tr><td>4/23</td><td>A2 Review Day</td><td></td><td>A2 reviews (Fri 4/24)</td></tr>
@@ -1789,6 +1789,155 @@ Kumar</a> or <a href="https://catalog.ucsd.edu/courses/COGS.html">COGS
 15 (more recreational)</a> for more
 information on these topics. </li>
 </ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="document-scanner-assignment"><a class="header" href="#document-scanner-assignment">Document Scanner Assignment</a></h1>
+<ul>
+<li>Initial submission: <strong>Tuesday, April 21</strong></li>
+<li>Review day: <strong>Thursday, April 23</strong></li>
+<li>Reviews: <strong>Friday, April 24</strong></li>
+<li>Final submission: <strong>Wednesday, April 29</strong></li>
+</ul>
+<p>Github Classroom: <a href="https://classroom.github.com/a/l8HTMkk-">https://classroom.github.com/a/l8HTMkk-</a></p>
+<p>Assignment goals:</p>
+<ul>
+<li>Create and manage prompts with multi-modal queries</li>
+<li>Create a useful standalone application with a GUI and data persistence</li>
+<li>Put the user in the loop of LLM prompting and corrections</li>
+</ul>
+<h2 id="more-than-text"><a class="header" href="#more-than-text">More than Text</a></h2>
+<p>Modern Generative AI systems are capable of working with much more than text.
+They support multi-media queries and are able to “read” and “see” documents
+like PDFs and images, and extract structured information from them.</p>
+<p>For example, <a href="assignments//lectures/02-document-scanner.html">these notes</a> show some
+incremental development of a program that takes a receipt as input and
+prompts various models to turn it into JSON output.</p>
+<p>This capability comes with some interesting consequences:</p>
+<ul>
+<li>Like all other interactions with generative AI, the results are
+nondeterministic. Run the CLI example above several times -- you will see
+differences in the reported information from the receipt on each run. In
+addition, different models report different results.</li>
+<li>Sourcing authentic test data can be more work. It's not obvious how to
+<em>create</em> many examples of images or PDFs for the program, while deploying an
+application that uses this functionality may end up seeing a wide variety of
+inputs from users. It's not obvious what the full scope of evaluation is; one
+solution is to <em>put the user in the loop</em> of determining correctness for
+their own usage.</li>
+</ul>
+<h2 id="document-scanning-application"><a class="header" href="#document-scanning-application">Document Scanning Application</a></h2>
+<p>Your task for this assignment is to pick a domain involving documents
+(receipts, transcripts, handwritten notes, chalkboard scans, screenshots –
+many options!) and write a useful application around it.</p>
+<p>Here are just a few ideas:</p>
+<ul>
+<li>A receipt and expense tracking app that helps administrators in an academic
+department manage reimbursements and expenses from student organizations or
+research travel</li>
+<li>An apartment-hunting app where you can share links or screenshots of listings
+across many different platforms, flyers, etc. and aggregate information about
+all the options you've seen</li>
+<li>A restaurant app that scans a menu and lets a user see descriptions and
+pictures of unknown food items (and could make suggestions based on
+stored preferences and history)</li>
+<li>A note-tracking app that allows a user to take screenshots of the chalkboard
+or whiteboard after a class and get text-based notes and organize them
+throughout the quarter</li>
+<li>A flashcard/study app that allows a user to upload a photo or scan of class
+handouts or lecture notes and automatically generates study flashcards from
+the key terms and concepts. Could use evidence-based techniques like spaced
+repetition.</li>
+<li>An app for tutors and TAs that allows them to take a photo of student work
+(e.g. their screen, which may have many windows open including some code and
+error messages) and helps them copy or run the code in another environment,
+as well as keep a journal of what happened with different students during
+their office hours, author frequent issues to send to their team, etc.</li>
+<li>An interior design app that takes photos of a space and links to products and
+helps the user place them in the space</li>
+</ul>
+<p>You may have your own – please be creative (and yes, some of these are adjacent
+to existing products!) No matter what you pick there are some requirements for
+what you build.</p>
+<h3 id="user-facing-features"><a class="header" href="#user-facing-features">User-facing Features</a></h3>
+<p>The application must:</p>
+<ul>
+<li>Have a GUI (we strongly recommend web-based but if you have a compelling
+alternative, go for it).</li>
+<li>Support users uploading documents. We should be able to easily try our own
+document(s) on your system.</li>
+<li>Get structured information out of the document in a way that meaningfully
+involves a generative AI system</li>
+<li>Involve the user in verifying and clarifying ambiguity in the structured
+information, allowing the user to edit or correct it</li>
+<li>Use information from user corrections to improve future extractions. For
+example, the user might add a category of groceries or a particular name for
+an item, and that information should propagate to prompts/extractions of
+future documents.</li>
+<li>Persist data across sessions. It should be possible to shut down and come
+back to the system later and have data present.</li>
+<li>Do some useful tasks for the user. For example, your app might:
+<ul>
+<li>Present the information in a new or different way than the original
+document</li>
+<li>Aggregate, summarize, or visualize data from <em>across</em> all the
+documents that have been uploaded</li>
+<li>Use some of the structured information to drive <em>another</em> GenAI query
+based on the structured extraction</li>
+<li>Other tasks of your own design</li>
+</ul>
+</li>
+</ul>
+<p>You may enjoy seeing how far you can get on the following with an agent's help,
+but they are <strong>not required</strong> right now:</p>
+<ul>
+<li>Support login, multiple users, accounts and sharing</li>
+<li>Deploy it at a public-facing URL like via Heroku or Render or fly.io</li>
+<li>Support languages other than English</li>
+</ul>
+<h3 id="engineering-and-testing"><a class="header" href="#engineering-and-testing">Engineering and Testing</a></h3>
+<ul>
+<li>You should have a meaningful evaluation dataset containing both positive and
+negative examples. We will not tell you “how many” tests or what is
+“enough” or which statistics to test. Make your own argument for adequacy
+based on what you've learned – we are happy to discuss this with you in
+office hours! The thoroughness of evaluation can often be traded off against
+the usability of the user corrections.</li>
+<li>The data extraction part of the system should be <em>separately testable</em> –
+that is, you should be able to run example documents through the part of your
+system that generates structured answers without starting up the whole
+program. This should be automatable with a testing harness that gives useful
+summarized output.</li>
+<li>It should be possible to run your evaluation dataset automatically, on single
+examples and on subsets of the full evaluation dataset, without editing the
+program (e.g. command-line flags or config file edits).</li>
+</ul>
+<h3 id="metadata-and-initial-submission"><a class="header" href="#metadata-and-initial-submission">Metadata and Initial Submission</a></h3>
+<p>As in <a href="assignments//assignments/social-media-monitor-assignment.html">assignment 1</a>, you
+should have your code ready on Github and also submit it via Gradescope. You
+can work in pairs (including grad-ugrad pairs), but if you worked in a pair for
+assignment 1, you <strong>cannot</strong> work in the same pair for this assignment.</p>
+<p>For your initial submission on <strong>Tuesday, April 21</strong>, you should submit to
+Gradescope:</p>
+<ul>
+<li>Your implementation</li>
+<li>As in <a href="assignments//assignments/social-media-monitor-assignment.html#initial-submission--due-tuesday-week-2-1159pm">assignment 1</a>
+<ul>
+<li>3 representative transcripts of interactions you had with agents in <code>transcripts/</code></li>
+<li><code>DESIGN.md</code></li>
+<li>A demo video and a <code>README.md</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="for-review-and-final-submission"><a class="header" href="#for-review-and-final-submission">For Review and Final Submission</a></h2>
+<p>Explicit review instructions are coming soon! We are integrating some of your
+feedback into the next review session, and designing updated rubrics and
+templates.</p>
+<p><strong>New!</strong>: For this assignment we plan to <strong>add new requirements after the
+initial submission</strong> in addition to having you respond to review feedback. Our
+goal is to simulate not just the initial prototyping of an application, but
+changes that happen after the fact in response to user feedback and so on,
+which benefit from good design up front. To reassure you, it certainly won't be
+as substantial as a whole new application, more in line with some of the
+suggested “you may enjoy” options above, though those are not necessarily the
+only or all of the possible required additions.</p>
 
                     </main>
 
