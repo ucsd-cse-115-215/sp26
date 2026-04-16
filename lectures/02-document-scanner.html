@@ -201,7 +201,6 @@ guidance on categorization.</p>
 <ul>
 <li>Presenting extractions to the user for corrections</li>
 <li>Having the user provide input (categories, metadata) to the prompt</li>
-<li>Prompt injection (not just for SQL anymore)</li>
 </ul>
 <h2 id="mixed-media-queries"><a class="header" href="#mixed-media-queries">Mixed-media Queries</a></h2>
 <p>Modern models support mixes of text, images, and other inputs. Passing images
@@ -644,9 +643,71 @@ lot of test code like this in my life and... I see no major personal loss in
 never doing it again. I can see what it's doing, I know how to add more tests
 as we go along, I appreciate the confidence that everything runs, and feel good
 about moving on.</p>
+<p><a href="https://github.com/ucsd-cse-genai-programming-sp26/receipt-scanner-demo/commit/d10c5e8b753c06b703c4e373f741196fba200c9d">The commit we made</a></p>
+<p>It's worth taking a bit of time to do some cleanup and write a few more tests.
+I want to keep the design document up to date, and make sure we test the
+various flavors of update at least a little bit before moving on:</p>
+<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-end-at="222"></div>
 <h3 id="implementing-a-frontend"><a class="header" href="#implementing-a-frontend">Implementing a Frontend</a></h3>
-<p>To be expanded!</p>
-<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5"></div>
+<p>We now have all the logic for parsing and storing receipts exposed through a
+web server. We've made a number of technology decisions and have basic tests in
+place to make sure we can do all the receipt work programmatically. Next is to
+build the user interface. I go into this with an attitude of keeping things
+simple; mainly I want to see how to connect a frontend with incremental user
+corrections to the infrastructure we have.</p>
+<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:480" data-speed="2" data-idle-time-limit="0.5" data-start-at="400" data-end-at="375"></div>
+<p>This is an interesting case where my experience directly comes into play, and
+Claude missed what I think was a straightforward, good idea.
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a> is
+a standard feature in browsers for storing reasonable-sized data (hundreds of
+MB), so it's a natural choice rather than storing images in memory and losing
+them on page navigation.  Of course, this is a place where I have particular
+expertise, so I can see missing this (and maybe it will cause problems later
+that I don't know about).</p>
+<p>This is one of those cases where a non-expert would have “unknown unknowns”
+– there was no indication there were options other than the ones Claude
+suggested. This suggests that in situations where we're unhappy with Claude's
+suggestions, it can be worth pushing back (“are you sure there's no other
+way?”), talking to experts, doing some external research, or asking it in a
+fresh session to try and get a broader perspective.</p>
+<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:480" data-speed="2" data-idle-time-limit="0.5" data-start-at="800" data-end-at="630"></div>
+<p>Some weird things happened with the UI in this clip (I think I misunderstood
+what file was being presented either due to scroll or the layered combination
+of terminal stuff I have running to record) so there are some blips.</p>
+<p>The relevant part is at the end – I noticed that Claude had duplicated the
+receipt types from the server to the client code. While it may at some point
+make sense for them to differ, it might never make sense and it certainly is a
+blatant duplication now. I was confused at first and thought they may have
+actually differed on nullability, but they were effectively identical. This
+kind of housekeeping is important – the more duplication the more chance there
+is for drift, the more context is taken up with refactors or field addtions,
+etc. This is a place where a principle that applies to human understanding of
+code matters for the agent as well!</p>
+<p>One thing that was nice in the ensuing series of edits and builds (clipped out
+because there's not much to see in the recording, just lots of flashing diffs
+and error messages and confirmations) is that Claude figured out the
+import/build details of sharing the <code>types.ts</code> file across the server and
+client. Those details were almost certainly going to be boring and frustrating
+and derail my design and coding thought processes, and instead I stayed pretty
+focused.</p>
+<p>With that refactoring tip Claude went ahead and implemented and then I let it
+start up some “Vite” servers and test them. I realized I had no idea what was
+going on and asked for a bit more clarification and some help with the
+logistics of running and testing myself:</p>
+<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:480" data-speed="2" data-idle-time-limit="0.5" data-start-at="1400" data-end-at="945"></div>
+<p>At this point I run <code>npm run dev</code> myself and visit the app in a browser.</p>
+<p>I noticed a few things, like no ability to delete items and some bad scroll
+behavior. At this point, we are into a test-refine-design workflow on the user
+experience. We can apply the same kinds of thinking to adding new features,
+checking them against a solid type-based design, getting feedback, and so on.</p>
+<p><img src="../img/scanner-demo.gif" alt="Scanner Demo" /></p>
+<p>The next big steps would be:</p>
+<ul>
+<li>Having screens for <em>aggregate</em> information</li>
+<li>Letting the user pick categories (or even nicknames for items) to organize and aggregate</li>
+<li>Use the user-defined categories and item names to parameterize the prompt to
+come up with better receipt parses</li>
+</ul>
 
                     </main>
 
