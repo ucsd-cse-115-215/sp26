@@ -23,6 +23,12 @@ aside.margin-note {
   padding-left: 10px;
 }
 
+/* Give blockquotes (used for audience questions) a large bottom margin
+   so the next section isn't visible when presenting */
+blockquote {
+  margin-bottom: 8em;
+}
+
 /* Reserve space for asciinema players before they load */
 div.cast {
   min-height: 500px;
