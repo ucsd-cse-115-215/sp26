@@ -23,6 +23,11 @@ aside.margin-note {
   padding-left: 10px;
 }
 
+/* Reserve space for asciinema players before they load */
+div.cast {
+  min-height: 500px;
+}
+
 /* Narrow screens: collapse inline */
 @media (max-width: 1300px) {
   aside.margin-note {

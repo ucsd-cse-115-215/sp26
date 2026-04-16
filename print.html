@@ -1278,7 +1278,7 @@ required tools like:</p>
 recognition”, recognizing faces or people in images)</li>
 </ul>
 <p>While tools like these are still useful, many use cases can be served by
-sending files to a LLM having it extract structured data.
+sending files to a LLM and having it extract structured data.
 <a href="https://chatgpt.com/use-cases/chat-with-pdfs/">ChatGPT</a> and <a href="https://platform.claude.com/docs/en/build-with-claude/pdf-support">Claude
 Code</a>
 explicitly advertise this feature, for example, and applications are showing up
@@ -1311,16 +1311,17 @@ guidance on categorization.</p>
 <hr />
 <h2 id="outline-6"><a class="header" href="#outline-6">Outline</a></h2>
 <ol>
-<li><strong>Mixed-media queries</strong>: Sending documents programatically</li>
-<li><strong>Extraction schemas</strong>: Defining, and evaluating, richer output data</li>
-<li><strong>Traditional (and important!) software engineering</strong>:</li>
+<li><strong>Mixed-media queries</strong>: Sending documents programmatically</li>
+<li><strong>Engineering with an agent</strong>:</li>
 </ol>
 <ul>
 <li>Building a full application quickly and responsibly</li>
 <li>Separating the AI pipeline into its own component</li>
-<li>Storing user documents and images</li>
+<li>Pushing back and collaborating with an agent</li>
+<li>Storing user documents and images (or not!)</li>
 </ul>
-<ol start="4">
+<ol start="2">
+<li><strong>Extraction schemas</strong>: Defining, and evaluating, richer output data</li>
 <li><strong>User in the loop</strong>: Having the user give corrections and guidance for extraction</li>
 </ol>
 <ul>
@@ -1341,8 +1342,8 @@ docs</a>), and even
 speech, audio, and video.</p>
 <p>Documents and images are an extremely broad category of data, ranging from
 candid photos to cartoons to artwork to structured data like receipts (above)
-to academic papers and more. Each application that works with documents in a
-semantic likely picks a subset and either looks for or imposes some structure
+to academic papers and more. Each application that works with documents
+semantically likely picks a subset and either looks for or imposes some structure
 on them.</p>
 <p>For these notes, we're going to focus on a particular kind of structured
 document: images of paper receipts like the one above. We will build a web
@@ -1391,7 +1392,7 @@ depending on our experience as developers of this kind of application.</p>
 <p>As an engineer, my preference is to try to build things incrementally. This is
 what Claude is hinting at with the “MVP” in the first interaction (jargon
 meaning “Minimum Viable Product”). I tend to find it useful to work on
-components I know well, and then for anything I <em>dont't</em> know, see how it
+components I know well, and then for anything I <em>don't</em> know, see how it
 connects to the component I understand well.</p>
 <p>Given where we are situated in this class, we can assume we know something
 about building the GenAI part: we need to set up API tokens, make API calls to
@@ -1494,10 +1495,13 @@ than others.)</li>
 <code>CLAUDE.md</code> was a better place for it! My take on this line—“CLAUDE.md is the
 better home for it”—is not that Claude “thinks” this is “globally true”
 or anything (if it did it wouldn't have put it in a memory). Rather, it's
-agreeing with me; these tools tend towards agreeing with us because (a) it
-would be way more frustrating if they didn't (b) different programmers do have preferences and good arguments that conflict, so the tool follows your lead, and (c) likely some indirect
-effects of it making us feel good and continue to use the product.</li>
+agreeing with me; these tools tend towards agreeing with us because</li>
 </ol>
+<ul>
+<li>it would be way more frustrating if they didn't</li>
+<li>different programmers do have preferences and good arguments that conflict, so the tool follows your lead, and</li>
+<li>likely some indirect effects of it making us feel good and continue to use the product</li>
+</ul>
 <blockquote>
 <p><strong>Q:</strong> Have you used memories or CLAUDE.md or the equivalent for your
 favorite agent?</p>
@@ -1509,17 +1513,19 @@ favorite agent?</p>
 <p><strong>Q:</strong> What other strategies have you used to manage design documents with
 your coding agent?</p>
 </blockquote>
-<h2 id="designing-and-learning-with-claude"><a class="header" href="#designing-and-learning-with-claude">Designing, and Learning, with Claude</a></h2>
+<h2 id="moving-on-to-building-designing-and-learning-with-claude"><a class="header" href="#moving-on-to-building-designing-and-learning-with-claude">Moving on to Building, Designing, and Learning, with Claude</a></h2>
 <aside class="margin-note">This is a place where programming assignments,
 despite their many virtues, don't really capture the experience of “owning” a
-product.</aside> With that useful setup work done, let's move on to building.
-When I work on a new project, I find that I do a lot of _learning about the
-system I'm building_.
-<p>One of the best ways to develop that understanding is to <em>build incrementally</em>.
-Claude listed a lot of things we need – persistent storage, a fronted, a
-backend, the AI subsystem for parsing, and so on. Some of these we may
-understand better than others. Let's build one at a time; I'm going to start
-with the AI subsystem, and then later build the user experience on top of it.</p>
+product.</aside> With that useful setup work done, let's move on to building
+this application. As we do so, we're going to be reflective about what we are
+getting out of the agent, and where we should be pushing back.
+<p>When I work on a new project, I find that I do a lot of <em>learning about the
+system I'm building</em>.  One of the best ways to develop that understanding is to
+<em>build incrementally</em>.  Claude listed a lot of things we need – persistent
+storage, a frontend, a backend, the AI subsystem for parsing, and so on. Some of
+these we may understand better than others. Let's build one at a time; I'm
+going to start with the AI subsystem, and then later build the user experience
+on top of it.</p>
 <p>Notice that I'm not trying to fully engage with the broad design file yet. It's
 useful context, but I want to build one step at a time.</p>
 <blockquote>
@@ -1554,9 +1560,10 @@ setup. It fixed them and rewrote code.</li>
 </ul>
 <p>We should take a moment to acknowledge how impressive this is! My sample was in
 Python, I asked it to adapt it to TypeScript and test it out, and it generated
-a running example. It took about 2-3 minutes. I'm a pretty fast typer and a
-pretty reasonable tool user; getting something like this set up takes me much
-more than 2-3 minutes!</p>
+a running example. It took about 2-3 minutes. I'm a resonably competent typist
+(though I'm not winning any words per minute awards) and at least a median tool
+user, and getting something like this set up takes me <em>much</em> more than 2-3
+minutes!</p>
 <p>Of course, along the way Claude made a <em>ton</em> of design decisions without
 consulting us. It picked a system prompt, picked default categories for items
 on receipts, picked data representations for items, and more.</p>
@@ -1564,7 +1571,7 @@ on receipts, picked data representations for items, and more.</p>
 <p><strong>Q</strong>: What should we do next?</p>
 </blockquote>
 <blockquote>
-<p><strong>Q</strong>: Look a the <a href="https://github.com/ucsd-cse-115-215/receipt-scanner-demo/commit/badaac05bf84808f429cd8d76f78dce4cc3de810">commit Claude made</a>. What is a design decision you agree with? One you don't agree with?</p>
+<p><strong>Q</strong>: Look at the <a href="https://github.com/ucsd-cse-115-215/receipt-scanner-demo/commit/badaac05bf84808f429cd8d76f78dce4cc3de810">commit Claude made</a>. What is a design decision you agree with? One you don't agree with?</p>
 </blockquote>
 <p>My choice was to next do some work on eval. I want to know where the good and
 bad receipt parsing is. If you're interested, here's a long-ish capture where I
@@ -1592,7 +1599,180 @@ comes in.</li>
 </ul>
 <p>You can see the relevant changes at <a href="https://github.com/ucsd-cse-genai-programming-sp26/receipt-scanner-demo/commit/a9fc2df52fefcaef89adc6873173863b6f25df7c">this commit</a></p>
 <h2 id="a-user-interface-and-putting-the-user-in-the-loop"><a class="header" href="#a-user-interface-and-putting-the-user-in-the-loop">A User Interface and Putting the User in the Loop</a></h2>
-<p>Coming soon!</p>
+<p>We know the AI part of the system can be made to work; there's more eval to do,
+we probably want to try more cameras and stores and scan images with more junk
+in the background, etc, but it's plausible. Next we can build an application
+around this. We could make a lot of decisions about how we want to do that. We
+could build an app (like installable via the app store), a standalone program
+(like with an installer <code>.exe</code> or <code>.dmg</code>), a web application, and more.</p>
+<h3 id="implementing-a-server"><a class="header" href="#implementing-a-server">Implementing a Server</a></h3>
+<aside class="margin-note">Probably the greatest virtue of the application
+approaches is they sort of assume the use of the user's filesystem. The
+advantage of a web application is its relative ubiquity and ease of
+testing and, well, Joe is an experienced web developer.</aside>
+I'm choosing a web application here, but the other options are fine and come
+with their own tradeoffs. We will want a server that stores persistent data and
+a pile of JavaScript on the frontend that can talk to and render the
+information stored in the server. I have a strong preference for starting from
+data definitions, so let's do that:
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-end-at="147"></div>
+<blockquote>
+<p><strong>Q</strong>: What do you think about the proposed schema?</p>
+</blockquote>
+<p>I see one thing wrong immediately: it's super bad practice to store money as
+floating point! We never want to do arithmetic on prices and see a price like
+0.6000000001. Standard best practice is to store a whole number of cents as an
+integer. This is a clear place where averaging over all the code has probably
+given Claude a bad completion. Let's see how it reacts!</p>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:147" data-speed="2" data-idle-time-limit="0.5" data-start-at="187" data-end-at="177"></div>
+<p>Notice that Claude is quick to agree with us calling it out. We can actually
+convince Claude of many things if we try. A useful (wrong, but useful) mental
+model is that it's giving the most likely autocomplete of a developer who is
+quite competent across a breathtaking array of technologies, but exists only to
+help you write stuff. That completion includes “you're right!” when you tell
+it about a well-known programming pattern.</p>
+<p>Also, Claude is being pushy, saying “start building” again. That's annoying.
+Let's tell it not to be, and that we'd like to think about the design. <em>Only
+then</em> do we want to go on.</p>
+<p>Below we make that update to the config and then look at the planned spec. Our
+goal is to get to the request handling part of a web server and the database that
+stores the data. My goal here is to get to the point where I can talk
+about <em>types</em>. By that I mean TypeScript types and database schemas that have
+field names, relations, and so on.</p>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:147" data-speed="2" data-idle-time-limit="0.5" data-start-at="217" data-end-at="518"></div>
+<blockquote>
+<p><strong>Q:</strong> What do you think of the types shown in the editor at the end? Are
+they what you expected? What questions do you have about them?</p>
+</blockquote>
+<p>Personally, I'm wondering which of these are <em>storage</em> types and which of these
+are <em>logical</em> or <em>operational</em> types. As in, will all three of these get stored
+in the database? They were put in <code>db.ts</code>. I also want to go further and see
+where the types will be used. Before code gets generated, this really helps me
+get a picture of what is going to go where.</p>
+<p>I also tell Claude to clean up the interface. I want my TODOs and plans and
+other things in files, not in transient session state in Claude's UI.</p>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:518" data-speed="2" data-idle-time-limit="0.5" data-start-at="558" data-end-at="640"></div>
+<aside class="margin-note">The strings in `app.get/put`
+describe URL patterns (“routes” often) and an associated handler with
+`req`uest data and a place to send a `res`ponse.</aside> 
+<p>Here we are getting to some sketches of code. I again want to know what the
+story is with types. Generally I need type-level data to think about
+abstractions, what data goes where, and so on. So I'm consistent about asking
+Claude for it. In particular I want to know what kinds of data I can expect to
+see (and autocomplete in my own editor!) on the requests, and what should go
+back in each response.</p>
+<p>So I prompt for that, and end up learning a lot about the API in the process:</p>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:975" data-speed="2" data-idle-time-limit="0.5" data-start-at="975" data-end-at="837"></div>
+<blockquote>
+<p><strong>Q:</strong> Describe the kind of error I was worried about with incremental edits.
+What's an example of what it would look like to make that mistake and
+accidentally delete stuff?</p>
+</blockquote>
+<blockquote>
+<p><strong>Q:</strong> Is what Claude said about the middle type parameter accurate? How
+would you know?</p>
+</blockquote>
+<p>There's some deliberate learning and engineering happening here:</p>
+<ul>
+<li>It's quite easy for programming with generic <code>request</code> and <code>response</code> objects
+to degenerate into programming against loose JSON-like structures. I'd like
+to get from the HTTP types into better checked types as soon as possible.</li>
+<li>The types help me talk about abstraction boundaries, AND should help Claude
+talk about them as well. If we keep using the same types for different
+functions, etc, it's literally fewer tokens than trying to think about a JSON
+schema over and over. And we can more easily write these type names into
+documentation, etc.</li>
+<li>I was honestly not sure how TypeScript and Express interact. I've done some
+Express programming (the library that sets up the routes and the req/res
+pairs), but never typed. So I was legitimately learning what that API does.
+I know that TypeScript types in many places document assumptions rather than
+enforcing a type, so that wasn't surprising to me (though it may be to you!),
+and I wanted to think about where those boundaries are in this code.</li>
+</ul>
+<p>In cases like these it's helpful for me to not be passive – Claude's default
+choices are not the ones I want. I'm still saving a lot of time and typing (I
+never opened a docs page for Express, for example). I'm thinking a little bit
+about if I can clean up these types at all, what validation will look like,
+what <code>zod</code> is, and so on. Those are all good things for me to think about to
+learn more about the system I'm building.</p>
+<p>Overall I think I grok what's going on, so I'm happy moving on.</p>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:975" data-speed="2" data-idle-time-limit="0.5" data-start-at="1400" data-end-at="1030"></div>
+<p>Here I have a useful conversation about logic and representation, and the
+type-based thinking helps me out a lot. I am very skeptical of Claude's choice
+to implement receipt update as “delete and re-add everything.” That just
+seems wrong and like it will eventually break some relationship between
+database tables, end up being very inefficient in a large batch update someday,
+etc. So I push back, and we decide that the receipt items can have their own
+notion of identity.</p>
+<aside class="margin-note">This back and forth made me think that I can
+probably be doing something to prompt Claude that I care deeply about good
+design at every step. Things feel a bit prototype-y to me here, and like the
+vibe is “get it working”.</aside>
+Then we start doing a bit of API design –
+what should an “edit” to a receipt look like? We settle on a standard
+operator-based update description, where the receipt updates can give a set of
+`ItemAdd | ItemUpdate | ItemDelete` operations that describe what to change.
+This is a huge improvement, opens up possibilities of having undo later (if we
+persist the changes), makes the API more flexible and allows just referring to
+small, specific edits rather than reconstructing the whole receipt every time,
+etc.
+<blockquote>
+<p><strong>Q:</strong> Have you ever seen operations expressed in a datatype like this before?</p>
+</blockquote>
+<aside class="margin-note">This is an instance of the <a href="https://wiki.c2.com/?CommandPattern">Command Pattern</a></aside>
+So now we have a decent sense of two components' types:
+<ul>
+<li>The request handlers, which get HTTP requests from the user (presumably their
+browser, but also testable from the command-line or from programs), and
+respond with JSON</li>
+<li>The db functions, which will store and retrieve things from the database, and
+so some work to apply logic around updates</li>
+</ul>
+<p>There seems to be a sensible place from which to get some code down. One
+observation I'd like to make – this point is often where, as a student, you
+would get the &quot;specification&quot; as a programming assignment writeup with type
+signatures and start filling in &quot;implementation&quot;. Look at how much work we've
+done (and the course staff for your courses have likely done) to decide all of
+this! What gets a type, what interface will work well or be error prone, what
+technology to use, and so on. A useful analogy for students who are
+experiencing this shift to agent-based coding is that <em>if you can write a
+high-quality programming assignment writeup, you can probably write reasonable
+specs for agents</em>.</p>
+<p>Those skills have always been important, but now they are central.</p>
+<div class="cast" data-src="../casts/web2.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-end-at="299"></div>
+<blockquote>
+<p><strong>Q:</strong> As you watch, think about this: What were some other options for how
+to refactor <code>parseReceipt</code> to accept the <code>Buffer</code> rather than a path?</p>
+</blockquote>
+<p>As Claude goes through the implementation, I have some coaching to do.</p>
+<ul>
+<li>Because of the signature <code>parseReceipt(imagePath, model)</code> API we set up for
+extraction, Claude aims for a path-based input. This requires saving to a
+temp file (which this <code>multer</code> library, which I just learned about, handles).
+But that's annoying, I would rather not save a file just to read it back into
+memory one step later. I have to nudge Claude to think this through, and we
+do an API update to make it reasonable to pass this through.</li>
+<li>I get a little testy with Claude because it seemingly ignored some of my
+remarks about memories and Claude.md earlier, so I make it listen to me. I
+also try to tone down the empty praise.</li>
+</ul>
+<p>With this, we have an implementation that's worth testing. I want to move on to
+writing enough tests to make sure this all runs, then we can hook it up to a
+browser-based frontend.</p>
+<div class="cast" data-src="../casts/web2.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-start-at="350"></div>
+<p>More learning about the available APIs. Also we add a new API endpoint for
+testing that we have a pretty good argument is good for our future selves as
+well – we can send receipts as JSON data to create them instead of just
+parsing them. Claude makes a good point that we may want a manual receipt-input
+interface, so the endpoint is just helpful generally.</p>
+<p>I'm very happy that Claude is writing this test code and not me. I've written a
+lot of test code like this in my life and... I see no major personal loss in
+never doing it again. I can see what it's doing, I know how to add more tests
+as we go along, I appreciate the confidence that everything runs, and feel good
+about moving on.</p>
+<h3 id="implementing-a-frontend"><a class="header" href="#implementing-a-frontend">Implementing a Frontend</a></h3>
+<p>To be expanded!</p>
+<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5"></div>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
 for this assignment (e.g. ugrad/ugrad, ugrad/grad, and grad/grad pairs all
