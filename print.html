@@ -1311,23 +1311,11 @@ guidance on categorization.</p>
 <hr />
 <h2 id="outline-6"><a class="header" href="#outline-6">Outline</a></h2>
 <ol>
-<li><strong>Mixed-media queries</strong>: Sending documents programmatically</li>
-<li><strong>Engineering with an agent</strong>:</li>
+<li><strong>Mixed-media APIs</strong>: passing images and PDFs alongside text</li>
+<li><strong>Working with an agent</strong>: pushing back on defaults, keeping project context, and building the system at a pace you can internalize</li>
+<li><strong>Types as design</strong>: using types to structure abstractions and communication with an agent</li>
+<li><strong>Putting the user in the loop</strong>: corrections and categories feeding back into extraction</li>
 </ol>
-<ul>
-<li>Building a full application quickly and responsibly</li>
-<li>Separating the AI pipeline into its own component</li>
-<li>Pushing back and collaborating with an agent</li>
-<li>Storing user documents and images (or not!)</li>
-</ul>
-<ol start="2">
-<li><strong>Extraction schemas</strong>: Defining, and evaluating, richer output data</li>
-<li><strong>User in the loop</strong>: Having the user give corrections and guidance for extraction</li>
-</ol>
-<ul>
-<li>Presenting extractions to the user for corrections</li>
-<li>Having the user provide input (categories, metadata) to the prompt</li>
-</ul>
 <h2 id="mixed-media-queries"><a class="header" href="#mixed-media-queries">Mixed-media Queries</a></h2>
 <p>Modern models support mixes of text, images, and other inputs. Passing images
 directly with a request is broadly available:</p>
@@ -1351,6 +1339,14 @@ application, targeted at fairly general users, for doing this.</p>
 generalize these eventually. In particular, we'll assume a US/English context,
 so expect $USD on receipts, and no language options. We'll build it as a web
 application that could eventually make its way into a phone app.</p>
+<hr />
+<h2 id="outline-7"><a class="header" href="#outline-7">Outline</a></h2>
+<ol>
+<li><del><strong>Mixed-media APIs</strong>: passing images and PDFs alongside text</del> <strong>[done]</strong></li>
+<li><strong>Working with an agent</strong>: pushing back on defaults, keeping project context, and building the system at a pace you can internalize</li>
+<li><strong>Types as design</strong>: using types to structure abstractions and communication with an agent</li>
+<li><strong>Putting the user in the loop</strong>: corrections and categories feeding back into extraction</li>
+</ol>
 <h2 id="starting-from-scratch-with-an-agent"><a class="header" href="#starting-from-scratch-with-an-agent">Starting from Scratch with an Agent</a></h2>
 <p>Let's start from an empty directory, and just the discussion above to guide us.
 My current favorite coding assistant is Claude Code; I'm curious what progress
@@ -1597,6 +1593,14 @@ tail with prompting and smart logic, but this kind of thing is where the user
 comes in.</li>
 </ul>
 <p>You can see the relevant changes at <a href="https://github.com/ucsd-cse-genai-programming-sp26/receipt-scanner-demo/commit/a9fc2df52fefcaef89adc6873173863b6f25df7c">this commit</a></p>
+<hr />
+<h2 id="outline-8"><a class="header" href="#outline-8">Outline</a></h2>
+<ol>
+<li><del><strong>Mixed-media APIs</strong>: passing images and PDFs alongside text</del> <strong>[done]</strong></li>
+<li><del><strong>Working with an agent</strong>: pushing back on defaults, keeping project context, and building the system at a pace you can internalize</del> <strong>[done]</strong></li>
+<li><strong>Types as design</strong>: using types to structure abstractions and communication with an agent</li>
+<li><strong>Putting the user in the loop</strong>: corrections and categories feeding back into extraction</li>
+</ol>
 <h2 id="a-user-interface-and-putting-the-user-in-the-loop"><a class="header" href="#a-user-interface-and-putting-the-user-in-the-loop">A User Interface and Putting the User in the Loop</a></h2>
 <p>We know the AI part of the system can be made to work; there's more eval to do,
 we probably want to try more cameras and stores and scan images with more junk
@@ -1827,6 +1831,14 @@ behavior. At this point, we are into a test-refine-design workflow on the user
 experience. We can apply the same kinds of thinking to adding new features,
 checking them against a solid type-based design, getting feedback, and so on.</p>
 <p><img src="lectures/../img/scanner-demo.gif" alt="Scanner Demo" /></p>
+<hr />
+<h2 id="outline-9"><a class="header" href="#outline-9">Outline</a></h2>
+<ol>
+<li><del><strong>Mixed-media APIs</strong>: passing images and PDFs alongside text</del> <strong>[done]</strong></li>
+<li><del><strong>Working with an agent</strong>: pushing back on defaults, keeping project context, and building the system at a pace you can internalize</del> <strong>[done]</strong></li>
+<li><del><strong>Types as design</strong>: using types to structure abstractions and communication with an agent</del> <strong>[done]</strong></li>
+<li><strong>Putting the user in the loop</strong>: corrections and categories feeding back into extraction</li>
+</ol>
 <p>The next big steps would be:</p>
 <ul>
 <li>Having screens for <em>aggregate</em> information</li>
