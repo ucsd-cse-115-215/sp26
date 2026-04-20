@@ -1,0 +1,24 @@
+## Review by [your name], [your pid]
+## Review of [review group name(s)]
+
+### 1. Project summary/implementation
+
+#### a. Summary
+_Summarize the project in a few sentences: what kind of documents does it take, what interface does it present, what does it extract?_
+
+#### b. GUI/backend interface
+_What is the programmatic interface between the GUI and the backend that sends the user document to the backend? Be specific: identify the URL route, the parameters, HTTP method, API call, etc._
+
+#### c. User data in the prompt
+_Identify the place in the code/prompt where user data had an effect (e.g. templated into/included in the prompt, used to inform data that is part of the prompt)._
+
+#### d. One confusing thing
+_Identify one thing you find confusing in the implementation, and describe why it's confusing and what you tried reading to understand it._
+
+### 2. Suggestions
+
+#### a. Optimization/improvement of existing features
+_Suggest one thing you would try to substantially improve the cost, latency, or accuracy of the application without compromising on other aspects. Give a substantive argument for why it's a good idea, grounded in details of the implementation (not just "use a smaller model")._
+
+#### b. Extension/feature request
+_Which extension would you suggest for this project? How would you go about it?_
