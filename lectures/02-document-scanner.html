@@ -747,12 +747,18 @@ what I expect. I don't plan to find any new major abstractions here.</p>
 dynamic prompt generation. It's still very string-template-y. But what Claude
 does for now with putting in the helpers <code>learnCategory</code> and
 <code>buildSystemPrompt(knownCategories)</code> is about what I'd try at first, and does
-abstract out where the categories are.</p>
+abstract out where the categories are. I do have some concern that the type
+<code>Category</code> was changed to the type <code>string</code> in a <code>ReceiptItem</code>, which is a sort
+of loss. There may be some type design we can do to make <code>Category</code> mean
+“string that is one from this list”, but given that we want to let the LLM
+generate some of these, a static guarantee becomes very tricky.</p>
 <p>If I <em>really</em> wanted to experiment, I may try to parameterize over some kind of
-category-collection strategy to make it easier to experiment. That feels like
-premature abstraction, and I'm super interested in getting to the user
-interface, because I want to understand the look and feel. So I enjoy the
-wonders of code creation getting me there:</p>
+category-collection strategy to make it easier to experiment (just unioning
+over existing <code>ReceiptItem</code> categories; in the future including other users'
+suggestions to seed the system, having different seed sets depending on what
+kind of receipt it is). That feels like premature abstraction, and I'm super
+interested in getting to the user interface, because I want to understand the
+look and feel. So I enjoy the wonders of code creation getting me there:</p>
 <div class="cast" data-src="../casts/categories.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-start-at="503" data-end-at="720"></div>
 <p>Now I want to get some UI code going. I redescribe the combo box, but the whole
 idea is in context so it's just the reasonable next step. More payoff from our
@@ -776,9 +782,16 @@ case <code>&quot;Groceries&quot;</code>).</p>
 <div class="cast" data-src="../casts/categories.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-start-at="946"></div>
 <p>And this gets us to a much happier version where we can categorize
 interactively with the combobox immediately showing the options we can choose
-from.</p>
+from. </p>
 <p><img src="../img/categories-v2.gif" alt="Categories" /></p>
-<p>There are plenty of UI improvements to think about from here!</p>
+<p>I really drove towards getting the user interface going here. My next steps
+would probably be to work with the interface a bit, and then use that as an
+opportunity to revisit the code that's there and refactor as I added new
+features and cleaned up workflows. This part of testing and design needs a
+person; I'm not sure I would trust the LLM to navigate the application and give
+feedback, though I'm sure someone is working on just that!</p>
+<p>There are plenty of UI improvements to think about from here that I do think
+will need a human eye (the application is, after all, built to help humans):</p>
 <ul>
 <li>A big one is showing aggregate information across categories as a separate
 page per-category (brainstormed with Claude but not implemented)</li>
