@@ -32,23 +32,23 @@ document.addEventListener("DOMContentLoaded", function () {
       var text = cast.text;
       var idleLimit = opts.idleTimeLimit || Infinity;
 
-      // Convert player time (idle-capped) to raw time
-      function toRawTime(playerTime) {
-        var rawCum = 0, playerCum = 0;
+      // Player-displayed time is idle-capped cast time. asciinema-player's
+      // startAt and npt posters are raw cast time (pre-cap). Convert so markup
+      // can use the time shown in the scrubber.
+      function playerToRaw(playerTime) {
+        var raw = 0, capped = 0;
         for (var i = 0; i < events.length; i++) {
-          var delta = events[i][0];
-          rawCum += delta / opts.speed;
-          playerCum += Math.min(delta, idleLimit) / opts.speed;
-          if (playerCum >= playerTime) break;
+          var d = events[i][0];
+          raw += d;
+          capped += Math.min(d, idleLimit);
+          if (capped >= playerTime) break;
         }
-        console.log(playerTime, playerCum, rawCum);
-        return rawCum;
+        return raw;
       }
 
-      // Convert startAt and poster npt from player time to raw time
-      if (startAt !== null) opts.startAt = startAt; // toRawTime(startAt);
+      if (startAt !== null) opts.startAt = playerToRaw(startAt);
       if (opts.poster && opts.poster.indexOf("npt:") === 0) {
-        opts.poster = "npt:" + toRawTime(parseFloat(opts.poster.slice(4)));
+        opts.poster = "npt:" + playerToRaw(parseFloat(opts.poster.slice(4)));
       }
 
       if (clipEnd !== null) {

@@ -153,8 +153,7 @@ recognition”, recognizing faces or people in images)</li>
 </ul>
 <p>While tools like these are still useful, many use cases can be served by
 sending files to a LLM and having it extract structured data.
-<a href="https://chatgpt.com/use-cases/chat-with-pdfs/">ChatGPT</a> and <a href="https://platform.claude.com/docs/en/build-with-claude/pdf-support">Claude
-Code</a>
+<a href="https://chatgpt.com/use-cases/chat-with-pdfs/">ChatGPT</a> and <a href="https://platform.claude.com/docs/en/build-with-claude/pdf-support">Claude</a>
 explicitly advertise this feature, for example, and applications are showing up
 to summarize notes, do professional workflows like quotes and billing, people
 talk about using ChatGPT to review their tax returns, and it's clear that AI
@@ -357,9 +356,7 @@ preference.”</li>
 “memory” and asked about it. Now, I really dislike how memories get
 configured! Memories are stored in <em>state local to the user</em>, again in
 something like <code>~/.claude/projects/.../memory/...</code>. As an engineer, I want
-(most of) my settings to be per-project and version controlled, not per-machine or per-user. (This
-might be more up to taste: maybe some teammates want Claude to act differently
-than others.)</li>
+(most of) my settings to be per-project and version controlled, not per-machine or per-user. </li>
 <li>I pointed this out to Claude and it moved it for me and “admitted” that
 <code>CLAUDE.md</code> was a better place for it! My take on this line—“CLAUDE.md is the
 better home for it”—is not that Claude “thinks” this is “globally true”
@@ -382,7 +379,7 @@ favorite agent?</p>
 <p><strong>Q:</strong> What other strategies have you used to manage design documents with
 your coding agent?</p>
 </blockquote>
-<h2 id="moving-on-to-building-designing-and-learning-with-claude"><a class="header" href="#moving-on-to-building-designing-and-learning-with-claude">Moving on to Building, Designing, and Learning, with Claude</a></h2>
+<h2 id="building-designing-and-learning-with-claude"><a class="header" href="#building-designing-and-learning-with-claude">Building, Designing, and Learning, with Claude</a></h2>
 <aside class="margin-note">This is a place where programming assignments,
 despite their many virtues, don't really capture the experience of “owning” a
 product.</aside> With that useful setup work done, let's move on to building
@@ -403,7 +400,7 @@ the agent likely to ask for in a followup?</p>
 </blockquote>
 <p>Let's try something:</p>
 <div class="cast" data-end-at="270" data-src="../casts/ai-cli.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.2"></div>
-<p>This churns for a while and <a href="https://github.com/ucsd-cse-115-215/receipt-scanner-demo/commit/badaac05bf84808f429cd8d76f78dce4cc3de810">produces a running starting point</a></p>
+<p>This churns for a while and produces a running <a href="https://github.com/ucsd-cse-genai-programming-sp26/receipt-scanner-demo/commit/badaac05bf84808f429cd8d76f78dce4cc3de810">starting point</a>.</p>
 <p>A few things to notice:</p>
 <ul>
 <li>I provided the sample code for using the TritonAI stuff, and the docs page
@@ -429,7 +426,7 @@ setup. It fixed them and rewrote code.</li>
 </ul>
 <p>We should take a moment to acknowledge how impressive this is! My sample was in
 Python, I asked it to adapt it to TypeScript and test it out, and it generated
-a running example. It took about 2-3 minutes. I'm a resonably competent typist
+a running example. It took about 2-3 minutes. I'm a reasonably competent typist
 (though I'm not winning any words per minute awards) and at least a median tool
 user, and getting something like this set up takes me <em>much</em> more than 2-3
 minutes!</p>
@@ -440,7 +437,7 @@ on receipts, picked data representations for items, and more.</p>
 <p><strong>Q</strong>: What should we do next?</p>
 </blockquote>
 <blockquote>
-<p><strong>Q</strong>: Look at the <a href="https://github.com/ucsd-cse-115-215/receipt-scanner-demo/commit/badaac05bf84808f429cd8d76f78dce4cc3de810">commit Claude made</a>. What is a design decision you agree with? One you don't agree with?</p>
+<p><strong>Q</strong>: Look at the <a href="https://github.com/ucsd-cse-genai-programming-sp26/receipt-scanner-demo/commit/badaac05bf84808f429cd8d76f78dce4cc3de810">commit Claude made</a>. What is a design decision you agree with? One you don't agree with?</p>
 </blockquote>
 <p>My choice was to next do some work on eval. I want to know where the good and
 bad receipt parsing is. If you're interested, here's a long-ish capture where I
@@ -475,7 +472,7 @@ comes in.</li>
 <li><strong>Types as design</strong>: using types to structure abstractions and communication with an agent</li>
 <li><strong>Putting the user in the loop</strong>: corrections and categories feeding back into extraction</li>
 </ol>
-<h2 id="a-user-interface-and-putting-the-user-in-the-loop"><a class="header" href="#a-user-interface-and-putting-the-user-in-the-loop">A User Interface and Putting the User in the Loop</a></h2>
+<h2 id="a-user-interface"><a class="header" href="#a-user-interface">A User Interface</a></h2>
 <p>We know the AI part of the system can be made to work; there's more eval to do,
 we probably want to try more cameras and stores and scan images with more junk
 in the background, etc, but it's plausible. Next we can build an application
@@ -501,7 +498,7 @@ floating point! We never want to do arithmetic on prices and see a price like
 0.6000000001. Standard best practice is to store a whole number of cents as an
 integer. This is a clear place where averaging over all the code has probably
 given Claude a bad completion. Let's see how it reacts!</p>
-<div class="cast" data-src="../casts/web.cast" data-poster="npt:147" data-speed="2" data-idle-time-limit="0.5" data-start-at="187" data-end-at="177"></div>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:147" data-speed="2" data-idle-time-limit="0.5" data-start-at="148" data-end-at="177"></div>
 <p>Notice that Claude is quick to agree with us calling it out. We can actually
 convince Claude of many things if we try. A useful (wrong, but useful) mental
 model is that it's giving the most likely autocomplete of a developer who is
@@ -516,7 +513,7 @@ goal is to get to the request handling part of a web server and the database tha
 stores the data. My goal here is to get to the point where I can talk
 about <em>types</em>. By that I mean TypeScript types and database schemas that have
 field names, relations, and so on.</p>
-<div class="cast" data-src="../casts/web.cast" data-poster="npt:147" data-speed="2" data-idle-time-limit="0.5" data-start-at="217" data-end-at="518"></div>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:147" data-speed="2" data-idle-time-limit="0.5" data-start-at="147" data-end-at="518"></div>
 <blockquote>
 <p><strong>Q:</strong> What do you think of the types shown in the editor at the end? Are
 they what you expected? What questions do you have about them?</p>
@@ -528,7 +525,7 @@ where the types will be used. Before code gets generated, this really helps me
 get a picture of what is going to go where.</p>
 <p>I also tell Claude to clean up the interface. I want my TODOs and plans and
 other things in files, not in transient session state in Claude's UI.</p>
-<div class="cast" data-src="../casts/web.cast" data-poster="npt:518" data-speed="2" data-idle-time-limit="0.5" data-start-at="558" data-end-at="640"></div>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:395" data-speed="2" data-idle-time-limit="0.5" data-start-at="395" data-end-at="640"></div>
 <aside class="margin-note">The strings in `app.get/put`
 describe URL patterns (“routes” often) and an associated handler with
 `req`uest data and a place to send a `res`ponse.</aside> 
@@ -539,7 +536,7 @@ Claude for it. In particular I want to know what kinds of data I can expect to
 see (and autocomplete in my own editor!) on the requests, and what should go
 back in each response.</p>
 <p>So I prompt for that, and end up learning a lot about the API in the process:</p>
-<div class="cast" data-src="../casts/web.cast" data-poster="npt:975" data-speed="2" data-idle-time-limit="0.5" data-start-at="975" data-end-at="837"></div>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:635" data-speed="2" data-idle-time-limit="0.5" data-start-at="635" data-end-at="837"></div>
 <blockquote>
 <p><strong>Q:</strong> Describe the kind of error I was worried about with incremental edits.
 What's an example of what it would look like to make that mistake and
@@ -573,7 +570,7 @@ about if I can clean up these types at all, what validation will look like,
 what <code>zod</code> is, and so on. Those are all good things for me to think about to
 learn more about the system I'm building.</p>
 <p>Overall I think I grok what's going on, so I'm happy moving on.</p>
-<div class="cast" data-src="../casts/web.cast" data-poster="npt:975" data-speed="2" data-idle-time-limit="0.5" data-start-at="1400" data-end-at="1030"></div>
+<div class="cast" data-src="../casts/web.cast" data-poster="npt:822" data-speed="2" data-idle-time-limit="0.5" data-start-at="822" data-end-at="1030"></div>
 <p>Here I have a useful conversation about logic and representation, and the
 type-based thinking helps me out a lot. I am very skeptical of Claude's choice
 to implement receipt update as “delete and re-add everything.” That just
@@ -636,12 +633,12 @@ also try to tone down the empty praise.</li>
 <p>With this, we have an implementation that's worth testing. I want to move on to
 writing enough tests to make sure this all runs, then we can hook it up to a
 browser-based frontend.</p>
-<div class="cast" data-src="../casts/web2.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-start-at="350"></div>
+<div class="cast" data-src="../casts/web2.cast" data-poster="npt:228" data-speed="2" data-idle-time-limit="0.5" data-start-at="228"></div>
 <p>More learning about the available APIs. Also we add a new API endpoint for
 testing that we have a pretty good argument is good for our future selves as
 well – we can send receipts as JSON data to create them instead of just
 parsing them. Claude makes a good point that we may want a manual receipt-input
-interface, so the endpoint is just helpful generally.</p>
+interface, so the endpoint is just generally useful.</p>
 <p>I'm very happy that Claude is writing this test code and not me. I've written a
 lot of test code like this in my life and... I see no major personal loss in
 never doing it again. I can see what it's doing, I know how to add more tests
@@ -659,7 +656,7 @@ place to make sure we can do all the receipt work programmatically. Next is to
 build the user interface. I go into this with an attitude of keeping things
 simple; mainly I want to see how to connect a frontend with incremental user
 corrections to the infrastructure we have.</p>
-<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:480" data-speed="2" data-idle-time-limit="0.5" data-start-at="400" data-end-at="375"></div>
+<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:224" data-speed="2" data-idle-time-limit="0.5" data-start-at="224" data-end-at="375"></div>
 <p>This is an interesting case where my experience directly comes into play, and
 Claude missed what I think was a straightforward, good idea.
 <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">IndexedDB</a> is
@@ -674,7 +671,7 @@ suggested. This suggests that in situations where we're unhappy with Claude's
 suggestions, it can be worth pushing back (“are you sure there's no other
 way?”), talking to experts, doing some external research, or asking it in a
 fresh session to try and get a broader perspective.</p>
-<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:480" data-speed="2" data-idle-time-limit="0.5" data-start-at="800" data-end-at="630"></div>
+<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:458" data-speed="2" data-idle-time-limit="0.5" data-start-at="458" data-end-at="630"></div>
 <p>Some weird things happened with the UI in this clip (I think I misunderstood
 what file was being presented either due to scroll or the layered combination
 of terminal stuff I have running to record) so there are some blips.</p>
@@ -684,7 +681,7 @@ make sense for them to differ, it might never make sense and it certainly is a
 blatant duplication now. I was confused at first and thought they may have
 actually differed on nullability, but they were effectively identical. This
 kind of housekeeping is important – the more duplication the more chance there
-is for drift, the more context is taken up with refactors or field addtions,
+is for drift, the more context is taken up with refactors or field additions,
 etc. This is a place where a principle that applies to human understanding of
 code matters for the agent as well!</p>
 <p>One thing that was nice in the ensuing series of edits and builds (clipped out
@@ -698,7 +695,7 @@ focused.</p>
 start up some “Vite” servers and test them. I realized I had no idea what was
 going on and asked for a bit more clarification and some help with the
 logistics of running and testing myself:</p>
-<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:480" data-speed="2" data-idle-time-limit="0.5" data-start-at="1400" data-end-at="945"></div>
+<div class="cast" data-src="../casts/cleanup-and-frontend.cast" data-poster="npt:833" data-speed="2" data-idle-time-limit="0.5" data-start-at="833" data-end-at="945"></div>
 <p>At this point I run <code>npm run dev</code> myself and visit the app in a browser.</p>
 <p>I noticed a few things, like no ability to delete items and some bad scroll
 behavior. At this point, we are into a test-refine-design workflow on the user
@@ -713,13 +710,99 @@ checking them against a solid type-based design, getting feedback, and so on.</p
 <li><del><strong>Types as design</strong>: using types to structure abstractions and communication with an agent</del> <strong>[done]</strong></li>
 <li><strong>Putting the user in the loop</strong>: corrections and categories feeding back into extraction</li>
 </ol>
-<p>The next big steps would be:</p>
+<h2 id="putting-the-user-in-the-loop"><a class="header" href="#putting-the-user-in-the-loop">Putting the User in the Loop</a></h2>
+<p>So far, the categories are just a hardcoded string that Claude picked for us.
+Let's add the ability for users to change them, and then have them become a
+part of the prompt going forward.</p>
+<div class="cast" data-src="../casts/categories.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-end-at="283"></div>
+<blockquote>
+<p><strong>Q</strong>: Pick some of the 1-6 options Claude gave us and come up with a
+response – a followup question, a refinement, or a disagreement. Don't agree
+with all 6. Any overall design reactions.</p>
+</blockquote>
+<p>These are interesting! This is a moment where I feel like I'm actually
+co-designing.  Typically the design space of user interfaces is pretty wide
+open, and it's nice to think through a number of ideas related to how this is
+going to work. Items 3, 4, and 5 are interesting because they are the backend
+data consistency issues that are directly a consequence of the user interface I
+proposed.</p>
+<p>I don't have any major objections, this seems like <strong>a</strong> right way to go (at
+this point there's almost certainly no <strong>the</strong> right way to go). I proceed by
+giving pretty minor point-by-point feedback, and have some new ideas along the
+way:</p>
+<div class="cast" data-src="../casts/categories.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-start-at="282" data-end-at="504"></div>
+<p>I have a moment of doubt – shouldn't we give Categories an identity and not
+have these strings all around? For better or worse I'm mollified by Claude's
+confidence that it will be an easy fix later.</p>
+<p>But I also have the idea that we can lean on the LLM to generate the initial
+set of categories. At least for what I want to build (and learn about) this is
+interesting because we impose basically no app structure on the categories and
+let them be determined solely by the model and the user working together
+through the interface we give them.</p>
+<p>In the next clip I just let Claude cook for a bit. I'm scanning the code
+step-by-step, and thanks to the Claude.md I set up, I'm getting fairly step by
+step code. I don't have a lot of comments for this code; it does more or less
+what I expect. I don't plan to find any new major abstractions here.</p>
+<p>There's definitely <em>some</em> work that can be done in the future around the
+dynamic prompt generation. It's still very string-template-y. But what Claude
+does for now with putting in the helpers <code>learnCategory</code> and
+<code>buildSystemPrompt(knownCategories)</code> is about what I'd try at first, and does
+abstract out where the categories are.</p>
+<p>If I <em>really</em> wanted to experiment, I may try to parameterize over some kind of
+category-collection strategy to make it easier to experiment. That feels like
+premature abstraction, and I'm super interested in getting to the user
+interface, because I want to understand the look and feel. So I enjoy the
+wonders of code creation getting me there:</p>
+<div class="cast" data-src="../casts/categories.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-start-at="503" data-end-at="720"></div>
+<p>Now I want to get some UI code going. I redescribe the combo box, but the whole
+idea is in context so it's just the reasonable next step. More payoff from our
+good design discussion earlier; the space of reasonable completions of code
+given <em>all</em> the guidance we've given is pretty narrow here!</p>
+<div class="cast" data-src="../casts/categories.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-start-at="720" data-end-at="946"></div>
+<p>I have more or less no comments on this code at first. I noticed that there was
+an opportunity for a helper with the repeated configuration of the fetching
+code (it keeps repeating <code>application/json</code> and some other config parameters).
+That could be cleaned up. I just made a mental note; I probably should have
+added it to the real TODOs so I don't forget that there's a refactoring
+opportunity. However, focus matters, too, and I want to test a UI. Here's how
+my first test looked:</p>
+<p><img src="../img/categories-v1.gif" alt="Categories" /></p>
+<p>See the annoyance? I actually made a few categories, but when the combobox
+opens the starting filter text is always the pre-assigned category (in this
+case <code>&quot;Groceries&quot;</code>).</p>
+<blockquote>
+<p><strong>Q:</strong> Make a UI suggestion for what to do that would be better.</p>
+</blockquote>
+<div class="cast" data-src="../casts/categories.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5" data-start-at="946"></div>
+<p>And this gets us to a much happier version where we can categorize
+interactively with the combobox immediately showing the options we can choose
+from.</p>
+<p><img src="../img/categories-v2.gif" alt="Categories" /></p>
+<p>There are plenty of UI improvements to think about from here!</p>
 <ul>
-<li>Having screens for <em>aggregate</em> information</li>
-<li>Letting the user pick categories (or even nicknames for items) to organize and aggregate</li>
-<li>Use the user-defined categories and item names to parameterize the prompt to
-come up with better receipt parses</li>
+<li>A big one is showing aggregate information across categories as a separate
+page per-category (brainstormed with Claude but not implemented)</li>
+<li>Thinking about getting “item names” that are user friendly: for example
+aggregating items to the name “Milk” or “Eggs” independent of brand name,
+and getting those categorized</li>
+<li>Avoiding duplicate uploads</li>
+<li>Doing better reporting of per-unit prices vs. overall price for a line item</li>
+<li>General styling and look+feel improvements</li>
+<li>and more!</li>
 </ul>
+<h2 id="bonus-login-and-authentication"><a class="header" href="#bonus-login-and-authentication">Bonus: Login and Authentication</a></h2>
+<p>In class last Thursday, we talked about how to use Claude when you don't know
+something. I didn't quite go to “making a device driver” or something really
+substantially outside my expertise; that might be for another week.</p>
+<p>However, I did want to think about user accounts and login. I also have wanted
+to learn how passkeys work for a while, and think they have a great security
+model. This cast shows how I used Claude to learn about and think through
+adding user accounts, but also learning about passkeys and relating them to my
+understanding of auth.</p>
+<div class="cast" data-src="../casts/login.cast" data-poster="npt:0.1" data-speed="2" data-idle-time-limit="0.5"></div>
+<p>I don't have a lot of narrative notes beyond sharing some of my thought process
+via the cast.</p>
+<p>Happy hacking!</p>
 
                     </main>
 
