@@ -1,0 +1,614 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Agents - UCSD GenAI and Programming SP26</title>
+        <!-- Custom HTML head -->
+<link rel="stylesheet" type="text/css" href="../js/asciinema-player.css" />
+<script src="../js/asciinema-player.min.js"></script>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../src/css/margin-notes.css">
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="../lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="../lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded "><a href="../lectures/03-agents.html" class="active"><strong aria-hidden="true">5.</strong> Agents</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="../assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">6.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="../assignments/doc-scanner-assignment.html"><strong aria-hidden="true">7.</strong> Assignment 2: Document Scanner</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">UCSD GenAI and Programming SP26</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="unit-3-agents"><a class="header" href="#unit-3-agents">Unit 3: Agents</a></h1>
+<p>In the previous units we have used models to:</p>
+<ul>
+<li>classify text by meaning</li>
+<li>convert images to structured representation</li>
+</ul>
+<p>We have also used assistants (Claude Code, Cursor, Codex, etc.) to help us build those systems, e.g.:</p>
+<ul>
+<li>create and organize files in our repo</li>
+<li>generate code and test data</li>
+<li>maybe look up documentation on the web</li>
+</ul>
+<blockquote>
+<p><strong>Q:</strong> What is the main difference between these assistants and the systems we have built in terms of how they use AI models?</p>
+</blockquote>
+<div class="table-wrapper"><table><thead><tr><th><em>Our systems</em> use models to</th><th><em>Assistants</em> use models to</th></tr></thead><tbody>
+<tr><td>implement a function:</td><td>- observe the world</td></tr>
+<tr><td>- <code>classify: Str -&gt; Label</code></td><td>- act in the world</td></tr>
+<tr><td>- <code>recognize: Bitmap -&gt; Receipt</code></td><td>- converse with the user</td></tr>
+</tbody></table>
+</div>
+<p>We will refer to AI systems that interact with the outside world as <strong>agents</strong>.
+In this unit we will practice building such systems.</p>
+<blockquote>
+<p><strong>Q:</strong> Give some examples of AI systems (apart from coding assistants) where it's useful for them to interact with the world (as opposed to just transform data)?</p>
+</blockquote>
+<p>Some examples:</p>
+<ul>
+<li><strong>Customer-support agent.</strong> Reads a user's ticket, queries the order database to check status, issues a refund through the payments API if warranted, and replies to the customer.</li>
+<li><strong>Research assistant</strong> (like &quot;deep research&quot; features in ChatGPT or Claude). Given a question like <em>&quot;what are the trade-offs of different vector databases?&quot;</em>, it searches the web, follows links, reads papers, and synthesizes a report.</li>
+</ul>
+<p>As a running example in this lecture we will instead use the following agent:</p>
+<ul>
+<li><strong>GitBot.</strong> Helps you manage your git repo via a chat interface. You'll never need to know the difference between <code>git revert HEAD</code>  and <code>git reset HEAD~1</code> ever again!</li>
+</ul>
+<hr />
+<h2 id="outline"><a class="header" href="#outline">Outline</a></h2>
+<ol>
+<li><strong>Agents from scratch</strong>: chat completions is all you need!</li>
+<li><strong>Multi-turn interactions</strong>: making the agent interactive</li>
+<li><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</li>
+<li><strong>Evaluation</strong>: how do we test agents?</li>
+<li><strong>Guardrails</strong>: building an agent you can trust</li>
+</ol>
+<hr />
+<h2 id="gitbot-v0"><a class="header" href="#gitbot-v0">GitBot v0</a></h2>
+<p>In unit 1 we have seen the chat completion API for LLMs.
+Do we <em>need</em> anything else to let the user control their git repo via natural-language commands?</p>
+<p>Not really!</p>
+<p><em>Step 1:</em> We can use the completion API to generate git commands as strings:</p>
+<pre><code class="language-python">SYSTEM_PROMPT = '''
+You are a git expert.
+You will be given a description of something that a user wants to do with their git repository.
+You will respond with a single-line git command that will accomplish the task.
+The command should be directly executable in a terminal against a repo in the current directory.
+'''
+
+def get_command(prompt: str) -&gt; str:
+    '''Accepts a natural-language description of a git task and returns a git command that accomplishes the task.'''
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: SYSTEM_PROMPT},
+            {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: prompt}
+        ],
+    )
+    return response.choices[0].message.content.strip()
+</code></pre>
+<p><em>Step 2:</em> We can use <code>subprocess</code> to run git commands represented as strings:</p>
+<pre><code class="language-python">def execute_command(command: str, working_dir: str) -&gt; str:
+    '''Executes a command in the terminal and returns the output or error message.'''
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=working_dir)
+    if result.returncode == 0:
+        return result.stdout
+    else:
+        return result.stderr
+</code></pre>
+<p><em>Step 3</em>: We can hook those two together and wrap them in a loop:</p>
+<pre><code class="language-python">while True:
+    # User input the prompt
+    prompt = input(&quot;gitbot&gt; &quot;)
+    # LLM generates git command
+    command = get_command(prompt)
+    # We execute the command and show the output
+    output = execute_command(command, repo_dir)
+    print(output)
+</code></pre>
+<p>And we've got ourselves an agent that <em>acts in the world</em>!</p>
+<blockquote>
+<p><strong>Q:</strong> What are some issues with GitBot v0 that you'd like to fix before you use it on your repo?</p>
+</blockquote>
+<hr />
+<h3 id="issues-with-v0"><a class="header" href="#issues-with-v0">Issues with v0</a></h3>
+<p>Let's walk through a few scenarios.</p>
+<p><strong>Scenario 1.</strong></p>
+<pre><code>Welcome to the GitBot v0.0!
+gitbot&gt; Does this repository have a remote?
+
+gitbot&gt;
+</code></pre>
+<p>Hmm, no output, what does this mean?</p>
+<p>I wish GitBot could <em>inspect</em> the output of the command and explain it to me!</p>
+<hr />
+<p><strong>Scenario 2.</strong></p>
+<pre><code>Welcome to the GitBot v0.0!
+gitbot&gt; can you switch to that refactoring branch I've been working on?
+git checkout refactoring
+
+error: pathspec 'refactoring' did not match any file(s) known to git
+</code></pre>
+<p>Duh, my branch is actually called <code>bigframes-refactor</code>!</p>
+<p>I wish the agent could first look at which branches I have and then pick the relevant one!</p>
+<hr />
+<p><strong>Scenario 3.</strong></p>
+<pre><code>Welcome to the GitBot v0.0!
+gitbot&gt; show me my unstaged changes
+
+diff --git a/main.py b/main.py
+index ba79a2b..d28db8f 100644
+--- a/main.py
++++ b/main.py
+@@ -47,7 +47,7 @@ if __name__ == &quot;__main__&quot;:
+     repo_dir = sys.argv[1]
+
+     while True:
+-        prompt = input(&quot;&gt; &quot;)
++        prompt = input(&quot;gitbot&gt; &quot;)
+         if prompt == &quot;/exit&quot;:
+             print(&quot;Goodbye!&quot;)
+             break
+
+gitbot&gt; no I just meant the list of files
+
+.gitignore
+CLAUDE.md
+main.py
+</code></pre>
+<p>Huh? I don't think <code>CLAUDE.md</code> and <code>main.py</code> actually changed... Wait, it had no idea I'm asking for a list of files <strong>that changed</strong>!</p>
+<p>I wish the agent would <em>keep track</em> of our whole conversation!</p>
+<hr />
+<p><strong>Scenario 4.</strong></p>
+<pre><code>Welcome to the GitBot v0.0!
+gitbot&gt; can you clean up my working directory? it's getting a bit messy in here
+
+Removing tmp/
+Removing scratch.md
+</code></pre>
+<p>Wait — <code>scratch.md</code> was my untracked notes file with a bunch of ideas I hadn't committed yet! <code>git clean -fd</code> just deleted it, no questions asked.</p>
+<p>I wish the agent would <em>ask me</em> before doing anything destructive!</p>
+<hr />
+<p>To sum up, GitBot needs:</p>
+<ol>
+<li><strong>Interaction with <code>git</code></strong>: observe output of git commands and perform more actions based on them</li>
+<li><strong>Interaction with the user</strong>: remember what the user said, be able to respond and ask clarifying questions</li>
+<li><strong>Guardrails</strong>: we want to be able to specify a <em>policy</em> (like no destructive updates without approval) and <em>guarantee</em> that the agent follows the policy</li>
+</ol>
+<hr />
+<h2 id="outline-1"><a class="header" href="#outline-1">Outline</a></h2>
+<ol>
+<li><del><strong>Agents from scratch</strong>: chat completions is all you need!</del> <strong>[done]</strong></li>
+<li><strong>Multi-turn interactions</strong>: making the agent interactive</li>
+<li><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</li>
+<li><strong>Evaluation</strong>: how do we test agents?</li>
+<li><strong>Guardrails</strong>: building an agent you can trust</li>
+</ol>
+<hr />
+<h2 id="interlude-test-repos"><a class="header" href="#interlude-test-repos">Interlude: Test Repos</a></h2>
+<p>Before we make our agent any fancier, we need some test/playground repos to run it on
+(so that it doesn't wreck its own repo).
+I had a conversation with Claude on how to set this up,
+which went something like this (slightly shortened).</p>
+<pre><code>❯ I want to start by creating some test repos that we'll run the agent on.
+  Where should I put them? The problem is, I both want them to be versioned
+  in this repo, and I also need them to be their own repos. I'm confused on
+  how to make this work.
+
+⏺ The tension you're sensing is real: nested real git repos inside your main
+  repo don't play well with git. The clean answer is to not store the repos —
+  store scripts that build them.
+
+  Each fixture is a small Python (or shell) function that calls git init,
+  git commit, etc., to construct a repo with a known history.
+  The script is versioned in your main repo; running it produces an independent,
+  throwaway repo somewhere else (a scratch dir, or pytest's tmp_path).
+
+  git-agent/
+    fixtures/
+      __init__.py
+      detached_head.py       # builds a repo in a detached-HEAD state
+      accidental_main.py     # user committed to main instead of feature branch
+      needs_squash.py        # 3 WIP commits to squash
+      builders.py            # shared helpers: commit(repo, msg, files={...})
+
+  Each builder takes a Path and populates it. Pin GIT_AUTHOR_DATE, GIT_COMMITTER_DATE,
+  name, and email inside the builder so SHAs are deterministic — that makes assertions
+  reliable. This solves several problems at once: versioned like code,
+  no nested-.git headaches, and every test gets a pristine fresh repo.
+
+  For remotes: also free with this approach — git init --bare &lt;path&gt;/remote.git
+  in the builder, set it as origin, and you have a fake remote you can push to,
+  force-push to, or pre-populate with divergent commits. No network.
+</code></pre>
+<p>I then asked Claude to create a fixture for a repo where I could test scenarios from above.
+Claude made a script that creates a repo with:</p>
+<ul>
+<li>no remote</li>
+<li>3 commits</li>
+<li>2 extra branches</li>
+<li>some uncommitted and unstaged changes</li>
+</ul>
+<p>I'm eternally grateful that I never have to write <em>that</em> kind of code ever again!</p>
+<hr />
+<h2 id="making-gitbot-interactive"><a class="header" href="#making-gitbot-interactive">Making GitBot Interactive</a></h2>
+<p>Recall our current implementation:</p>
+<pre><code class="language-python">SYSTEM_PROMPT = &quot;...respond with a single-line git command...&quot;
+
+def get_command(prompt: str) -&gt; str:
+    '''Accepts a natural-language description of a git task and returns a git command that accomplishes the task.'''
+    ...
+
+def execute_command(command: str, working_dir: str) -&gt; str:
+    '''Executes a command in the terminal and returns the output or error message.'''
+    ...
+
+while True:
+    # User inputs the prompt
+    prompt = input(&quot;gitbot&gt; &quot;)
+    # LLM generates git command
+    command = get_command(prompt)
+    # We execute the command and show the output
+    output = execute_command(command, repo_dir)
+    print(output)
+</code></pre>
+<p>Recall that we want to add:</p>
+<ol>
+<li><strong>Interaction with <code>git</code></strong>: observe output of git commands and perform more actions based on them</li>
+<li><strong>Interaction with the user</strong>: remember what the user said, be able to respond and ask clarifying questions</li>
+</ol>
+<blockquote>
+<p><strong>Q:</strong> Which changes do we need to make to the code above to add those capabilities?</p>
+</blockquote>
+<p>I. We need to accumulate the <strong>conversation history</strong> and pass it to the model instead of just the latest user prompt:</p>
+<ul>
+<li>what the user said</li>
+<li>what the agent responded with (the git command)</li>
+<li>what the output of the command was</li>
+</ul>
+<pre><code class="language-python"># Accepts the whole conversation history now!
+def get_command(history: list[dict]) -&gt; str:
+    ...
+
+# Main loop (everything gets added to history!):
+history: list[dict] = [{&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: SYSTEM_PROMPT}]
+while True:
+    # User inputs the prompt
+    user_input = input(&quot;gitbot&gt; &quot;)
+    history.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: user_input})
+
+    # LLM generates git command
+    command = get_command(history)
+    history.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: command})
+
+    # We execute the command and show the output
+    output = execute_command(command, repo_dir)
+    print(output)
+    # We have to use the user role for the output for now; we'll fix this later
+    history.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: f&quot;Output: {output}&quot;})
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> Which of our four scenarios from before does this fix and which it doesn't?</p>
+</blockquote>
+<p>This agent remembers what it had done and what the user had said (fixes scenario #3),
+but it cannot <em>explain git outputs</em> (scenario #1) or <em>investigate then act</em> (scenario #2).</p>
+<p>II. We need to:</p>
+<ul>
+<li>add an inner <strong>agent loop</strong> where the agent can interact with the environment before responding to the user</li>
+<li>let the agent respond in text, not just commands, so that it can explain what it sees and ask questions</li>
+</ul>
+<p>Let's implement the following simplified design:</p>
+<ul>
+<li>On each turn, the agent's response can be one of two things: a <strong>git command</strong> or <strong>plain text</strong>.</li>
+<li>As long as the agent keeps responding with git commands, we stay in the inner loop:
+we execute each command, feed its output back to the agent, and let it decide what to do next —
+so the agent can investigate the repo, react to errors, and chain multiple commands together on its own.</li>
+<li>Once it decides it has enough information (or needs to ask the user something),
+it responds with plain text; we break out of the inner loop, print the text to the user,
+and wait for the next user prompt in the outer loop.</li>
+</ul>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│                    OUTER LOOP                       │
+│     (one iteration = one exchange with the user)    │
+│                                                     │
+│                     ┌──────┐                        │
+│           ┌─────────┤ user │◄────────┐              │
+│           │         └──────┘         │              │
+│           │                          │ plain text   │
+│           │ user prompt              │              │
+│           │                          │              │
+│      ┌────┼──────────────────────────┼───────────┐  │
+│      │    ▼                          │           │  │
+│      │   ┌───────┐     command    ┌──────┐       │  │
+│      │   │ agent │────────────────┤  git │       │  │
+│      │   └───────┘◄───────────────└──────┘       │  │
+│      │                output                     │  │
+│      │                INNER LOOP                 │  │
+│      │        (one iter = one git command)       │  │
+│      └───────────────────────────────────────────┘  │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<p>We tell the agent about the protocol in the system prompt,
+and then all we need is to add an inner loop that keeps executing commands
+until the agent responds with plain text:</p>
+<pre><code class="language-python">def is_command(response: str) -&gt; bool:
+    '''Decide whether the agent's response is a git command or plain text.'''
+    ...
+
+history: list[dict] = [{&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: SYSTEM_PROMPT}]
+while True:  # outer loop: one iteration per user turn
+    user_input = input(&quot;gitbot&gt; &quot;)
+    history.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: user_input})
+
+    while True:  # inner loop: keep running commands until the agent replies in text
+        response = get_command(history)
+        history.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: response})
+
+        if not is_command(response):
+            print(response)      # plain text -&gt; show to user and break out
+            break
+
+        output = execute_command(response, repo_dir)
+        history.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: f&quot;Output: {output}&quot;})
+</code></pre>
+<p>III. We need to tell the agent about the <strong>protocol</strong> (i.e. change the system prompt):</p>
+<pre><code class="language-python">SYSTEM_PROMPT = '''
+...
+Respond with a single-line git command to execute,
+or with plain text if you want to reply to the user (e.g. explain a result or ask a clarifying question).
+'''
+
+def is_command(response: str) -&gt; bool:
+    '''Decide whether the agent's response is a git command or plain text.'''
+    return response.startswith(&quot;git &quot;)
+</code></pre>
+<hr />
+<h3 id="lets-take-it-for-a-spin"><a class="header" href="#lets-take-it-for-a-spin">Let's take it for a spin!</a></h3>
+<p>Now GitBot can <em>inspect</em> the output of git commands and explain it to us:</p>
+<pre><code>Welcome to GitBot!
+gitbot&gt; Does this repository have a remote?
+git remote -v
+
+No, this repository does not have any remote configured.
+</code></pre>
+<p>It can also <em>investigate first, then act</em>, so we no longer need to remember the exact branch name:</p>
+<pre><code>Welcome to GitBot!
+gitbot&gt; can you switch to that refactoring branch I've been working on?
+git branch --list
+git checkout bigframes-refactor
+
+Switched to branch 'bigframes-refactor'. This looked like the refactoring branch you meant.
+</code></pre>
+<p>And because we now pass the whole conversation history, it can follow up on previous turns:</p>
+<pre><code>Welcome to GitBot!
+gitbot&gt; show me my unstaged changes
+git diff
+
+diff --git a/main.py b/main.py
+...
+gitbot&gt; no I just meant the list of files
+git diff --name-only
+
+main.py
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> Look at our code: which mechanisms are specific to GitBot and which could be useful for any agent?</p>
+</blockquote>
+<hr />
+<h2 id="outline-2"><a class="header" href="#outline-2">Outline</a></h2>
+<ol>
+<li><del><strong>Agents from scratch</strong>: chat completions is all you need!</del> <strong>[done]</strong></li>
+<li><del><strong>Multi-turn interactions</strong>: making the agent interactive</del> <strong>[done]</strong></li>
+<li><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</li>
+<li><strong>Evaluation</strong>: how do we test agents?</li>
+<li><strong>Guardrails</strong>: building an agent you can trust</li>
+</ol>
+<hr />
+<h2 id="agent-frameworks"><a class="header" href="#agent-frameworks">Agent Frameworks</a></h2>
+<p>Take a closer look at what we had to build by hand:</p>
+<ul>
+<li>a <strong>conversation history</strong> we manually append to</li>
+<li>an <strong>inner loop</strong> that keeps the agent running until it's done</li>
+<li>a <strong>protocol</strong> for distinguishing &quot;I want to run a command&quot; from &quot;I'm talking to the user&quot; (our <code>is_command</code> hack)</li>
+<li><strong>parsing</strong> the command out of a free-form string response</li>
+</ul>
+<p>None of this is specific to GitBot — every tool-using agent needs the same plumbing.
+Good news: modern LLM APIs have first-class support for this via <strong>tool calls</strong>,
+and <strong>agent frameworks</strong> (like the <a href="https://openai.github.io/openai-agents-python/">OpenAI Agents SDK</a>,
+LangGraph, or Claude's Agent SDK) wrap that up so you don't have to write the loop yourself.</p>
+<p>The key ideas:</p>
+<ul>
+<li>You declare <strong>tools</strong> as regular Python functions; the framework handles the schema.</li>
+<li>The model returns <strong>structured tool calls</strong> instead of strings we have to parse — no more <code>startswith(&quot;git &quot;)</code>.</li>
+<li>The <strong>agent loop is built in</strong>: the framework keeps calling tools and feeding results back until the model produces a final text response.</li>
+<li><strong>History</strong> is managed for you (e.g. via a session object).</li>
+</ul>
+<p>Here's GitBot rewritten with the OpenAI Agents SDK:</p>
+<pre><code class="language-python">from agents import Agent, Runner, SQLiteSession, function_tool
+import subprocess
+
+@function_tool
+def execute_command(command: str) -&gt; str:
+    '''Execute a git command in the repo and return its output or error message.'''
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=repo_dir)
+    return result.stdout if result.returncode == 0 else result.stderr
+
+agent = Agent(
+    name=&quot;GitBot&quot;,
+    instructions=&quot;You are a git expert. Use the execute_command tool to run git commands. &quot;
+                 &quot;Explain results to the user and ask clarifying questions when needed.&quot;,
+    tools=[execute_command],
+)
+
+session = SQLiteSession(&quot;gitbot-session&quot;)  # persists conversation history
+while True:
+    user_input = input(&quot;gitbot&gt; &quot;)
+    result = Runner.run_sync(agent, user_input, session=session)
+    print(result.final_output)
+</code></pre>
+<p>Compare with what we had before: no manual <code>history.append(...)</code>, no inner <code>while True</code> loop,
+no <code>is_command</code> helper, no system prompt explaining our command/plain-text protocol.
+The framework runs the agent loop internally and hands us back the final text to show the user.</p>
+<blockquote>
+<p><strong>Q:</strong> We still haven't addressed scenario #4 (the <code>git clean -fd</code> disaster). Does switching to the Agents SDK fix it? Why or why not?</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../lectures/02-document-scanner.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../assignments/social-media-monitor-assignment.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../lectures/02-document-scanner.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../assignments/social-media-monitor-assignment.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript" src="../src/js/asciinema-init.js"></script>
+    </body>
+</html>
