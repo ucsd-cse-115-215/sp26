@@ -189,9 +189,10 @@ Do we <em>need</em> anything else to let the user control their git repo via nat
 <p><em>Step 1:</em> We can use the completion API to generate git commands as strings:</p>
 <pre><code class="language-python">SYSTEM_PROMPT = '''
 You are a git expert.
-You will be given a description of something that a user wants to do with their git repository.
-You will respond with a single-line git command that will accomplish the task.
-The command should be directly executable in a terminal against a repo in the current directory.
+You will be given a description of something that a user wants to do with their git repository or a problem they are running into.
+You will respond with a single line of git command that will accomplish the task or solve the problem.
+The command should be directly executable in a terminal against a repo in the current directory,
+and should not include any explanations or markdown fences.
 '''
 
 def get_command(prompt: str) -&gt; str:
