@@ -21,4 +21,4 @@ _Identify one thing you find confusing in the implementation, and describe why i
 _Suggest one thing you would try to substantially improve the cost, latency, or accuracy of the application without compromising on other aspects. Give a substantive argument for why it's a good idea, grounded in details of the implementation (not just "use a smaller model")._
 
 #### b. Extension/feature request
-_Which extension would you suggest for this project? How would you go about it?_
+_Which of the official required extensions would you suggest for this project? How would you go about it? (The reviewee isn't forced to do this one; this is for you to think a little bit about what it would look like on an unfamiliar codebase)_

@@ -280,14 +280,65 @@ Gradescope:</p>
 <li>Authors should prepare based on this <a href="templates/a2-session-log.txt">session log template</a></li>
 <li>Reviewers should plan to fill in this <a href="templates/a2-review-issue.txt">review template</a></li>
 </ul>
-<p><strong>New!</strong>: For this assignment we plan to <strong>add new requirements after the
-initial submission</strong> in addition to having you respond to review feedback. Our
-goal is to simulate not just the initial prototyping of an application, but
-changes that happen after the fact in response to user feedback and so on,
-which benefit from good design up front. To reassure you, it certainly won't be
-as substantial as a whole new application, more in line with some of the
-suggested “you may enjoy” options above, though those are not necessarily the
-only or all of the possible required additions.</p>
+<h2 id="new-requirements"><a class="header" href="#new-requirements">New Requirements</a></h2>
+<p>You must pick <strong>one</strong> of the following extensions, where the one you pick
+<strong>is not already implemented in your project</strong>. For example, if you already
+have user accounts, you can't claim the auth extension below.</p>
+<p>Whichever you pick, implement it, and add discussion about it to <code>README.md</code>
+and <code>DESIGN.md</code>. If you used an agent, add the relevant transcript to
+<code>transcripts/</code>.</p>
+<ul>
+<li>
+<p><strong>Privacy Concerns Limit New Markets</strong>: You've released your application and
+users are loving it. Revenue has started to trickle in, Github stars are
+rising. But there's a problem. You have excited users in organizations like
+Acme Inc. who would love to pay per user for your product, but they refuse
+because of concerns about persisting their documents to your storage.</p>
+<p>Your leadership team decides you need to <strong>ship a version that does not
+persist documents</strong> to meet the needs of this new userbase (and revenue
+stream). Adapt your application to:</p>
+<ul>
+<li>no longer store documents on the backend</li>
+<li>allow existing users to delete any stored documents without losing
+the structured extracted data</li>
+<li>allow users to <em>permanently delete</em> any extracted data upon making
+corrections</li>
+</ul>
+</li>
+<li>
+<p><strong>Power Users Demand Power Features</strong>: You've released your application and
+several well-known influencers have shared it. They are power users, making
+videos and tutorials on how to 10x your life using <code>&lt;your app name here&gt;</code>.
+There's a consistent theme across their reviews: they are tired of uploading
+documents one at a time.</p>
+<p>The ask is clear: there needs to be a <strong>batch mode</strong> where users can upload
+multiple documents at once and have a useful workflow for managing the
+corrections across the whole uploaded set. Adapt your application to:</p>
+<ul>
+<li>Have a new UI endpoint that accepts <em>multiple</em> documents</li>
+<li>Have some UI for guiding or tracking the user through all of them
+(analogies like an “inbox” or “queue” supporting incremental work
+with “uncorrected” state could be useful here)</li>
+</ul>
+</li>
+<li>
+<p><strong>Internal App Becomes the Business</strong>: You developed your app for internal
+company use, skipping steps like creating user accounts or putting
+authorization checks in front of sensitive data. However, your main product
+(an AI agent version of the original
+<a href="https://en.wikipedia.org/wiki/Yo_(app)">Yo</a>) is not making any money. Your
+CEO is convinced that the internal app you've made is the pivot.</p>
+<p>You need to <strong>add authentication/authorization and user accounts</strong> so that
+the app can be deployed to other businesses and eventually to the public.
+Adapt your application to:</p>
+<ul>
+<li>Require some kind of login (username/password, OAuth, passkey) before
+any access to documents or extracted data</li>
+<li>Store all data in a <em>per-user</em> fashion, so different users' corrections
+and feedback into prompts are managed separately</li>
+</ul>
+</li>
+</ul>
 
                     </main>
 
