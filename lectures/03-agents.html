@@ -568,10 +568,232 @@ while True:
 </code></pre>
 <p>Compare with what we had before: no manual <code>history.append(...)</code>, no inner <code>while True</code> loop,
 no <code>is_command</code> helper, no system prompt explaining our command/plain-text protocol.
-The framework runs the agent loop internally and hands us back the final text to show the user.</p>
+The framework <em>runs the agent loop internally</em> and hands us back the final text to show the user.</p>
+<hr />
+<h2 id="outline-3"><a class="header" href="#outline-3">Outline</a></h2>
+<ol>
+<li><del><strong>Agents from scratch</strong>: chat completions is all you need!</del> <strong>[done]</strong></li>
+<li><del><strong>Multi-turn interactions</strong>: making the agent interactive</del> <strong>[done]</strong></li>
+<li><del><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</del> <strong>[done]</strong></li>
+<li><strong>Evaluation</strong>: how do we test agents?</li>
+<li><strong>Guardrails</strong>: building an agent you can trust</li>
+</ol>
+<hr />
+<h2 id="evaluation"><a class="header" href="#evaluation">Evaluation</a></h2>
+<p>So far we've been driving GitBot by hand: type a prompt, eyeball the output, decide whether it did the right thing.
+Fine for a demo, but it doesn't scale, and it gives us no way to answer questions like
+<em>&quot;did that prompt change make things better or worse?&quot;</em> or <em>&quot;is the cheaper model good enough?&quot;</em></p>
 <blockquote>
-<p><strong>Q:</strong> We still haven't addressed scenario #4 (the <code>git clean -fd</code> disaster). Does switching to the Agents SDK fix it? Why or why not?</p>
+<p><strong>Q:</strong> What's our instinct as software engineers when we want to answer questions like that?</p>
 </blockquote>
+<p>We need to <strong>add some tests</strong>!</p>
+<blockquote>
+<p><strong>Q:</strong> What does a single &quot;unit test&quot; for GitBot even look like? What do we need to define?</p>
+</blockquote>
+<p>There's no one right answer, but here's a design I went with:</p>
+<p>A unit test consist of three parts:</p>
+<ol>
+<li>A <strong>repo fixture</strong> — a starting state to run the agent against.
+We already have infrastructure for this!
+Recall the test repo from earlier in this lecture: a Python builder script that calls <code>git init</code>, <code>git commit</code>, etc. and produces a throwaway repo in a known state.</li>
+<li>A <strong>prompt</strong> — the natural-language request we give to the agent.
+The agent is supposed to accomplish the task in one shot, without follow-up clarifications.</li>
+<li>An <strong>oracle</strong> — a predicate over the <em>final</em> repo state that decides whether the agent succeeded.</li>
+</ol>
+<p>Here's a concrete example — &quot;undo my last commit but keep the changes&quot;:</p>
+<pre><code class="language-python"># undo_keep.py
+
+PRIOR_MESSAGE = &quot;Wire up login endpoint&quot;
+LAST_MESSAGE  = &quot;Add rate limiting&quot;
+MARKER_LINE   = &quot;RATE_LIMIT = 100&quot;
+
+def build(path: Path) -&gt; Path:
+    '''Build a repo with two files and three commits. The last commit adds MARKER_LINE.'''
+    repo = init_repo(path)
+    commit(repo, &quot;Initial commit&quot;,  {&quot;src/config.py&quot;: &quot;DEBUG = False\n&quot;})
+    commit(repo, PRIOR_MESSAGE,     {&quot;src/login.py&quot;:  &quot;def login():\n    pass\n&quot;})
+    commit(repo, LAST_MESSAGE,      {&quot;src/config.py&quot;: f&quot;DEBUG = False\n{MARKER_LINE}\n&quot;})
+    return repo
+
+PROMPT = &quot;Undo my last commit but keep the changes in my working directory.&quot;
+
+def oracle(repo: Path) -&gt; bool:
+    return (
+        head_message(repo) == PRIOR_MESSAGE         # last commit is gone
+        and commit_count(repo) == 2                 # no new commit added
+        and MARKER_LINE in file_in_workdir(repo, &quot;src/config.py&quot;)  # changes preserved
+    )
+</code></pre>
+<p>To get a starter set of scenarios I borrowed from a list of common <a href="https://www.preethi-devops.com/git-interview-question">git interview questions</a> and asked Claude to draft ~10 of them — each with a fixture, a prompt, and an oracle — following the pattern above.</p>
+<hr />
+<h3 id="measuring-success"><a class="header" href="#measuring-success">Measuring success</a></h3>
+<blockquote>
+<p><strong>Q:</strong> Now that we have a bunch of scenarios, should we just hook them up to <code>pytest</code> and call it a day?</p>
+</blockquote>
+<p>Pytest is built around <strong>deterministic</strong> pass/fail:</p>
+<ul>
+<li>each test is supposed to always pass</li>
+<li>if a test fails, we need to fix our code</li>
+</ul>
+<p>But agents are <strong>non-deterministic</strong>:</p>
+<ul>
+<li>running the same scenario twice can yield different results</li>
+<li>some amount of failure is acceptable</li>
+</ul>
+<p>So we don't actually want a boolean <em>all-green / something's-broken</em>. We want a <strong>metric</strong>: &quot;how often does the agent get this right?&quot; — so we can compare across prompts, models, and agent designs.</p>
+<hr />
+<h3 id="passk"><a class="header" href="#passk">Pass@k</a></h3>
+<p>The standard metric for this kind of LLM-based task is <strong>pass@k</strong>, popularized by the <a href="https://arxiv.org/abs/2107.03374">HumanEval benchmark</a> (Chen et al., 2021) for code generation:</p>
+<blockquote>
+<p>Run each scenario <code>n</code> times, count <code>c</code> successes, and report</p>
+<pre><code>pass@k = 1 - C(n - c, k) / C(n, k)
+</code></pre>
+<p>averaged across scenarios. (<code>C(a, b)</code> is &quot;a choose b&quot;.)</p>
+</blockquote>
+<p>Intuition: pass@k is the probability that <strong>at least one of <code>k</code> independent attempts succeeds</strong>.
+So <code>pass@1</code> is the average per-trial success rate, and <code>pass@k</code> for larger <code>k</code> tells you how much retrying helps.</p>
+<hr />
+<h3 id="running-the-tests"><a class="header" href="#running-the-tests">Running the tests</a></h3>
+<p>We can now write a simple harness that runs each scenario <code>n</code> times, checks the oracle, and computes pass@k:</p>
+<pre><code class="language-python"># In the test harness code:
+@dataclass(frozen=True)
+class Scenario:
+    name: str
+    build: Callable[[Path], Path]
+    prompt: str
+    oracle: Callable[[Path], bool]
+
+# Assume that undo_keep.py  we saw above defines:
+# SCENARIO = Scenario(name=&quot;undo_keep&quot;, build=build, prompt=PROMPT, oracle=oracle)
+
+ALL_SCENARIOS: list[Scenario] = [
+    undo_keep.SCENARIO,
+    ... # other scenarios here
+]
+
+@dataclass(frozen=True)
+class ScenarioResult:
+    name: str
+    n_trials: int
+    n_successes: int
+
+def run_scenario(scenario: Scenario, n_trials: int) -&gt; ScenarioResult:
+    '''Run the agent on the scenario n_trials times and return the number of successes.'''
+    ...
+
+...
+
+# Run each scenario n_trials times
+results = [run_scenario(s, n_trials) for s in ALL_SCENARIOS]
+# Compute and print pass@k table
+summarize(results)
+</code></pre>
+<p>Running this on GitBot with <code>gpt-5-mini</code> and <code>n_trials=5</code> gives us the following results:</p>
+<pre><code>scenario           c/n   pass@1   pass@5
+----------------   ---   -------  -------
+undo_keep          5/5    1.00     1.00
+undo_discard       5/5    1.00     1.00
+amend_message      4/5    0.80     1.00
+move_commit        3/5    0.60     1.00
+recover_branch     5/5    1.00     1.00
+move_uncommitted   5/5    1.00     1.00
+revert_commit      5/5    1.00     1.00
+discard_one_file   5/5    1.00     1.00
+rename_branch      5/5    1.00     1.00
+squash_commits     5/5    1.00     1.00
+----------------   ---   -------  -------
+OVERALL                   0.94     1.00
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> What can we conclude from this table?</p>
+</blockquote>
+<hr />
+<h3 id="eval-frameworks"><a class="header" href="#eval-frameworks">Eval frameworks</a></h3>
+<p>Just like with the <em>agent loop</em> before, we've built a working eval harness from scratch — and just like before,
+most of what we wrote isn't specific to GitBot. Running each item <code>n</code> times, computing pass@k, building per-trial
+sandboxes, surfacing traces when something goes wrong: every team that evaluates an LLM-based system needs the
+same plumbing.</p>
+<p>So, predictably, there are <strong>eval frameworks</strong> that wrap this up: <a href="https://inspect.aisi.org.uk/">Inspect AI</a>,
+<a href="https://www.promptfoo.dev/">Promptfoo</a>, <a href="https://www.braintrust.dev/">Braintrust</a>, OpenAI's <code>evals</code>, and others.
+They differ in the details, but they share the same core abstraction:</p>
+<div class="table-wrapper"><table><thead><tr><th>Concept</th><th>What it is</th><th>In our hand-rolled code</th></tr></thead><tbody>
+<tr><td><strong>Dataset</strong></td><td>The set of inputs to evaluate on.</td><td><code>ALL_SCENARIOS</code></td></tr>
+<tr><td><strong>Solver</strong></td><td>Something that takes an input and produces an output.</td><td>The agent loop</td></tr>
+<tr><td><strong>Scorer</strong></td><td>Something that judges whether the output is correct.</td><td>The oracle</td></tr>
+</tbody></table>
+</div>
+<p>Recognizing this triple is the main transferable concept — once you see it, every framework looks similar.</p>
+<p>Here's our eval ported to Inspect, with implementations elided:</p>
+<pre><code class="language-python">from inspect_ai import Task, task, Epochs
+from inspect_ai.agent import react
+from inspect_ai.dataset import Sample
+from inspect_ai.scorer import scorer, Score, CORRECT, INCORRECT
+from inspect_ai.solver import solver
+from inspect_ai.tool import tool
+
+@solver
+def build_fixture():
+    '''Per-trial: run scenario.build() in a fresh tmpdir.'''
+    ...
+
+@tool
+def execute_command():
+    '''The same git tool we already had.'''
+    ...
+
+@scorer(metrics=[accuracy()])
+def repo_oracle():
+    '''Per-trial: call scenario.oracle() on the final repo state.'''
+    ...
+
+@task
+def git_agent_eval() -&gt; Task:
+    return Task(
+        dataset = [Sample(input=s.prompt, id=s.name) for s in ALL_SCENARIOS],
+        solver  = [build_fixture(), react(prompt=INSTRUCTIONS, tools=[execute_command()])],
+        scorer  = repo_oracle(),
+        epochs  = Epochs(5, [pass_at(1), pass_at(5)]),  # n_trials=5, report pass@1 and pass@5
+    )
+</code></pre>
+<p>The shape is what matters: a <code>Task</code> is a <code>(dataset, solver, scorer)</code> triple, plus how many times to run each
+sample (<code>Epochs</code>) and which metrics to report.</p>
+<blockquote>
+<p><strong>Q:</strong> Why bother, if we already had a working harness in ~30 lines?</p>
+</blockquote>
+<p>Because once you adopt the framework you get a lot of things <em>for free</em>:</p>
+<ul>
+<li>
+<p><strong>Trace logging and a web UI to inspect runs.</strong> This is the killer feature. With dozens of trials per scenario,
+terminal output is unreadable; per-trial timelines in a browser are not.</p>
+<p><img src="../img/inspect-runs.png" alt="Inspect web UI: list of evaluation runs" /></p>
+<p>Each trial gives you the full conversation — prompt, tool calls, tool output, model's reasoning — which is
+how you actually debug a flaky scenario. For example, here's the agent confidently reporting success
+after <code>git reset --hard</code> blew away the user's staged changes:</p>
+<p><img src="../img/inspect-trace-destruction.png" alt="Inspect trace: agent destroys staged changes and reports success" /></p>
+<p>This is a single best motivating example for the <em>Guardrails</em> section coming up next — the agent's plan looked
+fine in isolation; only the trace makes the failure obvious.</p>
+</li>
+<li>
+<p><strong>Mock user responses.</strong> The framework can simulate a user nudging the agent (&quot;please proceed to the next
+step ...&quot;) if the model stops without finishing. Useful for measuring capability without writing per-task
+baby-sitting code. (Caveat: this means the model may see multiple &quot;user&quot; turns even though <em>we</em> gave one
+prompt — worth knowing when comparing to the hand-rolled numbers.)</p>
+</li>
+<li>
+<p><strong>Multi-provider support out of the box.</strong> Same eval, same code, swap the model: Anthropic, OpenAI, local,
+whatever — useful when you're trying to answer &quot;is the cheaper model good enough?&quot;</p>
+</li>
+<li>
+<p><strong>Parallelism, retries, caching, deterministic seeding</strong> — all the boring infrastructure you'd otherwise
+re-implement.</p>
+</li>
+</ul>
+<p>What you still own: the <strong>dataset</strong> (fixture design), the <strong>scorer</strong> (oracle design), and the metric. That's the
+hard part, and no framework can do it for you.</p>
+<p>One thing to watch out for: shell hygiene is still on us. Even with the framework, our <code>execute_command</code> tool
+has to set <code>GIT_EDITOR=:</code>, <code>GIT_TERMINAL_PROMPT=0</code>, <code>GIT_PAGER=cat</code>, and a timeout — otherwise an agent that
+runs <code>git commit</code> without <code>-m</code> (or <code>git rebase -i</code>) will hang forever waiting for an editor that doesn't exist.
+The framework gives you the loop; it doesn't know what your tools need.</p>
 
                     </main>
 
