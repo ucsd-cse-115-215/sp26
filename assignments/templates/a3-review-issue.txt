@@ -1,0 +1,24 @@
+## Review by [your name], [your pid]
+## Review of [review group name(s)]
+
+### 1. Project summary/implementation
+
+#### a. Summary
+_Summarize the project in a few sentences: what does the agent do, what tools does it have available, and what kinds of actions are guarded?_
+
+#### b. Framework and Tools
+_Identify the agent framework/API that the project uses and where in the code the tools are defined. Be specific: list the tools and their input/output schemas._
+
+#### c. Guardrail enforcement
+_Find the place in the code that enforces the project's guardrails — i.e. where an action is blocked, or where the user is asked to confirm. Describe a specific scenario that would be blocked by these guardrails._
+
+#### d. One confusing thing
+_Identify one thing you find confusing in the implementation, and describe why it's confusing and what you tried reading to understand it._
+
+### 2. Suggestions
+
+#### a. A new tool
+_Suggest one new tool you would add to this agent. Describe its input/output schema and what new behaviors or scenarios it would enable. Give a substantive argument for why it's a good fit for this project, grounded in details of the existing tool set._
+
+#### b. A test scenario the project doesn't yet cover
+_Look at the project's test/eval scenarios. Propose one new scenario that probes a behavior the current tests don't cover — ideally one you suspect the agent might fail on, or one that exercises a guardrail in a way the existing tests don't. Briefly describe the fixture, the prompt, and what the oracle would check._

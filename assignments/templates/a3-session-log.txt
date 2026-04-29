@@ -1,0 +1,55 @@
+## Session Log
+
+### Prepared flow
+
+_Fill this in before review day._
+
+**Test Environments:** If evaluating your agent requires setting up an environment
+(such as e.g. setting up a git repo to operate in, for GitBot from the [lecture](../../lectures/03-agents.md)),
+you need to set up 3-5 such environments that can be used during the review session.
+Some agents (e.g. a research assistant) might not require a test environment;
+then you can skip this step.
+
+**Demo Scenario:** Pick one environment from the set above and
+describe a task you want the agent to accomplish in this scenario.
+
+**Agent trace:** Paste the trace of agent behavior on your demo scenario;
+the trace should include user and assistant messages,
+as well as the tool calls that the agent makes and their outputs
+(if a tool has a textual output).
+
+**Outcome:** _What was the final result? (screenshot or describe)_
+
+**Guardrails:** Describe which guardrails your agent implements
+(what are the actions that are disallowed or require user approval)
+and illustrate those guardrails on your demo scenario.
+
+
+---
+
+### Live session
+
+- Demo your agent using the demo scenario from above.
+- Tell the reviewers what other test environments are available (if applicable)
+- Allow each reviewer to interact with your agent in a test environment of their choosing.
+  You can drive your demoing laptop as the project author,
+  but take the prompts from them.
+
+The project author should fill in the sections below in the same format as
+above, during the session.
+
+#### Reviewer 1
+
+**Reviewer name:**
+
+- What was the task?
+- What was the end result (what did the agent accomplish)?
+- Which tools did the agent call?
+- What happened when you asked for an action that is not automatically allowed by the guardrails?
+
+---
+
+#### Reviewer 2
+
+_Copy the structure above for additional reviewers._
+
