@@ -2590,6 +2590,9 @@ step ...&quot;) if the model decides to ask for clarification or confirmation.</
 re-implement.</li>
 </ul>
 <h3 id="lets-look-at-some-traces"><a class="header" href="#lets-look-at-some-traces">Let's look at some traces!</a></h3>
+<p>After we ran <code>inspect eval</code> and it has stored the traces in <code>logs</code>, we can run:</p>
+<pre><code class="language-bash">inspect view --log-dir logs
+</code></pre>
 <p>Let's use Inspect to compare <code>gpt-5-mini</code> and <code>claude-haiku-4-5</code> on our 10 scenarios!</p>
 <p><img src="lectures/../img/inspect-results.png" alt="Inspect results" /></p>
 <p>Looks like haiku is much faster, but also less reliable (pass@1 is 0.9 vs 0.96 for gpt-5-mini).
