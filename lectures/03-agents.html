@@ -839,6 +839,7 @@ something that sits between the agent and <code>git</code>, looks at the propose
 <li><code>git push --force origin main</code></li>
 <li><code>git checkout main</code></li>
 <li><code>git reset --hard HEAD~1</code></li>
+<li><code>git branch feature-auth &amp;&amp; git reset --hard HEAD~1</code></li>
 <li><code>git branch feature-auth HEAD~1 &amp;&amp; git reset --hard HEAD~1</code>  <em>(remember this one?)</em></li>
 </ul>
 <blockquote>
@@ -846,10 +847,29 @@ something that sits between the agent and <code>git</code>, looks at the propose
 </blockquote>
 <p>What's actually going on in each:</p>
 <ul>
-<li><code>git push --force origin main</code> — rewrites published history on the remote. Loud and obvious.</li>
-<li><code>git checkout main</code> — usually benign, but if the workdir has uncommitted changes that conflict, they get clobbered.</li>
-<li><code>git reset --hard HEAD~1</code> — moves the current branch back one commit <em>and</em> wipes the workdir. If the dropped commit isn't reachable from any other ref, it's now orphaned; if the workdir had uncommitted changes, they're gone.</li>
-<li><code>git branch feature-auth HEAD~1 &amp;&amp; git reset --hard HEAD~1</code> — two actions chained. Whether anything is orphaned depends on where <code>HEAD</code> was, where <code>feature-auth</code> ends up, and what other refs exist.</li>
+<li>
+<p><code>git push --force origin main</code> — rewrites published history on the remote. Loud and obvious.</p>
+</li>
+<li>
+<p><code>git checkout main</code> — usually benign, but if the workdir has uncommitted changes that conflict, they get clobbered.</p>
+</li>
+<li>
+<p><code>git reset --hard HEAD~1</code> — moves the current branch back one commit <em>and</em> wipes the workdir. If the dropped commit isn't reachable from any other ref, it's now orphaned; if the workdir had uncommitted changes, they're gone.</p>
+</li>
+<li>
+<p><code>git branch feature-auth &amp;&amp; git reset --hard HEAD~1</code> — benign (assuming no uncommitted changes): just moves the last commit onto a new branch.</p>
+<pre><code>before:                       after:
+  A ─── B ─── C  (main, HEAD)    A ─── B  (main, HEAD)
+                                       └── C  (feature-auth)
+</code></pre>
+</li>
+<li>
+<p><code>git branch feature-auth HEAD~1 &amp;&amp; git reset --hard HEAD~1</code> — last commit is now orphaned (unless it's reachable from another branch, e.g. <code>wip</code>)! Reasoning about each command in isolation isn't enough — we need to reason about the <em>effect of the second command on the state produced by the first</em>.</p>
+<pre><code>before:                       after:
+  A ─── B ─── C  (main, HEAD)    A ─── B  (main, HEAD, feature-auth)
+                                       └── C  ← orphaned
+</code></pre>
+</li>
 </ul>
 <p>Three problems:</p>
 <ul>
