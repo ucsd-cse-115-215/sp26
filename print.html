@@ -2393,10 +2393,10 @@ Fine for a demo, but it doesn't scale, and it gives us no way to answer question
 </blockquote>
 <p>We need to <strong>add some tests</strong>!</p>
 <blockquote>
-<p><strong>Q:</strong> What does a single &quot;unit test&quot; for GitBot even look like? What do we need to define?</p>
+<p><strong>Q:</strong> What does a single &quot;test&quot; for GitBot even look like? What do we need to define?</p>
 </blockquote>
-<p>There's no one right answer, but here's a design I went with:</p>
-<p>A unit test consist of three parts:</p>
+<p>There's no one right answer, but here's a design I like:</p>
+<p>A <strong>test</strong> (aka <strong>scenario</strong>) consist of three parts:</p>
 <ol>
 <li>A <strong>repo fixture</strong> — a starting state to run the agent against.
 We already have infrastructure for this!
@@ -2435,7 +2435,7 @@ def oracle(repo: Path) -&gt; bool:
 <blockquote>
 <p><strong>Q:</strong> Now that we have a bunch of scenarios, should we just hook them up to <code>pytest</code> and call it a day?</p>
 </blockquote>
-<p>Pytest is built around <strong>deterministic</strong> pass/fail:</p>
+<p>Pytest is not a great fit for testing agents. It is built around <strong>deterministic</strong> pass/fail:</p>
 <ul>
 <li>each test is supposed to always pass</li>
 <li>if a test fails, we need to fix our code</li>
@@ -2512,14 +2512,27 @@ OVERALL                   0.94     1.00
 <blockquote>
 <p><strong>Q:</strong> What can we conclude from this table?</p>
 </blockquote>
+<ul>
+<li>The model is doing pretty well overall (?)</li>
+<li>Some scenarios are harder than others (and retrying helps for those), but what if our oracle is flaky or the prompt is too ambiguous?</li>
+</ul>
+<p>If we want to:</p>
+<ul>
+<li>inspect why the scenarios failed</li>
+<li>compare models or prompts</li>
+</ul>
+<p>We need a better eval infrastructure (with traces, inspection UI, etc.)!</p>
 <hr />
 <h3 id="eval-frameworks"><a class="header" href="#eval-frameworks">Eval frameworks</a></h3>
-<p>Just like with the <em>agent loop</em> before, we've built a working eval harness from scratch — and just like before,
-most of what we wrote isn't specific to GitBot. Running each item <code>n</code> times, computing pass@k, building per-trial
-sandboxes, surfacing traces when something goes wrong: every team that evaluates an LLM-based system needs the
-same plumbing.</p>
-<p>So, predictably, there are <strong>eval frameworks</strong> that wrap this up: <a href="https://inspect.aisi.org.uk/">Inspect AI</a>,
-<a href="https://www.promptfoo.dev/">Promptfoo</a>, <a href="https://www.braintrust.dev/">Braintrust</a>, OpenAI's <code>evals</code>, and others.
+<p>Instead of rolling our own eval infrastructure, we can use <strong>LLM eval frameworks</strong>:</p>
+<ul>
+<li><a href="https://inspect.aisi.org.uk/">Inspect AI</a></li>
+<li><a href="https://www.promptfoo.dev/">Promptfoo</a></li>
+<li><a href="https://www.braintrust.dev/">Braintrust</a></li>
+<li>OpenAI's <code>evals</code></li>
+</ul>
+<p>They are typically not specific to agents (e.g. we could have also used them in previous units),
+but they support the agent use case too.
 They differ in the details, but they share the same core abstraction:</p>
 <div class="table-wrapper"><table><thead><tr><th>Concept</th><th>What it is</th><th>In our hand-rolled code</th></tr></thead><tbody>
 <tr><td><strong>Dataset</strong></td><td>The set of inputs to evaluate on.</td><td><code>ALL_SCENARIOS</code></td></tr>
@@ -2528,18 +2541,8 @@ They differ in the details, but they share the same core abstraction:</p>
 </tbody></table>
 </div>
 <p>Recognizing this triple is the main transferable concept — once you see it, every framework looks similar.</p>
-<p>Here's our eval ported to Inspect, with implementations elided:</p>
-<pre><code class="language-python">from inspect_ai import Task, task, Epochs
-from inspect_ai.agent import react
-from inspect_ai.dataset import Sample
-from inspect_ai.scorer import scorer, Score, CORRECT, INCORRECT
-from inspect_ai.solver import solver
-from inspect_ai.tool import tool
-
-@solver
-def build_fixture():
-    '''Per-trial: run scenario.build() in a fresh tmpdir.'''
-    ...
+<p>Here's our eval ported to Inspect (simplified):</p>
+<pre><code class="language-python"># inspect_task.py
 
 @tool
 def execute_command():
@@ -2548,57 +2551,52 @@ def execute_command():
 
 @scorer(metrics=[accuracy()])
 def repo_oracle():
-    '''Per-trial: call scenario.oracle() on the final repo state.'''
-    ...
+    '''Returns a scoring function.'''
+    async def score(state: TaskState, _target: Target) -&gt; Score:
+        ... # Get the scenario and repo dir from the state,
+        ok = scenario.oracle(Path(repo_path))
+        return Score(value=CORRECT if ok else INCORRECT)
+
+    return score
+
 
 @task
 def git_agent_eval() -&gt; Task:
     return Task(
         dataset = [Sample(input=s.prompt, id=s.name) for s in ALL_SCENARIOS],
-        solver  = [build_fixture(), react(prompt=INSTRUCTIONS, tools=[execute_command()])],
+        # A solver is a pipeline: first build fixture, then run agent loop
+        solver  = [build_fixture(),
+                   react(prompt=INSTRUCTIONS, tools=[execute_command()])],
         scorer  = repo_oracle(),
-        epochs  = Epochs(5, [pass_at(1), pass_at(5)]),  # n_trials=5, report pass@1 and pass@5
+        # n_trials=5, report pass@1 and pass@5
+        epochs  = Epochs(5, [pass_at(1), pass_at(5)]),
     )
 </code></pre>
-<p>The shape is what matters: a <code>Task</code> is a <code>(dataset, solver, scorer)</code> triple, plus how many times to run each
+<p>A <code>Task</code> is a <code>(dataset, solver, scorer)</code> triple, plus how many times to run each
 sample (<code>Epochs</code>) and which metrics to report.</p>
-<blockquote>
-<p><strong>Q:</strong> Why bother, if we already had a working harness in ~30 lines?</p>
-</blockquote>
-<p>Because once you adopt the framework you get a lot of things <em>for free</em>:</p>
+<p>Now we can run:</p>
+<pre><code class="language-bash">inspect eval inspect_task.py --model gpt-5-mini
+</code></pre>
+<p><img src="lectures/../img/inspect-ui.png" alt="Inspect UI" /></p>
+<p>Once you adopt the framework you get a lot of things <em>for free</em>:</p>
 <ul>
-<li>
-<p><strong>Trace logging and a web UI to inspect runs.</strong> This is the killer feature. With dozens of trials per scenario,
-terminal output is unreadable; per-trial timelines in a browser are not.</p>
-<p><img src="lectures/../img/inspect-runs.png" alt="Inspect web UI: list of evaluation runs" /></p>
-<p>Each trial gives you the full conversation — prompt, tool calls, tool output, model's reasoning — which is
-how you actually debug a flaky scenario. For example, here's the agent confidently reporting success
-after <code>git reset --hard</code> blew away the user's staged changes:</p>
-<p><img src="lectures/../img/inspect-trace-destruction.png" alt="Inspect trace: agent destroys staged changes and reports success" /></p>
-<p>This is a single best motivating example for the <em>Guardrails</em> section coming up next — the agent's plan looked
-fine in isolation; only the trace makes the failure obvious.</p>
-</li>
-<li>
-<p><strong>Mock user responses.</strong> The framework can simulate a user nudging the agent (&quot;please proceed to the next
-step ...&quot;) if the model stops without finishing. Useful for measuring capability without writing per-task
-baby-sitting code. (Caveat: this means the model may see multiple &quot;user&quot; turns even though <em>we</em> gave one
-prompt — worth knowing when comparing to the hand-rolled numbers.)</p>
-</li>
-<li>
-<p><strong>Multi-provider support out of the box.</strong> Same eval, same code, swap the model: Anthropic, OpenAI, local,
-whatever — useful when you're trying to answer &quot;is the cheaper model good enough?&quot;</p>
-</li>
-<li>
-<p><strong>Parallelism, retries, caching, deterministic seeding</strong> — all the boring infrastructure you'd otherwise
-re-implement.</p>
-</li>
+<li><strong>Trace logging and a web UI to inspect runs.</strong>
+Each trial gives you the full conversation — prompt, tool calls, tool output, model's reasoning — which is
+how you actually debug a scenario.</li>
+<li><strong>Mock user responses.</strong> The framework can simulate user responses (&quot;please proceed to the next
+step ...&quot;) if the model decides to ask for clarification or confirmation.</li>
+<li><strong>Multi-provider support out of the box.</strong> Same eval code, just swap the model name e.g. to <code>anthropic/claude-haiku-4-5</code>.</li>
+<li><strong>Parallelism, retries, caching, deterministic seeding</strong> — all the boring infrastructure you'd otherwise
+re-implement.</li>
 </ul>
-<p>What you still own: the <strong>dataset</strong> (fixture design), the <strong>scorer</strong> (oracle design), and the metric. That's the
-hard part, and no framework can do it for you.</p>
-<p>One thing to watch out for: shell hygiene is still on us. Even with the framework, our <code>execute_command</code> tool
-has to set <code>GIT_EDITOR=:</code>, <code>GIT_TERMINAL_PROMPT=0</code>, <code>GIT_PAGER=cat</code>, and a timeout — otherwise an agent that
-runs <code>git commit</code> without <code>-m</code> (or <code>git rebase -i</code>) will hang forever waiting for an editor that doesn't exist.
-The framework gives you the loop; it doesn't know what your tools need.</p>
+<h3 id="lets-look-at-some-traces"><a class="header" href="#lets-look-at-some-traces">Let's look at some traces!</a></h3>
+<p>Let's use Inspect to compare <code>gpt-5-mini</code> and <code>claude-haiku-4-5</code> on our 10 scenarios!</p>
+<p><img src="lectures/../img/inspect-results.png" alt="Inspect results" /></p>
+<p>Looks like haiku is much faster, but also less reliable (pass@1 is 0.9 vs 0.96 for gpt-5-mini).
+Let's inspect some failure traces!</p>
+<p><img src="lectures/../img/haiku-failure.png" alt="Inspect trace" /></p>
+<p>Uh-oh! This is pretty concerning — the agent accidentally deleted some uncommitted changes!
+What if this happened on a real repo with important work in progress?</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
 for this assignment (e.g. ugrad/ugrad, ugrad/grad, and grad/grad pairs all
