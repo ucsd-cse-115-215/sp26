@@ -2597,6 +2597,81 @@ Let's inspect some failure traces!</p>
 <p><img src="lectures/../img/haiku-failure.png" alt="Inspect trace" /></p>
 <p>Uh-oh! This is pretty concerning — the agent accidentally deleted some uncommitted changes!
 What if this happened on a real repo with important work in progress?</p>
+<blockquote>
+<p><strong>Q:</strong> Can we prevent this? How would <em>you</em> want the agent to behave in this scenario?</p>
+</blockquote>
+<p>This is exactly what <strong>guardrails</strong> are for!</p>
+<hr />
+<h2 id="outline-14"><a class="header" href="#outline-14">Outline</a></h2>
+<ol>
+<li><del><strong>Agents from scratch</strong>: chat completions is all you need!</del> <strong>[done]</strong></li>
+<li><del><strong>Multi-turn interactions</strong>: making the agent interactive</del> <strong>[done]</strong></li>
+<li><del><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</del> <strong>[done]</strong></li>
+<li><del><strong>Evaluation</strong>: how do we test agents?</del> <strong>[done]</strong></li>
+<li><strong>Guardrails</strong>: building an agent you can trust</li>
+</ol>
+<hr />
+<h2 id="guardrails"><a class="header" href="#guardrails">Guardrails</a></h2>
+<p>Existing agent frameworks typically support three kinds of guardrails:</p>
+<div class="table-wrapper"><table><thead><tr><th>Kind</th><th>Runs on</th><th>Used to</th></tr></thead><tbody>
+<tr><td><strong>Input</strong></td><td>the user's prompt</td><td>block off-topic, unsafe, or out-of-scope requests before the agent acts</td></tr>
+<tr><td><strong>Tool</strong></td><td>a proposed tool call</td><td>inspect <em>what the agent is about to do</em> and allow / ask / reject it</td></tr>
+<tr><td><strong>Output</strong></td><td>a tool's output</td><td>sanitize sensitive data returned by the tool before it reaches the agent</td></tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>Q:</strong> Which of these would be useful for GitBot?</p>
+</blockquote>
+<p>For our scenario above (agent clobbers uncommitted changes), we want a <strong>tool guardrail</strong>:
+something that sits between the agent and <code>git</code>, looks at the proposed command, and decides whether to run it.</p>
+<hr />
+<h3 id="what-policy-do-we-want"><a class="header" href="#what-policy-do-we-want">What policy do we want?</a></h3>
+<blockquote>
+<p><strong>Q:</strong> What kinds of actions should the guardrail <em>ask the user about</em>? Are there any it should <em>reject outright</em>?</p>
+</blockquote>
+<p>Some candidates to discuss:</p>
+<ul>
+<li>overwriting uncommitted changes in the workdir or index</li>
+<li>deleting unmerged branches</li>
+<li>rewriting history</li>
+<li>(maybe) anything touching a remote at all</li>
+<li>...</li>
+</ul>
+<hr />
+<h3 id="how-do-we-implement-it"><a class="header" href="#how-do-we-implement-it">How do we implement it?</a></h3>
+<p>Consider a few example commands the agent might propose:</p>
+<ul>
+<li><code>git push --force origin main</code></li>
+<li><code>git checkout main</code></li>
+<li><code>git reset --hard HEAD~1</code></li>
+<li><code>git branch feature-auth HEAD~1 &amp;&amp; git reset --hard HEAD~1</code>  <em>(remember this one?)</em></li>
+</ul>
+<blockquote>
+<p><strong>Q:</strong> Given a proposed git command, how would we decide which bucket it falls into (allow / ask / reject)?</p>
+</blockquote>
+<p>What's actually going on in each:</p>
+<ul>
+<li><code>git push --force origin main</code> — rewrites published history on the remote. Loud and obvious.</li>
+<li><code>git checkout main</code> — usually benign, but if the workdir has uncommitted changes that conflict, they get clobbered.</li>
+<li><code>git reset --hard HEAD~1</code> — moves the current branch back one commit <em>and</em> wipes the workdir. If the dropped commit isn't reachable from any other ref, it's now orphaned; if the workdir had uncommitted changes, they're gone.</li>
+<li><code>git branch feature-auth HEAD~1 &amp;&amp; git reset --hard HEAD~1</code> — two actions chained. Whether anything is orphaned depends on where <code>HEAD</code> was, where <code>feature-auth</code> ends up, and what other refs exist.</li>
+</ul>
+<p>Three problems:</p>
+<ul>
+<li>the <em>same</em> git verb (<code>reset</code>, <code>checkout</code>, <code>branch</code>) can be benign or destructive depending on repo state</li>
+<li>a single bash string can chain several actions together — we'd have to parse it</li>
+<li>with full shell access, there's no guarantee the agent is running a git command <em>at all</em> — it could run whatever it wants (<code>rm -rf</code>, <code>curl | sh</code>, ...)</li>
+</ul>
+<p>So analyzing raw shell commands is hard. In production, when stakes are high, commercial agents are typically <em>not</em> given big powerful tools like a shell or a Python interpreter; when we want predictability and safety, we give the agent a set of smaller, well-defined tools instead.</p>
+<p>This pushes us toward the same idea for GitBot: <strong>redesign the tool surface itself.</strong>
+Instead of one big <code>execute_command(bash)</code> tool, give the agent a set of smaller, typed tools whose <strong>effects</strong> on the repo are well-defined and easy to reason about — things like:</p>
+<ul>
+<li>writes a local ref</li>
+<li>makes some commits unreachable</li>
+<li>overwrites uncommitted paths</li>
+<li>writes a remote ref / rewrites published history</li>
+</ul>
+<p>Then the guardrail's job becomes: <em>given the effects of a proposed call, decide allow / ask / reject.</em></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
 for this assignment (e.g. ugrad/ugrad, ugrad/grad, and grad/grad pairs all
