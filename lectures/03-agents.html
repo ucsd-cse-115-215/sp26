@@ -977,7 +977,7 @@ A ◄── B ◄── C   (main)               A ◄── B ◄── C'  (ma
 </ul>
 <hr />
 <h3 id="policy-for-gitbot"><a class="header" href="#policy-for-gitbot">Policy for GitBot</a></h3>
-<p>For GitBot, let us agree on the following policy:</p>
+<p>For GitBot, let us agree on the following <strong>policy</strong>:</p>
 <div class="table-wrapper"><table><thead><tr><th>Effect</th><th>Decision</th></tr></thead><tbody>
 <tr><td>Clobber uncommitted changes</td><td><strong>Confirm</strong></td></tr>
 <tr><td>Orphan a local commit</td><td><strong>Confirm</strong></td></tr>
@@ -1027,16 +1027,19 @@ while True:
 The model can still be confused, prompted adversarially, or just have a bad day.
 For real safety we need <strong>policy enforcement</strong> baked into the agent scaffolding,
 i.e. into the code <em>around</em> the model.</p>
-<p>Specifically, we need two pieces:</p>
+<p>Specifically, any time a model proposes a tool call (e.g. <code>execute_command(&quot;git reset --hard HEAD~1&quot;)</code>), we need to:</p>
 <ol>
-<li><strong>Effect inference.</strong> Given a proposed tool call, figure out what effects it would have on the repo (clobbers uncommitted paths? orphans commits? touches a remote? rewrites published history?).</li>
-<li><strong>A hook into the agent loop.</strong> Intercept every tool call <em>before</em> it runs, ask the policy what to do with its effects, and then <code>Allow</code> / <code>Confirm</code> / <code>Deny</code>.</li>
+<li><em>Intercept</em> every tool call before it runs</li>
+<li>Consult the policy and decide whether to <code>Allow</code> / <code>Confirm</code> / <code>Deny</code> the call</li>
+<li>If <code>Confirm</code>, ask the user for confirmation</li>
+<li>Reject or approve the call based on the final decision and resume the agent loop</li>
 </ol>
-<p>Let's tackle the hook first — it's the easy part — and come back to effect inference after.</p>
+<p>Let's figure out how to hook into the agent loop to do this.</p>
 <hr />
 <h3 id="guardrails-in-agent-frameworks"><a class="header" href="#guardrails-in-agent-frameworks">Guardrails in agent frameworks</a></h3>
-<p>Good news: every serious agent framework already has a slot for this kind of hook.
-They typically support three kinds of guardrails:</p>
+<p>Good news: every serious agent framework already has a slot for this kind of hook:
+this is called a <strong>guardrail</strong>.</p>
+<p>They typically support three kinds of guardrails:</p>
 <div class="table-wrapper"><table><thead><tr><th>Kind</th><th>Runs on</th><th>Used to</th></tr></thead><tbody>
 <tr><td><strong>Input</strong></td><td>the user's prompt</td><td>block off-topic, unsafe, or out-of-scope requests before the agent acts</td></tr>
 <tr><td><strong>Tool</strong></td><td>a proposed tool call</td><td>inspect <em>what the agent is about to do</em> and allow / ask / reject it</td></tr>
@@ -1069,8 +1072,8 @@ print(result.final_output)
 </code></pre>
 <p>Then <code>approve_call</code> consults the policy and either approves, rejects, or asks the user:</p>
 <pre><code class="language-python">def approve_call(state, item, repo: Path) -&gt; None:
-    effects = infer_effects(item.tool_name, item.args, repo)   # piece (1) — TBD
-    decision = policy(effects)                                  # our table
+    decision = ... # TBD: figure out whether to allow, confirm, or deny this call
+                   # depending on the tool call (item) and the repo state
 
     if isinstance(decision, Allow):
         state.approve(item)
@@ -1095,8 +1098,77 @@ might assume the call worked silently.</p>
 the agent <em>cannot</em> perform a denied action, no matter what the model decides to output.</p>
 <p>This is the key shift: the policy is enforced by <strong>code we control</strong>, not by the model.</p>
 <hr />
-<h3 id="policy-the-easy-half"><a class="header" href="#policy-the-easy-half">Policy: the easy half</a></h3>
-<p>Of the two missing pieces (<code>policy</code> and <code>infer_effects</code>), <code>policy</code> is by far the easier one. It's just a function from a list of effects to a decision — a direct translation of our table:</p>
+<h3 id="applying-the-policy-the-hard-part"><a class="header" href="#applying-the-policy-the-hard-part">Applying the policy: the hard part</a></h3>
+<p>That leaves the dummy line we glossed over:</p>
+<pre><code class="language-python">decision = ... # given a tool call (a git command) and the repo state,
+               # decide allow / confirm / deny.
+</code></pre>
+<p>Let me propose a strawman: pattern-match dangerous commands with a few regexes:</p>
+<pre><code class="language-python">def decide(command: str, repo: Path) -&gt; Decision:
+    if re.match(r&quot;^git push --force\b&quot;, command):
+        return Deny(&quot;rewrites published history&quot;)
+    if re.match(r&quot;^git reset --hard\b&quot;, command):
+        return Confirm(&quot;clobbers uncommitted changes&quot;)
+    ...
+    return Allow()
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> Will this work? If not, what does it miss?</p>
+</blockquote>
+<p>The good news: it does flag <code>git push --force origin main</code> and <code>git reset --hard HEAD~1</code> correctly. Now let's poke at it:</p>
+<ol>
+<li>
+<p><strong><code>git push origin +main</code></strong> — same effect as <code>--force</code> (overwrites remote ref), written differently. Regex misses it. Same story for <code>git push -f</code>, <code>git -C otherrepo push --force ...</code>, or low-level plumbing like <code>git update-ref</code> (which is what <code>reset --hard</code> does under the hood).</p>
+</li>
+<li>
+<p><strong><code>git reset --hard HEAD~1</code></strong>, in two different repos:</p>
+<pre><code>repo A:                              repo B:
+A ─── B ─── C  (main, HEAD)          A ─── B ─── C  (main, HEAD, wip)
+
+→ orphans C (no other ref)           → safe (wip still points at C)
+</code></pre>
+<p>Same command, different effect. Regex says <code>Confirm</code> both times — over-triggering in repo B costs the user a needless prompt.</p>
+</li>
+<li>
+<p><strong><code>git branch feature-auth &amp;&amp; git reset --hard HEAD~1</code></strong> — the second clause matches our regex, so we'd ask. But the combined effect is &quot;move the last commit onto a new branch&quot; — fully safe.</p>
+<pre><code>before:                              after:
+A ─── B ─── C  (main, HEAD)          A ─── B  (main, HEAD)
+                                           └── C  (feature-auth)
+</code></pre>
+</li>
+<li>
+<p><strong><code>rm -rf .git</code></strong> — destroys the entire repo. Doesn't match any git pattern.</p>
+</li>
+</ol>
+<p>Three failure modes:</p>
+<ul>
+<li><strong>Same command, different effect.</strong> Whether <code>reset --hard</code> orphans anything depends on the ref graph, which the regex never sees.</li>
+<li><strong>Same effect, different command.</strong> <code>--force</code> vs <code>-f</code> vs <code>+ref</code>, plumbing commands, aliases, <code>git -C</code> — all do the same thing, none look the same.</li>
+<li><strong>Not even git.</strong> With shell access the agent can run anything.</li>
+</ul>
+<h4 id="a-better-factoring"><a class="header" href="#a-better-factoring">A better factoring</a></h4>
+<p>The root issue: our <strong>policy</strong> is naturally phrased over <em>effects on the repo</em> — &quot;orphans commits&quot;, &quot;clobbers uncommitted changes&quot; — not over command strings. So let's factor along that line:</p>
+<pre><code>   command + repo state
+            │
+            ▼
+   ┌─ infer_effects ─┐   reads the repo, predicts what would happen
+   └─────────────────┘
+            │
+            ▼
+        list[Effect]
+            │
+            ▼
+   ┌──── policy ─────┐   maps effects to a decision
+   └─────────────────┘
+            │
+            ▼
+   Allow | Confirm | Deny
+</code></pre>
+<ul>
+<li><code>infer_effects</code> looks at <em>both</em> the command and the live repo, and produces a list of typed effects.</li>
+<li><code>policy</code> then maps those effects to a decision, ignoring command syntax entirely.</li>
+</ul>
+<p>Let's first implement <code>policy</code> (the easy part):</p>
 <pre><code class="language-python">@dataclass
 class MakesUnreachable:          commits: list[str]
 @dataclass
@@ -1128,52 +1200,9 @@ def policy(effects: list[Effect]) -&gt; Decision:
     return Confirm(&quot;; &quot;.join(reasons)) if reasons else Allow()
 </code></pre>
 <p>Each effect carries just enough context (which ref? which paths?) to write a useful prompt for the user when we ask.</p>
-<hr />
-<h3 id="effect-analysis-the-hard-half"><a class="header" href="#effect-analysis-the-hard-half">Effect analysis: the hard half</a></h3>
-<p>That leaves the actually-hard part: given a proposed call, what effects will it have?</p>
-<!-- TODO: I want to change this to: propose regex over git commands as a strawman and discuss what's wrong with it; need good examples to demonstrate -->
-<p>Consider a few commands the agent might propose:</p>
-<ul>
-<li><code>git push --force origin main</code></li>
-<li><code>git checkout main</code></li>
-<li><code>git reset --hard HEAD~1</code></li>
-<li><code>git branch feature-auth &amp;&amp; git reset --hard HEAD~1</code></li>
-</ul>
-<blockquote>
-<p><strong>Q:</strong> For each one, which of our policy effects (clobber uncommitted changes, orphan a commit, rewrite published history) apply?</p>
-</blockquote>
-<p>What's actually going on in each:</p>
-<ul>
-<li>
-<p><code>git push --force origin main</code> — <em>rewrites published history</em> on the remote. Loud and obvious.</p>
-</li>
-<li>
-<p><code>git checkout main</code> — benign, but would <em>clobber uncommitted changes</em> if <code>--force</code> flag is added.</p>
-</li>
-<li>
-<p><code>git reset --hard HEAD~1</code> — moves the current branch back one commit <em>and</em> wipes the workdir. <em>Orphans</em> the dropped commit (unless reachable from another ref); <em>clobbers uncommitted changes</em>.</p>
-<pre><code>before:                              after:
-  A ─── B ─── C  (main, HEAD)        A ─── B  (main, HEAD, workdir)
-              |                             └── C  (no ref points here)
-              └── C*  (workdir)                 C*  # gone
-
-</code></pre>
-</li>
-<li>
-<p><code>git branch feature-auth &amp;&amp; git reset --hard HEAD~1</code> — benign (modulo uncommitted): just moves the last commit onto a new branch.</p>
-<pre><code>before:                                   after:
-  A ─── B ─── C  (main, HEAD, workdir)    A ─── B  (main, HEAD, workdir)
-                                                └── C  (feature-auth)
-</code></pre>
-</li>
-</ul>
-<p>Three problems:</p>
-<ul>
-<li>the <em>same</em> git verb (<code>reset</code>, <code>checkout</code>, <code>branch</code>) can be benign or destructive depending on flags and repo state</li>
-<li>a single bash string can chain several actions together — we'd have to parse it</li>
-<li>with full shell access, there's no guarantee the agent is running a git command <em>at all</em> — it could run whatever it wants (<code>rm -rf</code>, <code>curl | sh</code>, ...)</li>
-</ul>
-<p>So inferring effects from raw shell commands is <strong>hard</strong>. The fix isn't a smarter analyzer — it's a different tool surface.</p>
+<p>Now for the inference half: <code>infer_effects(command, repo) -&gt; list[Effect]</code>.
+We saw above the three reasons this is hopelessly complicated over raw bash strings.</p>
+<p>The fix is to give the agent <strong>different tools</strong>.</p>
 <hr />
 <h2 id="tool-design"><a class="header" href="#tool-design">Tool Design</a></h2>
 <p>Recall: an agent is parameterized by a set of tools. For GitBot v0 we didn't think about this much — we just gave it the entire shell. In reality, the choice of tools is a tradeoff:</p>
