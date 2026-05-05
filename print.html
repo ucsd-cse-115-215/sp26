@@ -3010,8 +3010,20 @@ def policy(effects: list[Effect]) -&gt; Decision:
 We saw above the three reasons this is hopelessly complicated over raw bash strings.</p>
 <p>The fix is to give the agent <strong>different tools</strong>.</p>
 <hr />
+<h2 id="outline-15"><a class="header" href="#outline-15">Outline</a></h2>
+<ol>
+<li><del><strong>Agents from scratch</strong>: chat completions is all you need!</del> <strong>[done]</strong></li>
+<li><del><strong>Multi-turn interactions</strong>: making the agent interactive</del> <strong>[done]</strong></li>
+<li><del><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</del> <strong>[done]</strong></li>
+<li><del><strong>Evaluation</strong>: how do we test agents?</del> <strong>[done]</strong></li>
+<li><del><strong>Guardrails</strong>: building an agent you can trust</del> <strong>[done]</strong></li>
+<li><strong>Tool Design</strong>: powerful enough, restricted enough</li>
+</ol>
+<hr />
 <h2 id="tool-design"><a class="header" href="#tool-design">Tool Design</a></h2>
-<p>Recall: an agent is parameterized by a set of tools. For GitBot v0 we didn't think about this much — we just gave it the entire shell. In reality, the choice of tools is a tradeoff:</p>
+<p>Recall: an agent is parameterized by a set of tools. For GitBot v0 we didn't think about this much — we just gave it the entire shell.</p>
+<p>In reality, the choice of tools is probably <em>the most important design decision for an agent!</em></p>
+<p>The main trade-off is between <strong>power</strong> and <strong>control</strong>:</p>
 <div class="table-wrapper"><table><thead><tr><th>Approach</th><th>Pros</th><th>Cons</th></tr></thead><tbody>
 <tr><td><strong>Few powerful tools</strong> (shell, Python interpreter, browser)</td><td>Agent can do almost anything</td><td>Hard to control: behavior depends on the full string the model emits</td></tr>
 <tr><td><strong>Many small, restricted tools</strong> (one per intent, typed args)</td><td>Each call is easy to analyze</td><td>Limited to whatever the designer thought to expose</td></tr>
@@ -3023,6 +3035,10 @@ We saw above the three reasons this is hopelessly complicated over raw bash stri
 <li><strong>Syntactic command pattern matching</strong> — &quot;allow if the command starts with <code>git status</code> or <code>git diff</code>; otherwise ask.&quot; Easy to write, but as we just saw, a regex over <code>git reset --hard</code> can't tell you whether the reset orphans anything.</li>
 </ul>
 <p>For agents that run <em>autonomously</em> and <em>at scale</em> (customer-support agents, deep-research agents, browser agents, ...), this isn't enough. So in practice, programmers design <strong>special-purpose, restricted tools</strong> for those agents, and the powerful ones are reserved for human-supervised settings (like a coding assistant where you press &quot;approve&quot; each time).</p>
+<p>Let's try to re-design GitBot with a set of restricted tools instead of a raw shell.</p>
+<blockquote>
+<p><strong>Q</strong>: How would you approach tool design for GitBot? What tools would you give it? What principles would you follow in designing those tools?</p>
+</blockquote>
 <hr />
 <h3 id="a-safe-but-useless-gitbot"><a class="header" href="#a-safe-but-useless-gitbot">A safe but useless GitBot</a></h3>
 <p>The extreme version of &quot;restricted tools&quot;: expose only <strong>read-only</strong> operations.</p>
@@ -3038,10 +3054,15 @@ def log(start: str = &quot;HEAD&quot;, count: int = 20) -&gt; str: ...
 agent = Agent(name=&quot;GitBot&quot;, instructions=&quot;...&quot;, tools=[status, diff, log])
 </code></pre>
 <p>This GitBot is <em>trivially</em> safe — none of these tools mutate anything, so there's nothing for the policy to deny. But it can't actually <em>do</em> anything either: no commits, no branches, no resets.</p>
-<p>What we want is a <strong>middle ground</strong>: a set of tools powerful enough to handle every scenario in our eval, <em>and</em> with effects that are easy to compute. That's a tool design problem — and just like designing a regular API, it's hard, important, and has real downstream consequences.</p>
+<p>What we want is a <strong>middle ground</strong>: a set of tools</p>
+<ul>
+<li>powerful enough to handle most real-world scenarios,</li>
+<li><em>and</em> with effects that are easy to compute.</li>
+</ul>
+<p>Bad news is that this is a hard design problem. Good news is that it's not that different from the kind of API design we already know how to do as software engineers.</p>
 <hr />
 <h3 id="a-typed-git-dsl"><a class="header" href="#a-typed-git-dsl">A typed git DSL</a></h3>
-<p>Here's the key observation: porcelain verbs (<code>reset</code>, <code>checkout</code>, <code>rebase</code>, <code>revert</code>, <code>cherry-pick</code>, <code>merge</code>) look very different to a human, but they all bottom out in a handful of operations on git's underlying data model — refs, trees, commits, the index, the workdir. If we expose <em>those</em> directly, we get fewer tools, each with a narrower effect set.</p>
+<p>Here's the key observation: git verbs (<code>reset</code>, <code>checkout</code>, <code>rebase</code>, <code>revert</code>, <code>cherry-pick</code>, <code>merge</code>) look very different to a human, but they all bottom out in a handful of operations on git's underlying data model — refs, trees, commits, the index, the workdir. If we expose <em>those</em> directly, we get fewer tools, each with a narrower effect set.</p>
 <p>Four primitives cover most of what we need:</p>
 <div class="table-wrapper"><table><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody>
 <tr><td><code>set_ref(name, target)</code></td><td>Create or move a local ref to point at <code>target</code></td></tr>
@@ -3052,21 +3073,20 @@ agent = Agent(name=&quot;GitBot&quot;, instructions=&quot;...&quot;, tools=[stat
 </div>
 <p>Plus the obvious read-only inspectors (<code>inspect_refs</code>, <code>inspect_status</code>, <code>inspect_diff</code>, <code>inspect_reflog</code>, ...) and <code>push</code> / <code>fetch</code> for remotes.</p>
 <p>Notably <em>not</em> present: <code>reset</code>, <code>checkout</code>, <code>branch</code>, <code>revert</code>, <code>rebase</code>, <code>cherry-pick</code>. They're all expressible in terms of the four primitives above.</p>
-<p><strong>Example: undo my last commit but keep the changes</strong> (<code>git reset --soft HEAD~1</code> in porcelain):</p>
+<p><strong>Example: undo my last commit but keep the changes</strong> (<code>git reset --soft HEAD~1</code>):</p>
 <pre><code>set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)
 </code></pre>
-<pre><code>before:                       after:
-  A ─── B ─── C  (main, HEAD)    A ─── B  (main, HEAD)
-                                       └── C  # orphaned (until re-referenced)
+<pre><code>before:                                 after:
+  A ─── B ─── C  (main, HEAD, workdir)  A ─── B  (main, HEAD)
+                                              └── C  (workdir)
 </code></pre>
-<p>(Workdir untouched, so the changes from <code>C</code> show up as unstaged. Note the <code>MakesUnreachable</code> effect — the policy will ask before running this.)</p>
 <p><strong>Example: move my last commit to a new branch</strong> (the move_commit scenario haiku failed on):</p>
 <pre><code>set_ref(&quot;feature-auth&quot;, &quot;HEAD&quot;)    # feature-auth → C
 set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)          # main → B
 </code></pre>
-<pre><code>before:                       after:
-  A ─── B ─── C  (main, HEAD)    A ─── B  (main, HEAD)
-                                       └── C  (feature-auth)
+<pre><code>before:                                 after:
+  A ─── B ─── C  (main, HEAD, workdir)  A ─── B  (main, HEAD)
+                                              └── C  (feature-auth, workdir)
 </code></pre>
 <p>Two simple <code>set_ref</code> calls. The effect inferencer looks at each call independently:</p>
 <ul>
@@ -3098,7 +3118,7 @@ And our pass@k table on the eval:
 
 [TODO: rerun eval with `AGENT=dsl GUARDRAIL=permissive` and paste the new numbers — should show fewer destructive failures, comparable accuracy.] -->
 <hr />
-<h2 id="outline-15"><a class="header" href="#outline-15">Outline</a></h2>
+<h2 id="outline-16"><a class="header" href="#outline-16">Outline</a></h2>
 <ol>
 <li><del><strong>Agents from scratch</strong>: chat completions is all you need!</del> <strong>[done]</strong></li>
 <li><del><strong>Multi-turn interactions</strong>: making the agent interactive</del> <strong>[done]</strong></li>
