@@ -1986,6 +1986,7 @@ In this unit we will practice building such systems.</p>
 <li><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</li>
 <li><strong>Evaluation</strong>: how do we test agents?</li>
 <li><strong>Guardrails</strong>: building an agent you can trust</li>
+<li><strong>Tool Design</strong>: powerful enough, restricted enough</li>
 </ol>
 <hr />
 <h2 id="gitbot-v0"><a class="header" href="#gitbot-v0">GitBot v0</a></h2>
@@ -2108,6 +2109,7 @@ Removing scratch.md
 <li><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</li>
 <li><strong>Evaluation</strong>: how do we test agents?</li>
 <li><strong>Guardrails</strong>: building an agent you can trust</li>
+<li><strong>Tool Design</strong>: powerful enough, restricted enough</li>
 </ol>
 <hr />
 <h2 id="interlude-test-repos"><a class="header" href="#interlude-test-repos">Interlude: Test Repos</a></h2>
@@ -2328,6 +2330,7 @@ main.py
 <li><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</li>
 <li><strong>Evaluation</strong>: how do we test agents?</li>
 <li><strong>Guardrails</strong>: building an agent you can trust</li>
+<li><strong>Tool Design</strong>: powerful enough, restricted enough</li>
 </ol>
 <hr />
 <h2 id="agent-frameworks"><a class="header" href="#agent-frameworks">Agent Frameworks</a></h2>
@@ -2383,6 +2386,7 @@ The framework <em>runs the agent loop internally</em> and hands us back the fina
 <li><del><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</del> <strong>[done]</strong></li>
 <li><strong>Evaluation</strong>: how do we test agents?</li>
 <li><strong>Guardrails</strong>: building an agent you can trust</li>
+<li><strong>Tool Design</strong>: powerful enough, restricted enough</li>
 </ol>
 <hr />
 <h2 id="evaluation-1"><a class="header" href="#evaluation-1">Evaluation</a></h2>
@@ -2609,6 +2613,7 @@ What if this happened on a real repo with important work in progress?</p>
 <li><del><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</del> <strong>[done]</strong></li>
 <li><del><strong>Evaluation</strong>: how do we test agents?</del> <strong>[done]</strong></li>
 <li><strong>Guardrails</strong>: building an agent you can trust</li>
+<li><strong>Tool Design</strong>: powerful enough, restricted enough</li>
 </ol>
 <hr />
 <h2 id="guardrails"><a class="header" href="#guardrails">Guardrails</a></h2>
@@ -2887,8 +2892,43 @@ might assume the call worked silently.</p>
 the agent <em>cannot</em> perform a denied action, no matter what the model decides to output.</p>
 <p>This is the key shift: the policy is enforced by <strong>code we control</strong>, not by the model.</p>
 <hr />
-<h3 id="effect-analysis"><a class="header" href="#effect-analysis">Effect analysis</a></h3>
-<p>That leaves the hard part: given a proposed call, what effects will it have?</p>
+<h3 id="policy-the-easy-half"><a class="header" href="#policy-the-easy-half">Policy: the easy half</a></h3>
+<p>Of the two missing pieces (<code>policy</code> and <code>infer_effects</code>), <code>policy</code> is by far the easier one. It's just a function from a list of effects to a decision — a direct translation of our table:</p>
+<pre><code class="language-python">@dataclass
+class MakesUnreachable:          commits: list[str]
+@dataclass
+class LosesUncommitted:          paths: list[str]
+@dataclass
+class RewritesPublishedHistory:  ref: str
+# ... other effects as needed
+
+Effect = MakesUnreachable | LosesUncommitted | RewritesPublishedHistory
+
+@dataclass
+class Allow:    pass
+@dataclass
+class Confirm:  reason: str
+@dataclass
+class Deny:     reason: str
+
+Decision = Allow | Confirm | Deny
+
+def policy(effects: list[Effect]) -&gt; Decision:
+    reasons = []
+    for e in effects:
+        if isinstance(e, RewritesPublishedHistory):
+            return Deny(f&quot;would rewrite published history on {e.ref}&quot;)
+        if isinstance(e, MakesUnreachable):
+            reasons.append(f&quot;would orphan {len(e.commits)} commit(s)&quot;)
+        if isinstance(e, LosesUncommitted):
+            reasons.append(f&quot;would clobber uncommitted changes in {len(e.paths)} path(s)&quot;)
+    return Confirm(&quot;; &quot;.join(reasons)) if reasons else Allow()
+</code></pre>
+<p>Each effect carries just enough context (which ref? which paths?) to write a useful prompt for the user when we ask.</p>
+<hr />
+<h3 id="effect-analysis-the-hard-half"><a class="header" href="#effect-analysis-the-hard-half">Effect analysis: the hard half</a></h3>
+<p>That leaves the actually-hard part: given a proposed call, what effects will it have?</p>
+<!-- TODO: I want to change this to: propose regex over git commands as a strawman and discuss what's wrong with it; need good examples to demonstrate -->
 <p>Consider a few commands the agent might propose:</p>
 <ul>
 <li><code>git push --force origin main</code></li>
@@ -3006,16 +3046,19 @@ set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)          # main → B
 <li>the current value of every ref (one cheap git command)</li>
 </ul>
 <p>That's it. No string parsing, no chained commands, no surprises.</p>
-<hr />
-<h3 id="demo-gitbot-v1"><a class="header" href="#demo-gitbot-v1">Demo: GitBot v1</a></h3>
-<p>[Live demo: GitBot with the typed DSL + effect inference + policy guardrail. Walk through:</p>
-<ul>
-<li>a benign call (<code>set_ref</code> on a new branch) → silently allowed</li>
-<li>the haiku move_commit failure → <code>Confirm</code> fires, user rejects, agent recovers</li>
-<li>a force-push scenario → <code>Deny</code> outright]</li>
-</ul>
-<p>And our pass@k table on the eval:</p>
-<p>[TODO: rerun eval with <code>AGENT=dsl GUARDRAIL=permissive</code> and paste the new numbers — should show fewer destructive failures, comparable accuracy.]</p>
+<p><em>Let's take it for a spin!</em></p>
+<!-- ---
+
+### Demo: GitBot v1
+
+[Live demo: GitBot with the typed DSL + effect inference + policy guardrail. Walk through:
+- a benign call (`set_ref` on a new branch) → silently allowed
+- the haiku move_commit failure → `Confirm` fires, user rejects, agent recovers
+- a force-push scenario → `Deny` outright]
+
+And our pass@k table on the eval:
+
+[TODO: rerun eval with `AGENT=dsl GUARDRAIL=permissive` and paste the new numbers — should show fewer destructive failures, comparable accuracy.] -->
 <hr />
 <h2 id="outline-15"><a class="header" href="#outline-15">Outline</a></h2>
 <ol>
@@ -3024,6 +3067,7 @@ set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)          # main → B
 <li><del><strong>Agent Frameworks</strong>: where we stop re-inventing the wheel</del> <strong>[done]</strong></li>
 <li><del><strong>Evaluation</strong>: how do we test agents?</del> <strong>[done]</strong></li>
 <li><del><strong>Guardrails</strong>: building an agent you can trust</del> <strong>[done]</strong></li>
+<li><del><strong>Tool Design</strong>: powerful enough, restricted enough</del> <strong>[done]</strong></li>
 </ol>
 <hr />
 <h2 id="coda-what-we-didnt-cover"><a class="header" href="#coda-what-we-didnt-cover">Coda: what we <em>didn't</em> cover</a></h2>
@@ -3037,7 +3081,7 @@ set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)          # main → B
 <li><strong>Information flow control (IFC).</strong> Track which tool outputs are tainted by untrusted sources and refuse to use them as actions.</li>
 <li><strong>Capability-style restrictions.</strong> The agent's permissions narrow as soon as it touches untrusted content.</li>
 </ul>
-<p>[TODO: pick one or two references — Simon Willison's writeups on dual-LLM, or the CaMeL paper.]</p>
+<!-- [TODO: pick one or two references — Simon Willison's writeups on dual-LLM, or the CaMeL paper.] -->
 <p>The point for this lecture: even with a perfect policy and perfect effect inference, <em>trusting tool outputs as if they were instructions</em> is a separate problem. Guardrails as we've built them are a necessary foundation, not a complete answer.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
