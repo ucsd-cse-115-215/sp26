@@ -855,6 +855,8 @@ a set of rules that say which behaviors are acceptable, which are not, and which
 <h4 id="the-commit-graph"><a class="header" href="#the-commit-graph">The commit graph</a></h4>
 <p>Git stores history as a <strong>DAG of commits</strong>, each pointing to its parent(s):</p>
 <pre><code>A ◄── B ◄── C
+      ▲
+      └─ D
 </code></pre>
 <p>Each commit carries a <strong>tree</strong> — a snapshot of the file contents at that point — plus author, timestamp, and message.</p>
 <hr />
@@ -882,7 +884,8 @@ A ◄── B ◄── C  (main, HEAD, workdir)
 
 uncommitted changes:
 A ◄── B ◄── C  (main, HEAD)
-              ◄── C*  (workdir)
+            ▲
+            └─ C*  (workdir)
 </code></pre>
 <p>In the dirty case, <code>C*</code> is a &quot;what the next commit <em>would</em> look like&quot; tree —
 but no real commit object exists for it yet, and no real ref points there.
@@ -898,7 +901,7 @@ If we overwrite the files, <code>C*</code>'s contents are gone.</p>
 <pre><code>local                            remote (origin)
 A ◄── B ◄── C  (main, HEAD)      A ◄── B  (main)
       ▲
-      └─ origin/main
+      └─ (origin/main)
 </code></pre>
 <p><code>origin/main</code> is <em>your</em> remembered view of where <code>main</code> was on <code>origin</code> last time you synced — here, at <code>B</code>. It's a local ref, just one that you don't move by hand. Until you <code>git push</code>, the remote still only knows about <code>A</code> and <code>B</code>.</p>
 <hr />
@@ -907,14 +910,17 @@ A ◄── B ◄── C  (main, HEAD)      A ◄── B  (main)
 <p><strong><code>git commit -m &quot;...&quot;</code></strong> — adds a new commit on top of <code>HEAD</code> and moves the current branch forward:</p>
 <pre><code>before:                              after:
 A ◄── B  (main, HEAD)                A ◄── B ◄── C  (main, HEAD, workdir)
-      ◄── B*  (workdir)
+      ▲
+      └─ B*  (workdir)
+
 </code></pre>
 <p>(The dirty workdir <code>B*</code> becomes the actual commit <code>C</code>.)</p>
 <p><strong><code>git reset --hard HEAD~1</code></strong> — moves the current branch back one commit <em>and</em> drags <code>workdir</code> along with it, throwing away whatever was there:</p>
 <pre><code>before:                              after:
 A ◄── B ◄── C  (main, HEAD)          A ◄── B  (main, HEAD, workdir)
-              ◄── C*  (workdir)            ◄── C   (no ref points here)
-                                           C* gone (never had a commit object)
+            ▲                              ▲
+            └─ C*  (workdir)               └─ C   # no ref points here
+                                              C*  # gone (never had a commit object)
 </code></pre>
 <p>If you think of git commands in these terms, you'll notice that they all boil down to:</p>
 <ul>
@@ -932,15 +938,17 @@ A ◄── B ◄── C  (main, HEAD)          A ◄── B  (main, HEAD, wor
 <h4 id="1-clobber-uncommitted-changes"><a class="header" href="#1-clobber-uncommitted-changes">1. Clobber uncommitted changes</a></h4>
 <p>The workdir is dirty, and we overwrite the files. For example:</p>
 <pre><code>before:                              after  git checkout  .:
-A ◄── B ◄── C  (main, HEAD)          A ◄── B ◄── C  (main, HEAD, workdir)
-              ◄── C*  (workdir)              C* gone (never had a commit object)
+A ◄── B ◄── C  (main, HEAD)          A ◄── B ◄── C   (main, HEAD, workdir)
+            ▲
+            └─ C*  (workdir)                     C*  # gone (never had a commit object)
 </code></pre>
 <p>This is what happened to haiku in our eval trace above.</p>
 <h4 id="2-orphan-a-local-commit"><a class="header" href="#2-orphan-a-local-commit">2. Orphan a local commit</a></h4>
 <p>We move or delete all refs that point to a commit. For example:</p>
 <pre><code>before:                          after  git reset --hard HEAD~1:
 A ◄── B ◄── C  (main, HEAD)      A ◄── B  (main, HEAD)
-                                       ◄── C  (no ref points here)
+                                       ▲
+                                       └─ C   # no ref points here
 </code></pre>
 <h4 id="3-touch-a-remote"><a class="header" href="#3-touch-a-remote">3. Touch a remote</a></h4>
 <p>Anything that modifies the remote commit graph or refs — e.g. by pushing — is a big deal,
@@ -954,12 +962,13 @@ instead of the original <code>C</code>.</p>
 
 local                                local
 A ◄── B ◄── C'  (main)               A ◄── B ◄── C'  (main, origin/main)
-      ▲                                    ◄── C   (no ref points here)
-      └── C  (origin/main)
+      ▲                                    ▲
+      └── C  (origin/main)                 └── C     # no ref points here
 
 remote (origin)                      remote (origin)
 A ◄── B ◄── C   (main)               A ◄── B ◄── C'  (main)
-                                           ◄── C   (no ref points here)
+                                           ▲
+                                           └── C     #no ref points here
 </code></pre>
 <p>This is a problem because:</p>
 <ul>
@@ -1145,8 +1154,8 @@ def policy(effects: list[Effect]) -&gt; Decision:
 <p><code>git reset --hard HEAD~1</code> — moves the current branch back one commit <em>and</em> wipes the workdir. <em>Orphans</em> the dropped commit (unless reachable from another ref); <em>clobbers uncommitted changes</em>.</p>
 <pre><code>before:                              after:
   A ─── B ─── C  (main, HEAD)        A ─── B  (main, HEAD, workdir)
-                                           └── C  (no ref points here)
-              ◄── C*  (workdir)                C* gone
+              |                             └── C  (no ref points here)
+              └── C*  (workdir)                 C*  # gone
 
 </code></pre>
 </li>
@@ -1213,7 +1222,7 @@ agent = Agent(name=&quot;GitBot&quot;, instructions=&quot;...&quot;, tools=[stat
 </code></pre>
 <pre><code>before:                       after:
   A ─── B ─── C  (main, HEAD)    A ─── B  (main, HEAD)
-                                         └── C  ← orphaned (until re-referenced)
+                                       └── C  # orphaned (until re-referenced)
 </code></pre>
 <p>(Workdir untouched, so the changes from <code>C</code> show up as unstaged. Note the <code>MakesUnreachable</code> effect — the policy will ask before running this.)</p>
 <p><strong>Example: move my last commit to a new branch</strong> (the move_commit scenario haiku failed on):</p>
@@ -1222,7 +1231,7 @@ set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)          # main → B
 </code></pre>
 <pre><code>before:                       after:
   A ─── B ─── C  (main, HEAD)    A ─── B  (main, HEAD)
-                                         └── C  (feature-auth)
+                                       └── C  (feature-auth)
 </code></pre>
 <p>Two simple <code>set_ref</code> calls. The effect inferencer looks at each call independently:</p>
 <ul>
