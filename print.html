@@ -2911,7 +2911,8 @@ the agent <em>cannot</em> perform a denied action, no matter what the model deci
 <pre><code class="language-python">decision = ... # given a tool call (a git command) and the repo state,
                # decide allow / confirm / deny.
 </code></pre>
-<p>Let me propose a strawman: pattern-match dangerous commands with a few regexes:</p>
+<p>Let me propose a strawman:</p>
+<p><strong>Idea 1:</strong> pattern-match dangerous commands with a few regexes:</p>
 <pre><code class="language-python">def decide(command: str, repo: Path) -&gt; Decision:
     if re.match(r&quot;^git push --force\b&quot;, command):
         return Deny(&quot;rewrites published history&quot;)
@@ -2999,18 +3000,93 @@ Decision = Allow | Confirm | Deny
 def policy(effects: list[Effect]) -&gt; Decision:
     reasons = []
     for e in effects:
-        if isinstance(e, RewritesPublishedHistory):
-            return Deny(f&quot;would rewrite published history on {e.ref}&quot;)
-        if isinstance(e, MakesUnreachable):
-            reasons.append(f&quot;would orphan {len(e.commits)} commit(s)&quot;)
-        if isinstance(e, LosesUncommitted):
-            reasons.append(f&quot;would clobber uncommitted changes in {len(e.paths)} path(s)&quot;)
+        match e:
+            case RewritesPublishedHistory(ref):
+                return Deny(f&quot;would rewrite published history on {ref}&quot;)
+            case MakesUnreachable(commits):
+                reasons.append(f&quot;would orphan {len(commits)} commit(s)&quot;)
+            case LosesUncommitted(paths):
+                reasons.append(f&quot;would clobber uncommitted changes in {len(paths)} path(s)&quot;)
     return Confirm(&quot;; &quot;.join(reasons)) if reasons else Allow()
 </code></pre>
 <p>Each effect carries just enough context (which ref? which paths?) to write a useful prompt for the user when we ask.</p>
-<p>Now for the inference half: <code>infer_effects(command, repo) -&gt; list[Effect]</code>.
-We saw above the three reasons this is hopelessly complicated over raw bash strings.</p>
-<p>The fix is to give the agent <strong>different tools</strong>.</p>
+<h3 id="effect-inference-how-do-we-even-do-this"><a class="header" href="#effect-inference-how-do-we-even-do-this">Effect inference: how do we even do this?</a></h3>
+<p>Now for the inference half: <code>infer_effects(command, repo) -&gt; list[Effect]</code>. We've ruled out regex over the command. Two other ideas come up — both reasonable, both worth knocking down explicitly before we move on.</p>
+<h4 id="idea-2-piggy-back-on---dry-run"><a class="header" href="#idea-2-piggy-back-on---dry-run">Idea 2: piggy-back on <code>--dry-run</code></a></h4>
+<p>Many git commands accept <code>--dry-run</code> — they print what they <em>would</em> do without doing it. We could run the command with <code>--dry-run</code> first, scrape the output, derive effects.</p>
+<p>Pros: free reuse of existing tooling; the dry-run takes the live repo state into account for us.</p>
+<p>Cons:</p>
+<ul>
+<li>
+<p><strong>Not every command has it.</strong> <code>git reset --hard</code> has no dry-run mode at all (and it's destructive)</p>
+</li>
+<li>
+<p><strong>Unstructured output.</strong> What comes back is text meant for humans:</p>
+<pre><code>$ git push --dry-run --force origin main
+ + abc1234...def5678 main -&gt; main (forced update)
+
+$ git checkout --quiet --dry-run other-branch
+M    src/login.py
+</code></pre>
+<p>We'd be parsing strings like <code>&quot;forced update&quot;</code> and <code>&quot;M    src/login.py&quot;</code> to recover <code>RewritesPublishedHistory</code> / <code>LosesUncommitted</code> — brittle, and not a stable API across git versions.</p>
+</li>
+<li>
+<p><strong>Still doesn't catch non-git.</strong> <code>rm -rf .git</code> is unaffected.</p>
+</li>
+</ul>
+<h4 id="idea-3-parse-the-command-analyze-the-ast"><a class="header" href="#idea-3-parse-the-command-analyze-the-ast">Idea 3: parse the command, analyze the AST</a></h4>
+<p>The PL version: define an AST type with one node per command shape, parse the bash into it, then walk it with state-aware rules.</p>
+<pre><code class="language-python">@dataclass
+class GitBranch:     name: str; target: str = &quot;HEAD&quot;
+@dataclass
+class GitResetHard:  target: str
+@dataclass
+class GitPush:       remote: str; ref: str; force: bool = False
+# ... one class per command we want to support
+@dataclass
+class Seq:           left: &quot;AST&quot;; right: &quot;AST&quot;
+
+AST = GitBranch | GitResetHard | GitPush | Seq  # | ...
+</code></pre>
+<p>A compound command becomes a tiny tree:</p>
+<pre><code>git branch feature-auth &amp;&amp; git reset --hard HEAD~1
+
+           ─── parse ──►
+
+Seq
+├── GitBranch(name=&quot;feature-auth&quot;)
+└── GitResetHard(target=&quot;HEAD~1&quot;)
+</code></pre>
+<p>An analyzer threads state through each step:</p>
+<pre><code class="language-python">def analyze(node: AST, repo) -&gt; list[Effect]:
+    match node:
+        case Seq(left, right):
+            # right runs against the state that left would leave
+            return analyze(left, repo) + analyze(right, apply(left, repo))
+
+        case GitResetHard(target):
+            new = resolve(repo, target)
+            old = head_sha(repo)
+            effects = []
+            if not reachable_from_other_refs(repo, old, new):
+                effects.append(MakesUnreachable([old]))
+            if dirty(repo):
+                effects.append(LosesUncommitted(dirty_paths(repo)))
+            return effects
+
+        ...  # one case per command class
+</code></pre>
+<p>This is the right <em>shape</em> — structured input, structured output, state-aware.
+However, this is also <em>a lot of work</em>; we'd have to implement:</p>
+<ul>
+<li>a parser for the relevant subset of bash (quoting, substitutions, redirections, pipes, ...)</li>
+<li>an AST and an analyzer case for every git subcommand we want to support</li>
+<li>a fallback (probably &quot;deny&quot;) for everything else — including <em>valid</em> git invocations we forgot about</li>
+</ul>
+<p>We'd essentially be reimplementing a chunk of git as a static analyzer, and then betting we got it right.</p>
+<h4 id="better-idea-design-different-tools"><a class="header" href="#better-idea-design-different-tools">Better idea: design different tools</a></h4>
+<p>All three strawmen share a shape: the model emits a free-form string, and we try to recover structure <em>after the fact</em>. What if we never let it emit a free-form string in the first place?</p>
+<p>That's the next section.</p>
 <hr />
 <h2 id="outline-15"><a class="header" href="#outline-15">Outline</a></h2>
 <ol>
@@ -3027,16 +3103,32 @@ We saw above the three reasons this is hopelessly complicated over raw bash stri
 <p>In reality, the choice of tools is probably <em>the most important design decision for an agent!</em></p>
 <p>The main trade-off is between <strong>power</strong> and <strong>control</strong>:</p>
 <div class="table-wrapper"><table><thead><tr><th>Approach</th><th>Pros</th><th>Cons</th></tr></thead><tbody>
-<tr><td><strong>Few powerful tools</strong> (shell, Python interpreter, browser)</td><td>Agent can do almost anything</td><td>Hard to control: behavior depends on the full string the model emits</td></tr>
-<tr><td><strong>Many small, restricted tools</strong> (one per intent, typed args)</td><td>Each call is easy to analyze</td><td>Limited to whatever the designer thought to expose</td></tr>
+<tr><td><strong>One powerful tool</strong> (shell, Python interpreter, browser)</td><td>Agent can do almost anything</td><td>Hard to control: behavior depends on the full string the model emits</td></tr>
+<tr><td><strong>Many small, restricted tools</strong> (one per intent)</td><td>Easy to restrict to only allowed actions, easy to analyze</td><td>Limited to whatever the designer thought to expose</td></tr>
 </tbody></table>
 </div>
 <p>State of the art for taming powerful tools is roughly:</p>
 <ul>
 <li><strong>Sandboxing</strong> — run the shell inside a container/VM with restricted network / filesystem access. Catches <em>system-level</em> misbehavior (touching <code>/etc/passwd</code>, writing outside of the sandbox directory) but not application-level mistakes (deleting your branch).</li>
-<li><strong>Syntactic command pattern matching</strong> — &quot;allow if the command starts with <code>git status</code> or <code>git diff</code>; otherwise ask.&quot; Easy to write, but as we just saw, a regex over <code>git reset --hard</code> can't tell you whether the reset orphans anything.</li>
+<li><strong>Syntactic command pattern matching</strong> — &quot;allow if the command starts with <code>git status</code> or <code>git diff</code>; otherwise ask.&quot; But we already know this is problematic.</li>
 </ul>
-<p>For agents that run <em>autonomously</em> and <em>at scale</em> (customer-support agents, deep-research agents, browser agents, ...), this isn't enough. So in practice, programmers design <strong>special-purpose, restricted tools</strong> for those agents, and the powerful ones are reserved for human-supervised settings (like a coding assistant where you press &quot;approve&quot; each time).</p>
+<p>Has Claude Code ever asked you something like this?</p>
+<pre><code>⏺ Bash(source venv/bin/activate &amp;&amp; python script.py)
+  Run this command?
+  ❯ 1. Yes (once)
+    2. Yes, and always allow commands that start with `source venv/bin/activate`
+    3. No, tell Claude what to do differently (esc)
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> Options 2 sure sounds tempting (what could possibly go wrong with activating a venv?). But is it actually safe?</p>
+</blockquote>
+<ul>
+<li>Picking Option 2 allow-lists <em>anything</em> chained after <code>source venv/bin/activate &amp;&amp;</code> — including <code>rm -rf .git</code>.</li>
+<li>This is not a user error; this is terrible UI!</li>
+<li><strong>If there's one thing you remember from this lecture, it should be this:</strong> syntactic pattern matching is NOT a safety mechanism.</li>
+</ul>
+<p>For agents that run <em>autonomously</em> and <em>at scale</em> (e.g. customer-support agents, browser agents, ...), powerful tools are too risky.
+So in practice, programmers design <strong>special-purpose, restricted tools</strong> for those agents, and the powerful ones are reserved for human-supervised settings (like a coding assistant where you press &quot;approve&quot; each time).</p>
 <p>Let's try to re-design GitBot with a set of restricted tools instead of a raw shell.</p>
 <blockquote>
 <p><strong>Q</strong>: How would you approach tool design for GitBot? What tools would you give it? What principles would you follow in designing those tools?</p>
@@ -3064,7 +3156,12 @@ agent = Agent(name=&quot;GitBot&quot;, instructions=&quot;...&quot;, tools=[stat
 <p>Bad news is that this is a hard design problem. Good news is that it's not that different from the kind of API design we already know how to do as software engineers.</p>
 <hr />
 <h3 id="a-typed-git-dsl"><a class="header" href="#a-typed-git-dsl">A typed git DSL</a></h3>
-<p>Here's the key observation: git verbs (<code>reset</code>, <code>checkout</code>, <code>rebase</code>, <code>revert</code>, <code>cherry-pick</code>, <code>merge</code>) look very different to a human, but they all bottom out in a handful of operations on git's underlying data model — refs, trees, commits, the index, the workdir. If we expose <em>those</em> directly, we get fewer tools, each with a narrower effect set.</p>
+<p>Recall our observation from before:</p>
+<ul>
+<li>the git command surface is huge and varied</li>
+<li>but ultimately, they all manipulate a small set of underlying primitives: refs, commits, the workdir, and the remote.</li>
+</ul>
+<p>If we expose <em>those</em> operations directly, we get fewer tools, each with a narrower effect set.</p>
 <p>Four primitives cover most of what we need:</p>
 <div class="table-wrapper"><table><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody>
 <tr><td><code>set_ref(name, target)</code></td><td>Create or move a local ref to point at <code>target</code></td></tr>
@@ -3075,14 +3172,20 @@ agent = Agent(name=&quot;GitBot&quot;, instructions=&quot;...&quot;, tools=[stat
 </div>
 <p>Plus the obvious read-only inspectors (<code>inspect_refs</code>, <code>inspect_status</code>, <code>inspect_diff</code>, <code>inspect_reflog</code>, ...) and <code>push</code> / <code>fetch</code> for remotes.</p>
 <p>Notably <em>not</em> present: <code>reset</code>, <code>checkout</code>, <code>branch</code>, <code>revert</code>, <code>rebase</code>, <code>cherry-pick</code>. They're all expressible in terms of the four primitives above.</p>
-<p><strong>Example: undo my last commit but keep the changes</strong> (<code>git reset --soft HEAD~1</code>):</p>
+<p>Recall, the effects we care about are:</p>
+<ul>
+<li>orphaning commits (make ref unreachable)</li>
+<li>clobbering uncommitted changes (overwrite workdir)</li>
+<li>overwriting remote history</li>
+</ul>
+<p><strong>Example: undo my last commit but keep the changes</strong>:</p>
 <pre><code>set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)
 </code></pre>
 <pre><code>before:                                 after:
   A ─── B ─── C  (main, HEAD, workdir)  A ─── B  (main, HEAD)
                                               └── C  (workdir)
 </code></pre>
-<p><strong>Example: move my last commit to a new branch</strong> (the move_commit scenario haiku failed on):</p>
+<p><strong>Example: move my last commit to a new branch</strong>:</p>
 <pre><code>set_ref(&quot;feature-auth&quot;, &quot;HEAD&quot;)    # feature-auth → C
 set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)          # main → B
 </code></pre>
@@ -3090,35 +3193,20 @@ set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)          # main → B
   A ─── B ─── C  (main, HEAD, workdir)  A ─── B  (main, HEAD)
                                               └── C  (feature-auth, workdir)
 </code></pre>
-<p>Two simple <code>set_ref</code> calls. The effect inferencer looks at each call independently:</p>
-<ul>
-<li>the first creates a new ref pointing at <code>C</code> — no orphans, just <code>WritesLocalRef</code>. Allow.</li>
-<li>the second moves <code>main</code> from <code>C</code> to <code>B</code>. It checks &quot;is <code>C</code> still reachable from any other ref?&quot; — yes, <code>feature-auth</code> — so no <code>MakesUnreachable</code>. Allow.</li>
-</ul>
-<p>Compare to the buggy v0 sequence — <code>set_ref(&quot;feature-auth&quot;, &quot;HEAD~1&quot;)</code> followed by <code>set_ref(&quot;main&quot;, &quot;HEAD~1&quot;)</code> — where the second call <em>would</em> orphan <code>C</code> (no other ref points there), the inferencer emits <code>MakesUnreachable(C)</code>, and the policy fires <code>Confirm</code>.</p>
-<p>The teaching point: a small, effect-friendly tool surface gives us guarantees that no amount of bash parsing could.</p>
 <blockquote>
-<p><strong>Q:</strong> Why is <code>set_ref</code> &quot;easier to analyze&quot; than <code>git reset --hard</code>? What information do you need to compute its effects?</p>
+<p><strong>Q:</strong> Why is <code>set_ref</code> &quot;easier to analyze&quot; than <code>git reset</code>? What is the logic for computing its effects?</p>
 </blockquote>
-<p>You need only:</p>
 <ul>
-<li>the new ref name and target sha (from the call args)</li>
-<li>the current value of every ref (one cheap git command)</li>
+<li>The only possible adverse effect of <code>set_ref</code> is <code>MakesUnreachable</code> (no many-to-many mapping between commands and effects).</li>
+<li>To figure out whether <code>set_ref(name, target)</code> has <code>MakeUnreachable</code>, we just need to check if any other ref points to <code>name</code>'s current commit</li>
 </ul>
-<p>That's it. No string parsing, no chained commands, no surprises.</p>
-<p><em>Let's take it for a spin!</em></p>
-<!-- ---
-
-### Demo: GitBot v1
-
-[Live demo: GitBot with the typed DSL + effect inference + policy guardrail. Walk through:
-- a benign call (`set_ref` on a new branch) → silently allowed
-- the haiku move_commit failure → `Confirm` fires, user rejects, agent recovers
-- a force-push scenario → `Deny` outright]
-
-And our pass@k table on the eval:
-
-[TODO: rerun eval with `AGENT=dsl GUARDRAIL=permissive` and paste the new numbers — should show fewer destructive failures, comparable accuracy.] -->
+<p><strong>Lesson learned</strong>: a small, effect-friendly tool surface gives us guarantees that no amount of bash parsing could.</p>
+<h3 id="lets-take-it-for-a-spin-1"><a class="header" href="#lets-take-it-for-a-spin-1">Let's take it for a spin!</a></h3>
+<p>Now when the agent tries to do something that would orphan a commit or clobber uncommitted changes, the guardrail surfaces a confirmation prompt with the inferred effects spelled out:</p>
+<p><img src="lectures/../img/gitbot-confirm.png" alt="GitBot asking for confirmation" /></p>
+<p>Of course, restricting the tools and adding confirmations could hurt the agent's ability to actually solve tasks. Let's re-run our eval to see how much utility we paid for the safety:</p>
+<p><img src="lectures/../img/inspect-results-dsl.png" alt="Inspect results, DSL agent" /></p>
+<p><code>gpt-5-mini</code> is still doing pretty well (pass@1 0.94 — basically unchanged from the shell agent). <code>claude-haiku-4-5</code> takes a bigger hit (pass@1 drops to 0.7), apparently it has a harder time with the more constrained tool surface. But at least it won't be silently destroying your repo in prod — every dangerous action now goes through the policy first.</p>
 <hr />
 <h2 id="outline-16"><a class="header" href="#outline-16">Outline</a></h2>
 <ol>
