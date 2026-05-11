@@ -53,3 +53,11 @@ above, during the session.
 
 _Copy the structure above for additional reviewers._
 
+---
+
+### Full group
+
+After all reviewers have interacted with the agent, discuss and answer the following:
+
+**Guardrail comparison:** _Across the test environments and reviewer prompts, how did the guardrails behave? Were there cases where the same guardrail blocked an action in one environment but allowed it in another? Were there actions that surprised reviewers (either blocked unexpectedly, or allowed when they expected a block)?_
+
