@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 240" font-family="'Bradley Hand', 'Caveat', 'Comic Sans MS', cursive" font-size="13">
+  <defs>
+    <filter id="rough" x="-2%" y="-5%" width="104%" height="115%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.5"/>
+    </filter>
+    <pattern id="hatchHdrA" patternUnits="userSpaceOnUse" width="5" height="5">
+      <rect width="5" height="5" fill="#fbf5e8"/>
+      <line x1="0" y1="0" x2="5" y2="5" stroke="#2a2a2a" stroke-width="0.9"/>
+      <line x1="5" y1="0" x2="0" y2="5" stroke="#2a2a2a" stroke-width="0.9"/>
+    </pattern>
+    <pattern id="hatchAllocA" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(45)">
+      <rect width="9" height="9" fill="#dde9f5"/>
+      <line x1="0" y1="0" x2="0" y2="9" stroke="#2f5d8c" stroke-width="1.1"/>
+    </pattern>
+    <pattern id="hatchFreeA" patternUnits="userSpaceOnUse" width="14" height="14" patternTransform="rotate(45)">
+      <rect width="14" height="14" fill="#fbf5e8"/>
+      <line x1="0" y1="0" x2="0" y2="14" stroke="#a08850" stroke-width="0.7"/>
+    </pattern>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#fbf5e8"/>
+
+  <text x="280" y="28" text-anchor="middle" font-size="20" fill="#2a2a2a">heap layout — boundary tags</text>
+
+  <!-- Pointer indicator -->
+  <text x="92" y="50" text-anchor="middle" font-size="15" fill="#c5302a">p</text>
+  <text x="92" y="64" text-anchor="middle" font-size="11" fill="#c5302a">= malloc(24)</text>
+
+  <!-- All shapes share rough filter; fills first, outlines after -->
+  <!-- Block 1: alloc 32 -->
+  <g filter="url(#rough)">
+    <rect x="60"  y="78" width="32"  height="84" fill="url(#hatchHdrA)"/>
+    <rect x="92"  y="78" width="96"  height="84" fill="url(#hatchAllocA)"/>
+    <line x1="92" y1="78" x2="92" y2="162" stroke="#2a2a2a" stroke-width="1.1" stroke-dasharray="5,4" fill="none"/>
+    <rect x="60"  y="78" width="128" height="84" fill="none" stroke="#2a2a2a" stroke-width="2.2"/>
+  </g>
+  <g filter="url(#rough)">
+    <line x1="92" y1="68" x2="92" y2="80" stroke="#c5302a" stroke-width="1.6"/>
+    <circle cx="92" cy="78" r="4" fill="#c5302a" stroke="#c5302a" stroke-width="0.5"/>
+  </g>
+
+  <text x="140" y="124" text-anchor="middle" fill="#2a2a2a">payload (24)</text>
+  <text x="124" y="186" text-anchor="middle" fill="#2a2a2a">size 32 — alloc</text>
+
+  <!-- Block 2: free 48 -->
+  <g filter="url(#rough)">
+    <rect x="188" y="78" width="32"  height="84" fill="url(#hatchHdrA)"/>
+    <rect x="220" y="78" width="128" height="84" fill="url(#hatchFreeA)"/>
+    <rect x="348" y="78" width="32"  height="84" fill="url(#hatchHdrA)"/>
+    <line x1="220" y1="78" x2="220" y2="162" stroke="#2a2a2a" stroke-width="1.1" stroke-dasharray="5,4" fill="none"/>
+    <line x1="348" y1="78" x2="348" y2="162" stroke="#2a2a2a" stroke-width="1.1" stroke-dasharray="5,4" fill="none"/>
+    <rect x="188" y="78" width="192" height="84" fill="none" stroke="#2a2a2a" stroke-width="2.2"/>
+  </g>
+  <text x="284" y="124" text-anchor="middle" fill="#2a2a2a">free (32)</text>
+  <text x="284" y="186" text-anchor="middle" fill="#2a2a2a">size 48 — free</text>
+
+  <!-- Block 3: alloc 16 -->
+  <g filter="url(#rough)">
+    <rect x="380" y="78" width="32" height="84" fill="url(#hatchHdrA)"/>
+    <rect x="412" y="78" width="32" height="84" fill="url(#hatchAllocA)"/>
+    <line x1="412" y1="78" x2="412" y2="162" stroke="#2a2a2a" stroke-width="1.1" stroke-dasharray="5,4" fill="none"/>
+    <rect x="380" y="78" width="64" height="84" fill="none" stroke="#2a2a2a" stroke-width="2.2"/>
+  </g>
+  <text x="412" y="186" text-anchor="middle" fill="#2a2a2a">size 16 — alloc</text>
+
+  <!-- legend -->
+  <g font-size="13" fill="#2a2a2a">
+    <rect x="60"  y="208" width="14" height="14" fill="url(#hatchHdrA)" stroke="#2a2a2a" stroke-width="0.8"/>
+    <text x="80"  y="220">hdr / ftr</text>
+    <rect x="160" y="208" width="14" height="14" fill="url(#hatchAllocA)" stroke="#2a2a2a" stroke-width="0.8"/>
+    <text x="180" y="220">allocated</text>
+    <rect x="270" y="208" width="14" height="14" fill="url(#hatchFreeA)" stroke="#2a2a2a" stroke-width="0.8"/>
+    <text x="290" y="220">free</text>
+    <circle cx="346" cy="215" r="4" fill="#c5302a"/>
+    <text x="356" y="220" fill="#c5302a">returned ptr</text>
+  </g>
+</svg>

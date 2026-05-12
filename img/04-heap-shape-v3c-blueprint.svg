@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 240" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">
+  <defs>
+    <pattern id="bpGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 20 20 M 0 20 L 20 20" stroke="#1f4570" stroke-width="0.4" fill="none"/>
+    </pattern>
+    <pattern id="bpHatchAlloc" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#79c4e0" stroke-width="0.55"/>
+    </pattern>
+    <pattern id="bpHatchHdr" patternUnits="userSpaceOnUse" width="4" height="4">
+      <line x1="0" y1="0" x2="4" y2="4" stroke="#79c4e0" stroke-width="0.55"/>
+      <line x1="4" y1="0" x2="0" y2="4" stroke="#79c4e0" stroke-width="0.55"/>
+    </pattern>
+    <marker id="dimTick" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <line x1="3" y1="0" x2="3" y2="6" stroke="#c8e4f0" stroke-width="0.7"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#0f2d4d"/>
+  <rect width="100%" height="100%" fill="url(#bpGrid)"/>
+
+  <text x="280" y="22" text-anchor="middle" font-size="11" letter-spacing="3" fill="#c8e4f0">HEAP LAYOUT — BOUNDARY TAGS</text>
+  <line x1="60" y1="32" x2="500" y2="32" stroke="#c8e4f0" stroke-width="0.4" opacity="0.6"/>
+
+  <!-- Pointer leader -->
+  <text x="60" y="56" fill="#ff9a85" letter-spacing="2" font-size="10">P = MALLOC(24)</text>
+  <line x1="92" y1="60" x2="92" y2="78" stroke="#ff9a85" stroke-width="0.8"/>
+  <circle cx="92" cy="78" r="2.5" fill="#ff9a85"/>
+
+  <!-- BLOCK 1: alloc 32 -->
+  <rect x="60"  y="78" width="32"  height="84" fill="url(#bpHatchHdr)" stroke="#c8e4f0" stroke-width="0.6"/>
+  <rect x="92"  y="78" width="96"  height="84" fill="url(#bpHatchAlloc)" stroke="#c8e4f0" stroke-width="0.6"/>
+  <line x1="92" y1="78" x2="92" y2="162" stroke="#c8e4f0" stroke-width="0.6" stroke-dasharray="3,2"/>
+  <rect x="60"  y="78" width="128" height="84" fill="none" stroke="#c8e4f0" stroke-width="1.3"/>
+
+  <!-- BLOCK 2: free 48 -->
+  <rect x="188" y="78" width="32"  height="84" fill="url(#bpHatchHdr)" stroke="#c8e4f0" stroke-width="0.6"/>
+  <rect x="220" y="78" width="128" height="84" fill="none" stroke="#c8e4f0" stroke-width="0.6"/>
+  <rect x="348" y="78" width="32"  height="84" fill="url(#bpHatchHdr)" stroke="#c8e4f0" stroke-width="0.6"/>
+  <line x1="220" y1="78" x2="220" y2="162" stroke="#c8e4f0" stroke-width="0.6" stroke-dasharray="3,2"/>
+  <line x1="348" y1="78" x2="348" y2="162" stroke="#c8e4f0" stroke-width="0.6" stroke-dasharray="3,2"/>
+  <rect x="188" y="78" width="192" height="84" fill="none" stroke="#c8e4f0" stroke-width="1.3"/>
+  <text x="284" y="124" text-anchor="middle" fill="#79c4e0" letter-spacing="2">FREE</text>
+
+  <!-- BLOCK 3: alloc 16 -->
+  <rect x="380" y="78" width="32" height="84" fill="url(#bpHatchHdr)" stroke="#c8e4f0" stroke-width="0.6"/>
+  <rect x="412" y="78" width="32" height="84" fill="url(#bpHatchAlloc)" stroke="#c8e4f0" stroke-width="0.6"/>
+  <line x1="412" y1="78" x2="412" y2="162" stroke="#c8e4f0" stroke-width="0.6" stroke-dasharray="3,2"/>
+  <rect x="380" y="78" width="64" height="84" fill="none" stroke="#c8e4f0" stroke-width="1.3"/>
+
+  <!-- Inline labels (rotated) -->
+  <text x="76"  y="124" text-anchor="middle" fill="#c8e4f0" font-size="8" letter-spacing="1" transform="rotate(-90 76 124)">HDR</text>
+  <text x="204" y="124" text-anchor="middle" fill="#c8e4f0" font-size="8" letter-spacing="1" transform="rotate(-90 204 124)">HDR</text>
+  <text x="364" y="124" text-anchor="middle" fill="#c8e4f0" font-size="8" letter-spacing="1" transform="rotate(-90 364 124)">FTR</text>
+  <text x="396" y="124" text-anchor="middle" fill="#c8e4f0" font-size="8" letter-spacing="1" transform="rotate(-90 396 124)">HDR</text>
+
+  <!-- Dimension lines -->
+  <g stroke="#c8e4f0" stroke-width="0.6" fill="none">
+    <line x1="60"  y1="178" x2="188" y2="178" marker-start="url(#dimTick)" marker-end="url(#dimTick)"/>
+    <line x1="188" y1="178" x2="380" y2="178" marker-start="url(#dimTick)" marker-end="url(#dimTick)"/>
+    <line x1="380" y1="178" x2="444" y2="178" marker-start="url(#dimTick)" marker-end="url(#dimTick)"/>
+  </g>
+  <text x="124" y="194" text-anchor="middle" fill="#c8e4f0" letter-spacing="1">32 B</text>
+  <text x="284" y="194" text-anchor="middle" fill="#c8e4f0" letter-spacing="1">48 B</text>
+  <text x="412" y="194" text-anchor="middle" fill="#c8e4f0" letter-spacing="1">16 B</text>
+
+  <!-- Status row -->
+  <text x="124" y="210" text-anchor="middle" fill="#79c4e0" letter-spacing="2" font-size="9">ALLOC</text>
+  <text x="284" y="210" text-anchor="middle" fill="#79c4e0" letter-spacing="2" font-size="9">FREE</text>
+  <text x="412" y="210" text-anchor="middle" fill="#79c4e0" letter-spacing="2" font-size="9">ALLOC</text>
+
+  <!-- legend bar -->
+  <line x1="60" y1="222" x2="500" y2="222" stroke="#c8e4f0" stroke-width="0.4" opacity="0.6"/>
+  <g font-size="9" letter-spacing="1" fill="#c8e4f0">
+    <rect x="60"  y="226" width="12" height="10" fill="url(#bpHatchHdr)" stroke="#c8e4f0" stroke-width="0.5"/>
+    <text x="78"  y="234">HDR/FTR</text>
+    <rect x="160" y="226" width="12" height="10" fill="url(#bpHatchAlloc)" stroke="#c8e4f0" stroke-width="0.5"/>
+    <text x="178" y="234">ALLOC</text>
+    <rect x="240" y="226" width="12" height="10" fill="none" stroke="#c8e4f0" stroke-width="0.5"/>
+    <text x="258" y="234">FREE</text>
+    <circle cx="320" cy="231" r="2.5" fill="#ff9a85"/>
+    <text x="330" y="234" fill="#ff9a85">RETURNED PTR</text>
+  </g>
+</svg>

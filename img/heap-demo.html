@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Heap SVG iterations</title>
+<style>
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 760px;
+    margin: 2em auto;
+    padding: 0 1em 4em;
+    color: #2a2a2a;
+    background: #f5f0e3;
+    line-height: 1.4;
+  }
+  h1 {
+    font-size: 1.5em;
+    margin: 0 0 0.3em;
+  }
+  h2 {
+    font-size: 1.05em;
+    margin: 2.4em 0 0.3em;
+    padding: 0.45em 0.7em;
+    background: #2c2218;
+    color: #fbf5e8;
+    border-radius: 5px;
+    font-weight: 600;
+  }
+  .desc {
+    font-size: 0.88em;
+    color: #5a4a3a;
+    margin: 0 0 0.7em;
+    font-style: italic;
+  }
+  .svg-frame {
+    background: #fbf5e8;
+    border: 1px solid #d6c8a8;
+    border-radius: 6px;
+    margin: 0;
+    overflow: hidden;
+  }
+  .svg-frame object,
+  .svg-frame img {
+    display: block;
+    width: 100%;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5em;
+  }
+  .row .svg-frame { margin: 0; }
+  .top-note {
+    background: #fff8e0;
+    border-left: 4px solid #c5302a;
+    padding: 0.6em 0.9em;
+    margin: 0.8em 0 1.8em;
+    font-size: 0.88em;
+  }
+  code {
+    background: #ece2c5;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  .meta {
+    color: #8a7560;
+    font-size: 0.82em;
+    margin-top: 0.2em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Heap layout — SVG iterations</h1>
+<p class="meta">Most-recent at top. Refresh after edits.</p>
+
+<p class="top-note">
+  Each SVG is embedded via <code>&lt;object&gt;</code>, so internal CSS (including
+  <strong>v8's hover popovers</strong>) is live — try hovering blocks in v8.
+</p>
+
+<script src="heap-diagram.js"></script>
+
+<!-- ============ API ============ -->
+<h2>API — &lt;heap-diagram&gt; custom element</h2>
+<p class="desc">Renders v12-style heaps from a declarative block list. Load <code>heap-diagram.js</code> on the page (in mdbook, add it to <code>additional-js</code> in <code>book.toml</code>), then write:</p>
+<pre style="background:#fdf8e8;border:1px solid #d6c8a8;border-radius:5px;padding:0.6em 0.9em;font-size:0.85em;overflow-x:auto;"><code>&lt;heap-diagram wrap="128"&gt;
+  alloc 32
+  free  64
+  alloc 32
+  free  32
+  alloc 64
+  free  32
+&lt;/heap-diagram&gt;</code></pre>
+<p class="desc">Attributes: <code>wrap</code> (bytes per row, default 128), <code>start</code> (hex or decimal start address, default 0), <code>title</code> (optional). Block syntax: one <code>alloc &lt;size&gt;</code> or <code>free &lt;size&gt;</code> per line (also <code>;</code>-separated). Size must be a multiple of 16, min 16. Same hover behavior as v12 — header for the 3-line summary, footer for the boundary-tag reminder.</p>
+<div class="svg-frame" style="padding:0.5em;">
+  <heap-diagram wrap="128">
+    alloc 32
+    free  64
+    alloc 32
+    free  32
+    alloc 64
+    free  32
+  </heap-diagram>
+</div>
+
+<p class="desc">A second example — single-row alloc-heavy heap with a custom start address:</p>
+<pre style="background:#fdf8e8;border:1px solid #d6c8a8;border-radius:5px;padding:0.6em 0.9em;font-size:0.85em;overflow-x:auto;"><code>&lt;heap-diagram wrap="256" start="0x1000"&gt;
+  alloc 48
+  alloc 32
+  free  96
+  alloc 64
+  free  16
+&lt;/heap-diagram&gt;</code></pre>
+<div class="svg-frame" style="padding:0.5em;">
+  <heap-diagram wrap="256" start="0x1000">
+    alloc 48
+    alloc 32
+    free  96
+    alloc 64
+    free  16
+  </heap-diagram>
+</div>
+
+<p class="desc">Per-block flags: <code>ptr</code> (or <code>*</code>) adds a red lollipop at the start of that block's payload; <code>hl</code> (or <code>!</code>) outlines the block in red as "changed by op". Attribute <code>legend</code> adds a key bar.</p>
+<pre style="background:#fdf8e8;border:1px solid #d6c8a8;border-radius:5px;padding:0.6em 0.9em;font-size:0.85em;overflow-x:auto;"><code>&lt;heap-diagram wrap="128" legend&gt;
+  alloc 32
+  alloc 32 ptr hl
+  free  32 hl
+  alloc 32
+&lt;/heap-diagram&gt;</code></pre>
+<div class="svg-frame" style="padding:0.5em;">
+  <heap-diagram wrap="128" legend>
+    alloc 32
+    alloc 32 ptr hl
+    free  32 hl
+    alloc 32
+  </heap-diagram>
+</div>
+
+<p class="desc">Attribute <code>pad</code> prepends the CSE 29 leading-pad cell (8 bytes of alignment + magic-number stash) at the heap start. Use <code>pad</code> alone for the default 8 bytes or <code>pad="16"</code> for a custom size. Hover the pad for the explanation.</p>
+<pre style="background:#fdf8e8;border:1px solid #d6c8a8;border-radius:5px;padding:0.6em 0.9em;font-size:0.85em;overflow-x:auto;"><code>&lt;heap-diagram wrap="128" pad legend&gt;
+  alloc 32
+  free  64
+  alloc 16
+&lt;/heap-diagram&gt;</code></pre>
+<div class="svg-frame" style="padding:0.5em;">
+  <heap-diagram wrap="128" pad legend>
+    alloc 32
+    free  64
+    alloc 16
+  </heap-diagram>
+</div>
+
+<!-- ============ v12 ============ -->
+<h2>v12 — refined wording (status + footer)</h2>
+<p class="desc">Status text now <code>0b0011 (Prev Busy, This Busy)</code> style — no checkmarks, explicit Busy/Free names, <code>0b</code> binary prefix. Footer reads "marks this free block's length (NN), so it can merge…" with parens around the number.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v12.svg" style="aspect-ratio: 560/170;"></object>
+</div>
+
+<!-- ============ v11 ============ -->
+<h2>v11 — header- vs footer-scoped popups, smaller text</h2>
+<p class="desc">Hover the <em>header</em> (dark slab on the left of each block) for the 3-line summary. Hover the <em>footer</em> (right slab of free blocks) for the italic boundary-tag reminder. Payload area no longer triggers anything. Popup text shrunk from 11px to 9px.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v11.svg" style="aspect-ratio: 560/170;"></object>
+</div>
+
+<!-- ============ v10 ============ -->
+<h2>v10 — cursor-following terse popup (any block hover)</h2>
+<p class="desc">Same compact 2-row heap with in-header bit strips. Popup is now a 3-line summary that follows the cursor and flips position near edges, so detail stays visible on tall heaps. Total / header word / status — terse and bit-meaning all in one. Powered by embedded JS, so requires <code>&lt;object&gt;</code> or inline embedding (not <code>&lt;img&gt;</code>).</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v10.svg" style="aspect-ratio: 560/170;"></object>
+</div>
+
+<!-- ============ v9 ============ -->
+<h2>v9 — bit strip back in headers + popover as bit-meaning reminder</h2>
+<p class="desc">Compact h=36 blocks with size on top + 4-bit strip on bottom (visible in every header and footer). Popover repurposed as a reminder of what each bit field <em>means</em>, not just its value.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v9.svg" style="aspect-ratio: 560/280;"></object>
+</div>
+
+<!-- ============ v8 ============ -->
+<h2>v8 — compact + hover popovers (bit detail in popover only)</h2>
+<p class="desc">Blocks shrunk to 36px tall. Pointer marker and row-continues text removed. Bit detail moved out of headers into styled hover popovers (works because of <code>&lt;object&gt;</code> embedding).</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v8.svg" style="aspect-ratio: 560/270;"></object>
+</div>
+
+<!-- ============ v7 ============ -->
+<h2>v7 — compact + two-row test + beefier pointer</h2>
+<p class="desc">First compact pass (h=56). Two-row 256B heap. Pointer marker grown with dark outline + cream inner dot. Bit strip still inline in headers.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v7.svg" style="aspect-ratio: 560/260;"></object>
+</div>
+
+<!-- ============ v6 ============ -->
+<h2>v6 — bit strip with consistent backgrounds</h2>
+<p class="desc">Fixed v5's two issues: bit strip moved out of the rounded-corner zone and all cells share the dark header bg. Set bits stand out via bold cream digits; unset via dim warm-gray.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v6.svg" style="aspect-ratio: 560/380;"></object>
+</div>
+
+<!-- ============ v5 ============ -->
+<h2>v5 — first attempt at bit strip (with issues)</h2>
+<p class="desc">Size on top + 4 cells on bottom in each header, plus a redesigned bit-decomp callout. Corner clipping and bg/fg color flips visible in the small renders — fixed in v6.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v5.svg" style="aspect-ratio: 560/380;"></object>
+</div>
+
+<!-- ============ v4 ============ -->
+<h2>v4 — merged warm + rounded + bit-decomp callout</h2>
+<p class="desc">Cream bg + wobbly outlines from sketch, rounded corners + distinct payload/free textures from dark-mode widget. Hex value inline in each header, full bit decomp in callout below.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v4.svg" style="aspect-ratio: 560/380;"></object>
+</div>
+
+<!-- ============ v3 row ============ -->
+<h2>v3 — three style explorations</h2>
+<p class="desc">Hand-drawn sketch · slick dark mode widget · engineering blueprint. Same content, three visual languages.</p>
+<div class="row">
+  <div class="svg-frame"><object type="image/svg+xml" data="04-heap-shape-v3a-sketch.svg"    style="aspect-ratio: 560/240;"></object></div>
+  <div class="svg-frame"><object type="image/svg+xml" data="04-heap-shape-v3b-dark.svg"      style="aspect-ratio: 560/240;"></object></div>
+  <div class="svg-frame"><object type="image/svg+xml" data="04-heap-shape-v3c-blueprint.svg" style="aspect-ratio: 560/240;"></object></div>
+</div>
+
+<!-- ============ split-v3a ============ -->
+<h2>split-v3a — sketch-style split-on-malloc, with gaps</h2>
+<p class="desc">Sketch palette applied to the operation diagram. First introduction of the 4px between-block gaps (2px inset each side; byte ruler unchanged).</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-split-v3a-sketch.svg" style="aspect-ratio: 592/400;"></object>
+</div>
+
+<!-- ============ v2 ============ -->
+<h2>v2 — pointer lollipop + dashed interior dividers</h2>
+<p class="desc">Solid outer block outline, dashed sub-region dividers. Pointer marker introduced as a red lollipop (dot + stem + label) at the header/payload boundary.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v2.svg" style="aspect-ratio: 560/270;"></object>
+</div>
+
+<!-- ============ split-v2 ============ -->
+<h2>split-v2 — operation diagram in v2 style</h2>
+<p class="desc">Split-on-malloc(16) before/after, with red outlines on the blocks the op changed.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-split-v2.svg" style="aspect-ratio: 592/380;"></object>
+</div>
+
+<!-- ============ v1 ============ -->
+<h2>v1 — original block layout</h2>
+<p class="desc">First pass — three blocks (alloc 32 / free 48 / alloc 16) showing header / payload / footer regions and address ruler.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-shape-v1.svg" style="aspect-ratio: 560/260;"></object>
+</div>
+
+<!-- ============ split-v1 ============ -->
+<h2>split-v1 — original split-on-malloc</h2>
+<p class="desc">First fixed-shape heap demo. 128B canvas, before/after states stacked, red borders mark blocks the op touched.</p>
+<div class="svg-frame">
+  <object type="image/svg+xml" data="04-heap-split-v1.svg" style="aspect-ratio: 592/380;"></object>
+</div>
+
+</body>
+</html>

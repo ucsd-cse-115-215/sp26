@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 592 380" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12">
+  <defs>
+    <pattern id="freeHatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#f5ecd0"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#d9c98a" stroke-width="1"/>
+    </pattern>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <text x="296" y="22" text-anchor="middle" font-size="14" font-weight="bold" font-family="system-ui, sans-serif">Splitting a free block on malloc(16)</text>
+
+  <!-- BEFORE -->
+  <text x="40" y="58" font-family="system-ui, sans-serif" font-size="12" fill="#666">before — 128 B heap</text>
+  <g>
+    <!-- block A: alloc 32 (cells 0-3) -->
+    <rect x="40"  y="70" width="32"  height="80" fill="#2c3e57" stroke="#0f1a2c" stroke-width="1.5"/>
+    <rect x="72"  y="70" width="96"  height="80" fill="#5b8cb8" stroke="#0f1a2c" stroke-width="1.5"/>
+    <text x="104" y="115" text-anchor="middle" fill="#fff">alloc 32</text>
+    <!-- block B: free 64 (cells 4-11) -->
+    <rect x="168" y="70" width="32"  height="80" fill="#2c3e57" stroke="#0f1a2c" stroke-width="1.5"/>
+    <rect x="200" y="70" width="192" height="80" fill="url(#freeHatch)" stroke="#0f1a2c" stroke-width="1.5"/>
+    <rect x="392" y="70" width="32"  height="80" fill="#2c3e57" stroke="#0f1a2c" stroke-width="1.5"/>
+    <text x="296" y="115" text-anchor="middle" fill="#7a6a3a">free 64</text>
+    <!-- block C: alloc 32 (cells 12-15) -->
+    <rect x="424" y="70" width="32"  height="80" fill="#2c3e57" stroke="#0f1a2c" stroke-width="1.5"/>
+    <rect x="456" y="70" width="96"  height="80" fill="#5b8cb8" stroke="#0f1a2c" stroke-width="1.5"/>
+    <text x="488" y="115" text-anchor="middle" fill="#fff">alloc 32</text>
+  </g>
+
+  <!-- operation arrow -->
+  <g font-family="system-ui, sans-serif">
+    <line x1="296" y1="166" x2="296" y2="196" stroke="#444" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="310" y="184" font-size="12" fill="#444">malloc(16) → split free 64 into alloc 32 + free 32</text>
+  </g>
+
+  <!-- AFTER -->
+  <text x="40" y="218" font-family="system-ui, sans-serif" font-size="12" fill="#666">after</text>
+  <g>
+    <!-- block A: unchanged -->
+    <rect x="40"  y="230" width="32"  height="80" fill="#2c3e57" stroke="#0f1a2c" stroke-width="1.5"/>
+    <rect x="72"  y="230" width="96"  height="80" fill="#5b8cb8" stroke="#0f1a2c" stroke-width="1.5"/>
+    <text x="104" y="275" text-anchor="middle" fill="#fff">alloc 32</text>
+    <!-- new alloc 32 (cells 4-7) -->
+    <rect x="168" y="230" width="32"  height="80" fill="#2c3e57" stroke="#d04848" stroke-width="2"/>
+    <rect x="200" y="230" width="96"  height="80" fill="#5b8cb8" stroke="#d04848" stroke-width="2"/>
+    <text x="232" y="275" text-anchor="middle" fill="#fff">alloc 32</text>
+    <!-- new free 32 (cells 8-11) -->
+    <rect x="296" y="230" width="32"  height="80" fill="#2c3e57" stroke="#d04848" stroke-width="2"/>
+    <rect x="328" y="230" width="64"  height="80" fill="url(#freeHatch)" stroke="#d04848" stroke-width="2"/>
+    <rect x="392" y="230" width="32"  height="80" fill="#2c3e57" stroke="#d04848" stroke-width="2"/>
+    <text x="360" y="275" text-anchor="middle" fill="#7a6a3a">free 32</text>
+    <!-- block C: unchanged -->
+    <rect x="424" y="230" width="32"  height="80" fill="#2c3e57" stroke="#0f1a2c" stroke-width="1.5"/>
+    <rect x="456" y="230" width="96"  height="80" fill="#5b8cb8" stroke="#0f1a2c" stroke-width="1.5"/>
+    <text x="488" y="275" text-anchor="middle" fill="#fff">alloc 32</text>
+  </g>
+
+  <!-- byte ruler -->
+  <g font-size="10" fill="#999" font-family="system-ui, sans-serif">
+    <line x1="40"  y1="316" x2="552" y2="316" stroke="#bbb"/>
+    <line x1="40"  y1="316" x2="40"  y2="320" stroke="#bbb"/>
+    <line x1="168" y1="316" x2="168" y2="320" stroke="#bbb"/>
+    <line x1="296" y1="316" x2="296" y2="320" stroke="#bbb"/>
+    <line x1="424" y1="316" x2="424" y2="320" stroke="#bbb"/>
+    <line x1="552" y1="316" x2="552" y2="320" stroke="#bbb"/>
+    <text x="40"  y="332" text-anchor="middle">0</text>
+    <text x="168" y="332" text-anchor="middle">32</text>
+    <text x="296" y="332" text-anchor="middle">64</text>
+    <text x="424" y="332" text-anchor="middle">96</text>
+    <text x="552" y="332" text-anchor="middle">128</text>
+  </g>
+
+  <!-- legend -->
+  <g transform="translate(40, 350)" font-size="10" font-family="system-ui, sans-serif">
+    <rect x="0"   y="0" width="12" height="12" fill="#2c3e57"/><text x="18"  y="10">header/footer</text>
+    <rect x="120" y="0" width="12" height="12" fill="#5b8cb8"/><text x="138" y="10">allocated</text>
+    <rect x="220" y="0" width="12" height="12" fill="url(#freeHatch)" stroke="#888"/><text x="238" y="10">free</text>
+    <rect x="290" y="0" width="12" height="12" fill="none" stroke="#d04848" stroke-width="2"/><text x="308" y="10">changed by op</text>
+  </g>
+</svg>

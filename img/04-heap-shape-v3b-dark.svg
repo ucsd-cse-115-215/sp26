@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 240" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="12">
+  <defs>
+    <linearGradient id="allocB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#5a82bc"/>
+      <stop offset="100%" stop-color="#3a5d8c"/>
+    </linearGradient>
+    <linearGradient id="hdrB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#2c3550"/>
+      <stop offset="100%" stop-color="#1c2238"/>
+    </linearGradient>
+    <linearGradient id="freeB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#2a2536"/>
+      <stop offset="100%" stop-color="#1f1c28"/>
+    </linearGradient>
+    <pattern id="freeDotsB" patternUnits="userSpaceOnUse" width="9" height="9">
+      <circle cx="4.5" cy="4.5" r="0.9" fill="#6b5c8a"/>
+    </pattern>
+    <filter id="ptrGlowB" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="cardShadowB" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
+    <clipPath id="b1clip"><rect x="60"  y="78" width="128" height="84" rx="8"/></clipPath>
+    <clipPath id="b2clip"><rect x="200" y="78" width="192" height="84" rx="8"/></clipPath>
+    <clipPath id="b3clip"><rect x="404" y="78" width="64"  height="84" rx="8"/></clipPath>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#0d1017"/>
+
+  <text x="280" y="26" text-anchor="middle" font-size="14" font-weight="600" fill="#e8eaed">Heap layout</text>
+  <text x="280" y="44" text-anchor="middle" font-size="11" fill="#7a8290" letter-spacing="0.5">boundary-tag implicit list</text>
+
+  <!-- Pointer indicator -->
+  <text x="92" y="64" text-anchor="middle" font-size="11" font-weight="600" fill="#ff6b9d">p = malloc(24)</text>
+  <line x1="92" y1="68" x2="92" y2="76" stroke="#ff6b9d" stroke-width="1.5"/>
+  <circle cx="92" cy="78" r="3.5" fill="#ff6b9d" filter="url(#ptrGlowB)"/>
+
+  <!-- BLOCK 1: alloc 32 -->
+  <g filter="url(#cardShadowB)">
+    <rect x="60" y="78" width="128" height="84" rx="8" fill="url(#allocB)"/>
+  </g>
+  <g clip-path="url(#b1clip)">
+    <rect x="60" y="78" width="32" height="84" fill="url(#hdrB)"/>
+    <line x1="92" y1="78" x2="92" y2="162" stroke="#0a0d14" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+  </g>
+  <text x="76" y="124" text-anchor="middle" fill="#7a8290" font-size="9" letter-spacing="0.5" transform="rotate(-90 76 124)">HDR</text>
+  <text x="140" y="124" text-anchor="middle" fill="#dfe6f0" font-weight="500">payload</text>
+  <text x="124" y="184" text-anchor="middle" fill="#9aa3b2" font-size="11">size 32 · alloc</text>
+
+  <!-- BLOCK 2: free 48 -->
+  <g filter="url(#cardShadowB)">
+    <rect x="200" y="78" width="192" height="84" rx="8" fill="url(#freeB)"/>
+  </g>
+  <g clip-path="url(#b2clip)">
+    <rect x="200" y="78" width="32" height="84" fill="url(#hdrB)"/>
+    <rect x="232" y="78" width="128" height="84" fill="url(#freeDotsB)" opacity="0.7"/>
+    <rect x="360" y="78" width="32" height="84" fill="url(#hdrB)"/>
+    <line x1="232" y1="78" x2="232" y2="162" stroke="#0a0d14" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+    <line x1="360" y1="78" x2="360" y2="162" stroke="#0a0d14" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+  </g>
+  <text x="216" y="124" text-anchor="middle" fill="#7a8290" font-size="9" letter-spacing="0.5" transform="rotate(-90 216 124)">HDR</text>
+  <text x="296" y="124" text-anchor="middle" fill="#a89b75" font-weight="500">free</text>
+  <text x="376" y="124" text-anchor="middle" fill="#7a8290" font-size="9" letter-spacing="0.5" transform="rotate(-90 376 124)">FTR</text>
+  <text x="296" y="184" text-anchor="middle" fill="#9aa3b2" font-size="11">size 48 · free</text>
+
+  <!-- BLOCK 3: alloc 16 -->
+  <g filter="url(#cardShadowB)">
+    <rect x="404" y="78" width="64" height="84" rx="8" fill="url(#allocB)"/>
+  </g>
+  <g clip-path="url(#b3clip)">
+    <rect x="404" y="78" width="32" height="84" fill="url(#hdrB)"/>
+    <line x1="436" y1="78" x2="436" y2="162" stroke="#0a0d14" stroke-width="1" opacity="0.6" stroke-dasharray="3,3"/>
+  </g>
+  <text x="420" y="124" text-anchor="middle" fill="#7a8290" font-size="9" letter-spacing="0.5" transform="rotate(-90 420 124)">HDR</text>
+  <text x="436" y="184" text-anchor="middle" fill="#9aa3b2" font-size="11">size 16 · alloc</text>
+
+  <!-- legend -->
+  <g font-size="11" fill="#9aa3b2">
+    <rect x="60"  y="208" width="14" height="10" rx="2" fill="url(#hdrB)"/>
+    <text x="80"  y="217">header / footer</text>
+    <rect x="170" y="208" width="14" height="10" rx="2" fill="url(#allocB)"/>
+    <text x="190" y="217">allocated</text>
+    <rect x="262" y="208" width="14" height="10" rx="2" fill="url(#freeDotsB)" stroke="#3a3548" stroke-width="0.5"/>
+    <text x="282" y="217">free</text>
+    <circle cx="332" cy="213" r="3.5" fill="#ff6b9d" filter="url(#ptrGlowB)"/>
+    <text x="343" y="217" fill="#ff6b9d">returned ptr</text>
+  </g>
+</svg>

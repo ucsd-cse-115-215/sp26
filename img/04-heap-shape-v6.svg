@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 380" font-family="'Bradley Hand', 'Caveat', 'Comic Sans MS', cursive" font-size="13">
+  <defs>
+    <filter id="rough" x="-2%" y="-3%" width="104%" height="106%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="6" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2"/>
+    </filter>
+    <pattern id="freeDotsV6" patternUnits="userSpaceOnUse" width="9" height="9">
+      <rect width="9" height="9" fill="#fbf5e8"/>
+      <circle cx="4.5" cy="4.5" r="1.1" fill="#b08850"/>
+    </pattern>
+    <clipPath id="b1clipV6"><rect x="62"  y="78" width="124" height="84" rx="8"/></clipPath>
+    <clipPath id="b2clipV6"><rect x="190" y="78" width="188" height="84" rx="8"/></clipPath>
+    <clipPath id="b3clipV6"><rect x="382" y="78" width="60"  height="84" rx="8"/></clipPath>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#fbf5e8"/>
+
+  <text x="280" y="30" text-anchor="middle" font-size="20" fill="#2a2a2a">heap layout — boundary tags</text>
+
+  <!-- Pointer indicator -->
+  <text x="94" y="50" text-anchor="middle" font-size="14" fill="#c5302a">p</text>
+  <text x="94" y="64" text-anchor="middle" font-size="11" fill="#c5302a">malloc(24)</text>
+  <g filter="url(#rough)">
+    <line x1="94" y1="68" x2="94" y2="76" stroke="#c5302a" stroke-width="1.6"/>
+    <circle cx="94" cy="78" r="4" fill="#c5302a"/>
+  </g>
+
+  <!-- BLOCK 1: alloc 32 (inset 62-186), low bits = 0011 -->
+  <g clip-path="url(#b1clipV6)">
+    <rect x="62" y="78" width="32" height="84" fill="#2c2218"/>
+    <rect x="94" y="78" width="92" height="84" fill="#3a5d8c"/>
+    <!-- Bit strip: thin separator + cell dividers, NO cell fills (uniform dark bg) -->
+    <line x1="64" y1="136" x2="92" y2="136" stroke="#fbf5e8" stroke-width="0.5" opacity="0.7"/>
+    <line x1="71" y1="136" x2="71" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <line x1="78" y1="136" x2="78" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <line x1="85" y1="136" x2="85" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+  </g>
+  <line x1="94" y1="78" x2="94" y2="162" stroke="#fbf5e8" stroke-width="1" stroke-dasharray="4,3" opacity="0.55"/>
+  <g filter="url(#rough)">
+    <rect x="62" y="78" width="124" height="84" rx="8" fill="none" stroke="#2c2218" stroke-width="2"/>
+  </g>
+  <!-- Header: size top -->
+  <text x="78" y="116" text-anchor="middle" font-size="17" fill="#fbf5e8">32</text>
+  <!-- Bit digits: dim for 0, bold-bright for 1 -->
+  <text x="67.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="74.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="81.5" y="148" text-anchor="middle" font-size="9" fill="#fff8e0" font-family="ui-monospace, monospace" font-weight="bold">1</text>
+  <text x="88.5" y="148" text-anchor="middle" font-size="9" fill="#fff8e0" font-family="ui-monospace, monospace" font-weight="bold">1</text>
+  <text x="140" y="124" text-anchor="middle" fill="#fbf5e8">payload (24 B)</text>
+  <text x="124" y="186" text-anchor="middle" fill="#2a2a2a">size 32 — alloc</text>
+
+  <!-- BLOCK 2: free 48 (inset 190-378), low bits = 0010 -->
+  <g clip-path="url(#b2clipV6)">
+    <rect x="190" y="78" width="32"  height="84" fill="#2c2218"/>
+    <rect x="222" y="78" width="124" height="84" fill="url(#freeDotsV6)"/>
+    <rect x="346" y="78" width="32"  height="84" fill="#2c2218"/>
+    <!-- Header bit strip -->
+    <line x1="192" y1="136" x2="220" y2="136" stroke="#fbf5e8" stroke-width="0.5" opacity="0.7"/>
+    <line x1="199" y1="136" x2="199" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <line x1="206" y1="136" x2="206" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <line x1="213" y1="136" x2="213" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <!-- Footer bit strip -->
+    <line x1="348" y1="136" x2="376" y2="136" stroke="#fbf5e8" stroke-width="0.5" opacity="0.7"/>
+    <line x1="355" y1="136" x2="355" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <line x1="362" y1="136" x2="362" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <line x1="369" y1="136" x2="369" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+  </g>
+  <line x1="222" y1="78" x2="222" y2="162" stroke="#5a4a3a" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+  <line x1="346" y1="78" x2="346" y2="162" stroke="#5a4a3a" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+  <g filter="url(#rough)">
+    <rect x="190" y="78" width="188" height="84" rx="8" fill="none" stroke="#2c2218" stroke-width="2"/>
+  </g>
+  <!-- Block 2 header text -->
+  <text x="206" y="116" text-anchor="middle" font-size="17" fill="#fbf5e8">48</text>
+  <text x="195.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="202.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="209.5" y="148" text-anchor="middle" font-size="9" fill="#fff8e0" font-family="ui-monospace, monospace" font-weight="bold">1</text>
+  <text x="216.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <!-- Block 2 footer text (mirrors header) -->
+  <text x="362" y="116" text-anchor="middle" font-size="17" fill="#fbf5e8">48</text>
+  <text x="351.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="358.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="365.5" y="148" text-anchor="middle" font-size="9" fill="#fff8e0" font-family="ui-monospace, monospace" font-weight="bold">1</text>
+  <text x="372.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="284" y="124" text-anchor="middle" fill="#5a4a3a">free (32 B)</text>
+  <text x="284" y="186" text-anchor="middle" fill="#2a2a2a">size 48 — free  (footer mirrors header)</text>
+
+  <!-- BLOCK 3: alloc 16 (inset 382-442), low bits = 0001 -->
+  <g clip-path="url(#b3clipV6)">
+    <rect x="382" y="78" width="32" height="84" fill="#2c2218"/>
+    <rect x="414" y="78" width="28" height="84" fill="#3a5d8c"/>
+    <line x1="384" y1="136" x2="412" y2="136" stroke="#fbf5e8" stroke-width="0.5" opacity="0.7"/>
+    <line x1="391" y1="136" x2="391" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <line x1="398" y1="136" x2="398" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+    <line x1="405" y1="136" x2="405" y2="150" stroke="#fbf5e8" stroke-width="0.5" opacity="0.5"/>
+  </g>
+  <line x1="414" y1="78" x2="414" y2="162" stroke="#fbf5e8" stroke-width="1" stroke-dasharray="4,3" opacity="0.55"/>
+  <g filter="url(#rough)">
+    <rect x="382" y="78" width="60" height="84" rx="8" fill="none" stroke="#2c2218" stroke-width="2"/>
+  </g>
+  <text x="398" y="116" text-anchor="middle" font-size="17" fill="#fbf5e8">16</text>
+  <text x="387.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="394.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="401.5" y="148" text-anchor="middle" font-size="9" fill="#8a7560" font-family="ui-monospace, monospace">0</text>
+  <text x="408.5" y="148" text-anchor="middle" font-size="9" fill="#fff8e0" font-family="ui-monospace, monospace" font-weight="bold">1</text>
+  <text x="412" y="186" text-anchor="middle" fill="#2a2a2a">size 16 — alloc</text>
+
+  <!-- Bit detail callout -->
+  <text x="60" y="226" font-size="15" fill="#2a2a2a">size_status word — 32 bits (the first 4 of the 8-byte header slot)</text>
+
+  <g font-size="10" fill="#5a4a3a" font-family="ui-monospace, monospace">
+    <text x="180" y="240" text-anchor="middle">bits 31..4</text>
+    <text x="304" y="240" text-anchor="middle">3</text>
+    <text x="328" y="240" text-anchor="middle">2</text>
+    <text x="352" y="240" text-anchor="middle">1</text>
+    <text x="376" y="240" text-anchor="middle">0</text>
+  </g>
+
+  <g filter="url(#rough)">
+    <rect x="70"  y="244" width="220" height="36" rx="4" fill="none" stroke="#2c2218" stroke-width="1.6"/>
+    <rect x="292" y="244" width="24"  height="36" rx="2" fill="none" stroke="#2c2218" stroke-width="1.4"/>
+    <rect x="316" y="244" width="24"  height="36" rx="2" fill="none" stroke="#2c2218" stroke-width="1.4"/>
+    <rect x="340" y="244" width="24"  height="36" rx="2" fill="none" stroke="#2c2218" stroke-width="1.4"/>
+    <rect x="364" y="244" width="24"  height="36" rx="2" fill="none" stroke="#2c2218" stroke-width="1.4"/>
+  </g>
+  <text x="180" y="266" text-anchor="middle" fill="#2a2a2a">size (multiple of 16)</text>
+  <text x="304" y="266" text-anchor="middle" fill="#5a4a3a" font-style="italic">—</text>
+  <text x="328" y="266" text-anchor="middle" fill="#5a4a3a" font-style="italic">—</text>
+  <text x="352" y="266" text-anchor="middle" fill="#2a2a2a">PB</text>
+  <text x="376" y="266" text-anchor="middle" fill="#c5302a" font-weight="bold">B</text>
+
+  <g font-family="ui-monospace, monospace" font-size="12">
+    <text x="60"  y="304" fill="#5a4a3a">block 1 (alloc 32):</text>
+    <text x="180" y="304" text-anchor="middle" fill="#2a2a2a">0x20 = 32</text>
+    <text x="304" y="304" text-anchor="middle" fill="#a89a80">0</text>
+    <text x="328" y="304" text-anchor="middle" fill="#a89a80">0</text>
+    <text x="352" y="304" text-anchor="middle" fill="#2a2a2a" font-weight="bold">1</text>
+    <text x="376" y="304" text-anchor="middle" fill="#c5302a" font-weight="bold">1</text>
+    <text x="412" y="304" fill="#5a4a3a">→ 0x23</text>
+
+    <text x="60"  y="324" fill="#5a4a3a">block 2 (free 48):</text>
+    <text x="180" y="324" text-anchor="middle" fill="#2a2a2a">0x30 = 48</text>
+    <text x="304" y="324" text-anchor="middle" fill="#a89a80">0</text>
+    <text x="328" y="324" text-anchor="middle" fill="#a89a80">0</text>
+    <text x="352" y="324" text-anchor="middle" fill="#2a2a2a" font-weight="bold">1</text>
+    <text x="376" y="324" text-anchor="middle" fill="#a89a80">0</text>
+    <text x="412" y="324" fill="#5a4a3a">→ 0x32</text>
+  </g>
+
+  <g font-size="13" fill="#2a2a2a">
+    <rect x="60"  y="350" width="14" height="14" rx="2" fill="#2c2218"/>
+    <text x="80"  y="362">header / footer (8 B slot)</text>
+    <rect x="220" y="350" width="14" height="14" rx="2" fill="#3a5d8c"/>
+    <text x="240" y="362">allocated</text>
+    <rect x="320" y="350" width="14" height="14" rx="2" fill="url(#freeDotsV6)" stroke="#5a4a3a" stroke-width="0.6"/>
+    <text x="340" y="362">free</text>
+    <circle cx="390" cy="357" r="4" fill="#c5302a"/>
+    <text x="400" y="362" fill="#c5302a">returned ptr</text>
+  </g>
+</svg>

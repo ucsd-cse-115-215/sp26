@@ -79,7 +79,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded "><a href="lectures/03-agents.html"><strong aria-hidden="true">5.</strong> Agents</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">6.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="assignments/doc-scanner-assignment.html"><strong aria-hidden="true">7.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="assignments/agent-assignment.html"><strong aria-hidden="true">8.</strong> Assignment 3: Agents</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded "><a href="lectures/03-agents.html"><strong aria-hidden="true">5.</strong> Agents</a></li><li class="chapter-item expanded "><a href="lectures/04-correctness.html"><strong aria-hidden="true">6.</strong> Getting Confidence in (Agentic) Code</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">7.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="assignments/doc-scanner-assignment.html"><strong aria-hidden="true">8.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="assignments/agent-assignment.html"><strong aria-hidden="true">9.</strong> Assignment 3: Agents</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -3247,6 +3247,1236 @@ If GitBot decides to inspect the commit log, it might read that message and take
 </ul>
 </li>
 </ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unit-4-getting-confidence-in-agentic-code"><a class="header" href="#unit-4-getting-confidence-in-agentic-code">Unit 4: Getting Confidence in (Agentic) Code</a></h1>
+<p>As programmers and software engineers, we talk a lot about code being
+“correct” or “right” or “working”. We ship code, in products or
+programming assignments, when we feel it's “done” (or when we've reached a
+deadline), and it invariably has “bugs” – that is, it is not correct in the
+strict sense.</p>
+<p>At the same time, we have a lot of confidence that our code does
+what we intended, for the most part. After all, we wrote it, and we thought
+carefully about what it was supposed to do as we developed each helper
+function, algorithmic loop, and API call.</p>
+<p>As systems get larger, it is harder and harder to have this confidence. Web
+browsers, operating systems, IDEs, and more are vast, complex codebases with
+millions of lines of code, decades of history, and many authors. Having
+confidence in these comes from a few main sources:</p>
+<ul>
+<li>Trust, in the social sense. A trusted author wrote it, a trusted person did a
+code review, and so on, and we trust the community's process and collective
+judgment. Another kind of trust is <em>being around for a while</em> and <em>not
+changing very much</em>. <code>gcc</code> has earned a certain level of trust because we
+know it doesn't get overhauled every release and has been a known quantity in
+production for decades.</li>
+<li>Verification, in the software sense. A program may be very complex, but we
+observe that a simpler artifact, like test cases or a type-based
+specification, passes when run against the implementation. We can justifiably
+have confidence in the code up to what we see from the verifier and our read
+of the spec.</li>
+</ul>
+<p>In reality, most large systems <em>do</em> have critical bugs. It's a bummer! However,
+the software engineering and verification community has made a lot of progress
+over the past few decades in bringing tool-based confidence to systems. Type
+systems like Rust's aim to eliminate entire classes of correctness issues
+related to memory management. Techniques like property-based testing and
+fuzzing have found many critical bugs before (and after) release. We're
+striving towards robustness and confidence in our code.</p>
+<p>With agents capable of writing orders of magnitude more code than humans in the
+same amount of time, the calculus of trust and confidence is undergoing a
+significant shift. In <a href="lectures/./02-document-scanner.html">Unit 2</a> we talked about <em>slowing
+Claude down</em> to a pace we could review. At least partially, we were forcing
+ourselves into the social and code review kind of trust. I (Joe) had a lot of
+domain knowledge about web programming that I could bring to bear on the actual
+code that was being generated, and acted as a trusted reviewer.</p>
+<p>But what about important systems where confidence is critical yet no one person
+can reasonably review all the code? Clearly agents are capable of building
+<em>large</em> systems. But can they build large systems <em>while giving us confidence
+in them</em>? 
+People are surely trying: <a href="https://www.anthropic.com/engineering/building-c-compiler">the Claude C
+Compiler</a> got
+widespread attention for trying to reproduce a <code>gcc</code>-like system in an
+automated way; <a href="https://news.ycombinator.com/item?id=48016880">a rewrite of a JavaScript engine from Zig to
+Rust</a> was a conversation-starter
+just this week; Claude documents a <a href="https://claude.com/plugins/ralph-loop">“Ralph Wiggum
+loop”</a> where agents work for a long
+time, iterating on their own artifacts, until “done”.</p>
+<p>We don't have the traditional signals of social trust for this code! In 2020,
+the existence of a million line codebase implied something about human effort
+and attention that translated into some “banked” trust. That is not true of
+million-line codebases generated in days by agents. In those cases, the
+confidence in the built system rests on <em>the quality of the verifier</em>. That is,
+what <strong>properties</strong> need to be true of the system for us to have confidence in
+it, and what <strong>verifiers</strong> can we write to check that those properties hold.
+For example, if the Claude C compiler passes <code>gcc</code>'s test suite, we can have
+<em>some</em> confidence in it.</p>
+<blockquote>
+<p><strong>Q:</strong> What might give us more confidence?</p>
+</blockquote>
+<p>In this unit, we are going to explore the interplay between agentic code
+generation and verifiers. Two common “verifier”/“property” pairs:</p>
+<ul>
+<li>Unit tests <strong>verify the property</strong> of input-output correctness (on a finite
+set of examples (for a single run))</li>
+<li>Type systems (that are sound) <strong>verify the property</strong> that a variable will
+always hold a value of a particular type</li>
+</ul>
+<aside class="margin-note">CS curricula could benefit from including these going forward!</aside>
+<p>The actual space of verifiers is vast – there are <strong>static</strong> verifiers like
+type systems or symbolic execution or static analysis, there are <strong>dynamic</strong>
+verifiers like predicate checks or <code>valgrind</code> or <code>asan</code> or humble <code>assert</code>
+statements. There are <strong>test-based</strong> and <strong>input-generation</strong> harnesses for
+these like fuzzers or oracles or handwritten inputs.</p>
+<blockquote>
+<p><strong>Q:</strong> Define each of the terms in the preceding paragraph, using a competent
+model or a web search for the ones you can't identify from your own learning.</p>
+</blockquote>
+<p><a id="problem"></a></p>
+<h2 id="problem-selection"><a class="header" href="#problem-selection">Problem Selection</a></h2>
+<p>To try this, I wanted a problem that would:</p>
+<ul>
+<li>Be difficult enough that frontier models would be unlikely to satisfyingly
+implement it in one shot</li>
+<li>Have many possible “correct” answers</li>
+<li>Showcase a variety of verification methodology</li>
+<li>Have understandable behavior, but genuinely out of scope for me to code
+review: The key property I want is that <em>looking at the code wouldn't
+necessarily help me much</em>, but <em>I still know what success means</em>.</li>
+</ul>
+<p>The following problem is what we'll explore:</p>
+<p><strong>Make a standard textbook allocator (e.g. something like <code>malloc</code>) support
+concurrency.</strong></p>
+<ul>
+<li>I tried a few ways, and agents made meaningful errors</li>
+<li>There <em>are</em> different existing solutions for parallel allocators, which may
+or may not be in corpus for the model, and may or may not exactly line up
+with how my starting-point malloc works</li>
+<li>It's possible to get quite complicated implementations that are necessary to
+improve performance</li>
+<li>The C ecosystem has useful tools for doing this kind of verification</li>
+<li>I know how to implement allocators, and I know what properties they should
+have. However, I have <strong>never</strong> designed or written a concurrent data
+structure by hand or taken a parallel programming course. Most of what I
+(now) know about them I learned while preparing this document.</li>
+</ul>
+<p>Along the way, we will need to clearly specify allocator behavior, write tests
+(and have an agent help us generate them), write benchmarks and measure
+performance, and learn about new tools for more thorough vetting of generated
+code.</p>
+<p><a id="allocator-intro"></a></p>
+<h3 id="what-an-allocator-does"><a class="header" href="#what-an-allocator-does">What an Allocator Does</a></h3>
+<p><code>malloc</code> (and the corresponding <code>free</code>) are usually taught as the default way
+to allocate on the heap in C and systems programs:</p>
+<ul>
+<li><code>void* malloc(size_t size)</code> takes a number of bytes and returns either:
+<ul>
+<li>A pointer to freshly-allocated memory of (at least) size bytes, or</li>
+<li><code>NULL</code> if not enough space was available or another error occurred</li>
+</ul>
+</li>
+<li><code>void free(void* ptr)</code> takes a pointer <em>that must have been returned by
+malloc and not yet freed</em> and does some work to make the space available on
+the heap for future calls to <code>malloc</code>. After a call to free, it is assumed
+that the freed pointer is no longer used.</li>
+</ul>
+<p>In practice, there are many implementations of <code>malloc</code> – the default on MacOS
+is different than the default on Linux, and so on. There are also many
+different <em>allocators</em> in general: CPython has a particular
+<a href="https://docs.python.org/3/c-api/memory.html#default-memory-allocators">pymalloc</a>
+allocator that has a specific way of laying out memory for Python
+objects, for example (most programming languages do). These allocators
+typically:</p>
+<ul>
+<li>describe a <strong>heap layout</strong> and some rules for how data is stored</li>
+<li>work in terms of low-level representations like pointers and bit-by-bit tag values</li>
+<li>support allocation and freeing of pointers</li>
+<li>may support other operations as well, like reporting free space available,
+growing or shrinking the heap, and so on</li>
+</ul>
+<p><a id="allocator-spec"></a></p>
+<h3 id="our-allocator-for-this-study"><a class="header" href="#our-allocator-for-this-study">Our Allocator for This Study</a></h3>
+<aside class="margin-note">This allocator design comes from <a href="https://ucsd-cse29.github.io/wi26/#schedule">CSE 29 (Winter 2026), Programming Assignment 4</a>.</aside>
+<p>We are going to take as our starting point a particular allocator shape that
+comes from a course here at UCSD. We'll name the functions the way they do to
+make sure we think of them differently than the built-in <code>malloc</code> and <code>free</code>
+that come with our C distribution:</p>
+<h4 id="vmalloc"><a class="header" href="#vmalloc">vmalloc</a></h4>
+<pre><code>void* vmalloc(size_t size);
+</code></pre>
+<p>The <code>size_t</code> size parameter specifies the number of bytes the caller wants.
+This has the same meaning as the usual <code>malloc</code> we have been using: the returned
+pointer is to the start of <code>size</code> bytes of memory that is now exclusively
+available to the caller.</p>
+<h4 id="vmfree"><a class="header" href="#vmfree">vmfree</a></h4>
+<pre><code>void vmfree(void* ptr);
+</code></pre>
+<p>The <code>vmfree</code> function expects a <strong>16-byte aligned</strong> address obtained by a
+previous call to <code>vmalloc</code>. For allocated blocks, <code>vmfree</code> updates the block
+metadata to indicate that it is free, and coalesces with adjacent (previous and
+next) blocks if they are also free.</p>
+<h4 id="layout"><a class="header" href="#layout">Layout</a></h4>
+<p>This implementation comes with a specific <em>heap layout</em>, specifying how the
+metadata should be stored on the heap.</p>
+<aside class="margin-note">Hover over the headers and footers in the diagrams below to see what they store.</aside>
+<p>Initially, the heap is one large &quot;free block&quot; (here I show it as just 128 bytes
+long; real heaps are of course much larger).</p>
+<heap-diagram>
+free 128
+</heap-diagram>
+<p>On a first call to <code>void* ptr = vmalloc(24)</code>, the resulting heap would look like this:</p>
+<heap-diagram>
+alloc 32 *
+free 96
+</heap-diagram>
+<p>The marked location would be returned and stored in <code>ptr</code>. After another two
+allocations <code>vmalloc(8)</code> and <code>vmalloc(16)</code>, we'd have:</p>
+<heap-diagram>
+alloc 32
+alloc 16 *
+alloc 32 *
+free 48
+</heap-diagram>
+<p>Then, if we <em>free</em> the first block with <code>vmfree(ptr)</code> (the one we stored above), we'd have:</p>
+<heap-diagram>
+free 32
+alloc 16
+alloc 32
+free 48
+</heap-diagram>
+<p>Another allocation could now use that first block again. Another call to free,
+on the <em>second</em> block (the 16-sized one), would cause the first two blocks to merge:</p>
+<heap-diagram>
+free 48
+alloc 32
+free 48
+</heap-diagram>
+<p>A few things to say about these diagrams:</p>
+<ol>
+<li>
+<p>The solid blue regions are the client's to use. This is where all the actual
+use of the allocated data happens in e.g. a C program that is allocating a
+24-byte <code>Node</code> struct or similar: the client has the expectation of exclusive
+access to the payload area.</p>
+</li>
+<li>
+<p>The dotted regions are free, and it's expected that clients of the library
+<em>do not</em> try to read or write those areas when free. The implementation of the
+allocator is allowed to use that space for anything. Indeed it does, for <em>footers</em>.</p>
+</li>
+<li>
+<p><em>Footers</em> are added to free regions to help with coalescing. When we freed
+the 16-sized block, it was useful to know the size of the previous block for
+navigating the heap via pointer arithmetic!</p>
+</li>
+<li>
+<p><em>Headers</em> are the front 8 bytes of each block. They store 3 things:</p>
+<ul>
+<li>The size</li>
+<li>Whether the current block is busy or free (least significant bit)</li>
+<li>Whether the <em>previous</em> block is busy or free (second least significant bit)</li>
+</ul>
+<p>All of that information is used to manage the shape of the heap across
+allocations and frees.</p>
+</li>
+</ol>
+<p>With this information, there are straightforward algorithms for:</p>
+<ul>
+<li>Starting at the beginning of the heap, loop until a free block of at least a
+particular size is found (e.g. find a place to put a new <code>vmalloc</code>)</li>
+<li>Starting at an arbitrary block, check if the next and previous blocks are
+free (e.g. coalesce/merge two free blocks on <code>vmfree</code>)</li>
+<li>Starting at a big enough free block, split it into an allocated block and a
+remaining free block</li>
+</ul>
+<blockquote>
+<p><strong>Q:</strong> Describe the algorithm for finding a free block of a particular size,
+starting with just a pointer to the beginning of the heap.  What information
+is needed at each block? What C operation(s) would help you get that
+information? What parts of memory are read?</p>
+</blockquote>
+<p>Answer:</p>
+<p>Rough pseudocode is:</p>
+<pre><code class="language-c">block_t *find_fit(size_t needed) {
+  block_t *b = first_block(heap);            // skip the 8-byte leading pad
+  while (block_size(b) != 0) {                // 0 marks the end-of-heap sentinel
+    if (is_free(b) &amp;&amp; block_size(b) &gt;= needed) return b;
+    b = (block_t *)((char *)b + block_size(b));
+  }
+  return NULL;                                // no fit
+}
+</code></pre>
+<p>At each block we only read the <strong>header</strong> (size + busy bit), then advance by
+that size — a single <code>uint32_t</code> load and a pointer cast/addition per block.
+Free blocks' payloads are never touched.</p>
+<blockquote>
+<p><strong>Q:</strong> Describe the algorithm for <code>vmfree</code>, starting with just a pointer to the
+allocated block to be freed. What C operation(s) would help you get that
+information? What parts of memory are read and written?</p>
+</blockquote>
+<p>Answer:</p>
+<pre><code class="language-c">void vmfree(void *ptr) {
+  block_t *b = block_from_payload(ptr);       // ptr - HEADER_SIZE
+  if (prev_is_free(b))                         // reads b's prev-bit
+    b = merge_with_prev(b);                    //   uses prev block's footer for its size
+  block_t *next = next_block(b);
+  if (block_size(next) != 0 &amp;&amp; is_free(next))  // sentinel size = 0, so this guard stops at end
+    merge_with_next(b, next);
+  mark_free(b);                                // writes header, footer, and next block's prev-bit
+}
+</code></pre>
+<p>Reads: <code>b</code>'s header (own size + prev-bit), the previous block's footer (only
+if prev is free), the next block's header. Writes: <code>b</code>'s header and footer,
+and the <em>next</em> block's prev-bit so it stays accurate.</p>
+<h4 id="details-and-heap-properties"><a class="header" href="#details-and-heap-properties">Details and Heap Properties</a></h4>
+<p>I omitted two small details in the last section.</p>
+<ol>
+<li>The heap has an 8-byte padding at the beginning, to make sure all user-facing
+pointers are 16-byte aligned (which has performance implications)</li>
+<li>There is always an 8-byte all-0 word at the end of the heap as a way to tell
+when the heap ends.</li>
+</ol>
+<p>So the actual final picture would look like:</p>
+<heap-diagram pad sentinel>
+free 48
+alloc 32
+free 32
+</heap-diagram>
+<aside class="margin-note">Or will it... we'll come back to these "small details" once we start asking verifiers to walk the heap.</aside>
+<p>Usually this won't matter for our examples, but it is technically required of
+the heap shape!</p>
+<p>The <a href="https://ucsd-cse29.github.io/wi26/pa/pa4/index.html#task-specification">implementation specifies</a> some other requirements in addition to the two
+above:</p>
+<ul>
+<li>There must <em>never</em> be two adjacent free blocks: they should always be eagerly coalesced</li>
+<li>All blocks must accurately report their size and busy (allocated) information for this block and the previous block</li>
+<li>All free blocks must accurately report their size in a footer</li>
+<li>All user-facing pointers (payload starts) must be at 16-byte addresses</li>
+<li>Block sizes are given 4 bytes (<code>uint32_t</code>), which implies a several-gigabyte
+maximum block size (probably bigger than ever needed, but a true limit)</li>
+</ul>
+<h4 id="practice"><a class="header" href="#practice">Practice</a></h4>
+<blockquote>
+<p><strong>Q</strong>: What will the heap look like after the following sequence (assume a 256-byte heap)</p>
+<pre><code>a = vmalloc(24)
+b = vmalloc(56)
+vmfree(a)
+c = vmalloc(42)
+vmfree(b)
+</code></pre>
+</blockquote>
+<p>Answer:</p>
+<heap-diagram pad sentinel wrap="128">
+free 96
+alloc 64
+free 80
+</heap-diagram>
+<p>Walkthrough:</p>
+<ul>
+<li><code>a = vmalloc(24)</code> carves out a 32-byte block (header 8 + payload rounded up
+to a 16-multiple), leaving 208 bytes free.</li>
+<li><code>b = vmalloc(56)</code> carves out a 64-byte block, leaving 144 bytes free.</li>
+<li><code>vmfree(a)</code> marks <code>a</code>'s slot free. No coalesce: <code>b</code> is to the right and busy,
+and the heap-start sentinel is to the left.</li>
+<li><code>c = vmalloc(42)</code> rounds up to a 64-byte block. The 32-byte free block is
+too small, so we allocate out of the 144-byte free block, leaving 80 free.</li>
+<li><code>vmfree(b)</code> is the interesting one: the previous block (<code>a</code>'s old slot, 32
+bytes) is free, so the two coalesce into a 96-byte free block. The next
+block is <code>c</code>, still busy, so no forward coalesce.</li>
+</ul>
+<blockquote>
+<p><strong>Q:</strong> What will the heap look like after the following sequence (assume a 128-byte heap)? What will be stored in <code>a</code>?</p>
+<pre><code>a = vmalloc(130)
+</code></pre>
+</blockquote>
+<p>Answer: The heap should be unchanged, <code>NULL</code> should be returned</p>
+<p><a id="race-walkthrough"></a></p>
+<h3 id="why-concurrency-is-hard"><a class="header" href="#why-concurrency-is-hard">Why Concurrency is Hard</a></h3>
+<p>The <code>vmalloc</code> and <code>vmfree</code> allocator assumes that the allocator and the client
+are running on a single thread. Things can go <em>very wrong</em> if two threads
+race on the individual lines of its implementation. For example, if we consider
+<code>find_fit</code> and <code>vmfree</code> from above:</p>
+<pre><code class="language-c">block_t *find_fit(size_t needed) {
+  block_t *b = first_block(heap);
+  while (block_size(b) != 0) {
+    if (is_free(b) &amp;&amp; block_size(b) &gt;= needed) return b; // RETURNED
+    b = (block_t *)((char *)b + block_size(b));
+  }
+  return NULL;
+}
+
+void vmfree(void *ptr) {
+  block_t *b = block_from_payload(ptr);
+  if (prev_is_free(b)) b = merge_with_prev(b);    // PREVMERGE
+  block_t *next = next_block(b);
+  if (block_size(next) != 0 &amp;&amp; is_free(next))
+    merge_with_next(b, next);
+  mark_free(b);
+}
+</code></pre>
+<p>Consider:</p>
+<p><strong>Thread A</strong> is running vmfree on the allocated block in the middle of two free
+blocks:</p>
+<heap-diagram>
+free 32
+alloc 32 *
+free 32
+</heap-diagram>
+<p>The marked block is the one Thread A is about to free.</p>
+<p><strong>Thread B</strong> is about to allocate with <code>vmalloc</code>, which will use <code>find_fit</code> to
+select which free block to use for the new allocation.</p>
+<p>Consider the following sequence of events:</p>
+<ol>
+<li>The merge with the <em>previous</em> block (marked <code>// PREVMERGE</code> in the
+code above) happens</li>
+<li><code>find_fit</code> sees the new block created by merging the first two, and an
+allocation happens there, using the space of the newly-freed region (marked <code>// RETURNED</code>)</li>
+<li><code>merge_with_next</code> happens, and incorrectly tries to merge the
+newly-allocated block with the next block, <strong>and/or</strong> <code>mark_free</code> goes on to
+mark the newly-allocated block free</li>
+</ol>
+<p><strong>State 1</strong> — Thread A runs <code>merge_with_prev</code>, then pauses before
+<code>merge_with_next</code>. The first two blocks have folded into a 64-byte free
+region; the trailing free 32 is untouched:</p>
+<heap-diagram>
+free 64
+free 32
+</heap-diagram>
+<p>This is a fleeting <em>invariant violation</em>: two adjacent free blocks. Thread
+A's local <code>b</code> now points to the start of this merged region, which is also
+the start of the heap.</p>
+<p><strong>State 2</strong> — Thread B runs <code>find_fit(56)</code>. It sees the free 64 first and
+carves a 64-byte allocated block out of it:</p>
+<heap-diagram>
+alloc 64 *
+free 32
+</heap-diagram>
+<p>The marker is Thread B's freshly-returned pointer. Thread B is now free to
+write into its payload (bytes 8–64 of the heap).</p>
+<p><strong>State 3</strong> — Thread A resumes. Its local <code>b</code> still points to byte 0 of the
+heap. It reads <code>block_size(b)</code> — which is now <code>64</code>, because Thread B just
+wrote an alloc-64 header there — and lands <code>next_block(b)</code> at the start of
+the trailing free 32. <code>is_free(next)</code> is true, so it merges, writing a new
+free-96 header back at b's address (clobbering Thread B's header), and
+<code>mark_free(b)</code> confirms it. The allocator's metadata now claims:</p>
+<heap-diagram>
+free 96
+</heap-diagram>
+<p>…but Thread B is still actively writing to bytes 8–64 of that &quot;free&quot; region,
+believing it owns them. A future <code>vmalloc</code> will happily hand the same bytes
+to another caller. Silent double-allocation, and the heap structure passes
+a casual inspection — there's exactly one block, sized correctly,
+header and footer agree.</p>
+<p>To make the heap a fundamentally shared resource across threads, we would need
+to take much more care!</p>
+<p>Now, I mentioned that <em>I am not a concurrent/parallel programmer</em>. I've never
+taken a class in it, I nod along in research talks about it, etc. I do know
+some basics:</p>
+<ul>
+<li>There are <strong>locks</strong>, which are a cross-thread resource that forces a thread
+to pause trying to &quot;acquire&quot; the lock until another thread &quot;releases&quot; it.</li>
+<li>There are <strong>atomic operations</strong> which are guaranteed to complete without
+interruption by another thread. Examples are <strong>compare-and-swap</strong> (&quot;if this
+memory location still holds value X, replace it with Y, otherwise tell me
+what's there now&quot;), <strong>fetch-and-add</strong> (read a counter and
+increment it in one step), and <strong>atomic load/store</strong> of a single machine
+word (so no thread can ever observe a half-written value).</li>
+</ul>
+<p>So I'm imagining some setups like one thread may need to &quot;acquire&quot; a lock in
+order to finish an allocation and then &quot;release&quot; it when done so other threads
+could process a free. Or maybe there are super clever ways to use
+<strong>compare-and-swap</strong> to only allocate correctly-freed things in some way. I'm
+not sure – I can only imagine vague shapes of solutions, not tell you what to
+try.</p>
+<p><a id="cpython-motivation"></a></p>
+<h3 id="why-concurrent-allocators-are-interesting-and-relevant"><a class="header" href="#why-concurrent-allocators-are-interesting-and-relevant">Why Concurrent Allocators are Interesting and Relevant</a></h3>
+<p>I picked this example in part because <em>CPython is dealing with this challenge
+right now</em>. Python has become a primary language for implementing and training
+ML models over the last decade. It is known that parallelism via threads can
+speed up these workflows dramatically.</p>
+<p>However, CPython (the main implementation) also has a very inefficient
+concurrency story: it has a <a href="https://docs.python.org/3/glossary.html#term-global-interpreter-lock"><strong>Global Interpreter Lock</strong></a> that locks
+and releases around many operations that work with heap-allocated data. This
+prevents meaningful parallelism on lots of potential workloads.</p>
+<p>Huge amounts of industry and academic effort have gone into making this work,
+and new versions of Python shipping in the next few years will provide much
+more configuration around the GIL:</p>
+<ul>
+<li><a href="https://peps.python.org/pep-0703/"><strong>PEP 703</strong></a> (&quot;Making the Global
+Interpreter Lock Optional in CPython,&quot; Sam Gross): adds a build-time
+<code>--disable-gil</code> option so CPython can run without the GIL, leaning on
+per-object locking and biased reference counting to keep thread safety.
+Shipped as the experimental &quot;free-threaded&quot; build in Python 3.13.</li>
+<li><a href="https://peps.python.org/pep-0779/"><strong>PEP 779</strong></a> (&quot;Criteria for supported
+status for free-threaded Python,&quot; Wouters/Page/Gross): sets the concrete
+bar — ≤15% single-threaded slowdown, ≤20% memory overhead, API stability,
+and internal documentation — for promoting the free-threaded build from
+experimental to officially supported in Python 3.14.</li>
+</ul>
+<p>This was and is a very difficult design challenge! A lot of the code underlying
+CPython and related libraries fundamentally relies on how CPython's object
+layout and allocation strategies work. Getting a path forward that is fully- or
+even mostly-backwards-compatible requires careful design, testing, and
+engineering.</p>
+<p><a id="experiment-setup"></a></p>
+<h2 id="from-cse29-homework-to-concurrent-allocator"><a class="header" href="#from-cse29-homework-to-concurrent-allocator">From CSE29 Homework to Concurrent Allocator</a></h2>
+<p>So now we have the setup. I am armed with:</p>
+<ul>
+<li>A fair amount about <code>vmalloc</code> and allocators in general</li>
+<li>A pretty specific and detailed specification for how the heap is supposed to
+work</li>
+<li>Vague passing knowledge related to concurrency, and no real notion of how to
+write these operations in C</li>
+</ul>
+<p>How much am I given superpowers by agentic programming? Can I use agentic
+programming to:</p>
+<ul>
+<li><strong>write a concurrent allocator</strong></li>
+<li><strong>constrained by the specification of <code>vmalloc</code></strong></li>
+<li><strong>with meaningful performance improvements on concurrent workloads</strong></li>
+<li><strong>that I trust?</strong></li>
+</ul>
+<p><a id="r0-baseline"></a></p>
+<h3 id="doing-my-homework"><a class="header" href="#doing-my-homework">Doing my Homework</a></h3>
+<p>It's useful to start with a baseline – the algorithms I described as
+“straightforward” above are actually someone's systems programming homework.
+Of course, Claude &amp; friends are excellent at traditional systems programming
+homework problems.</p>
+<p>To get a useful starting point, let's not write our own allocator, but let's
+allow Claude to one-shot the CSE29 project. We likely could succeed at getting
+C code with &quot;Yo Claude, here's the assignment: <code>&lt;url&gt;</code>, gimme impl pls&quot;.
+However, we should be above such recreations at this point in the quarter. I'm
+going to be a little more explicit in what I provide and think ahead a little
+bit.</p>
+<h4 id="decent-first-round-testing-and-a-heap-predicate"><a class="header" href="#decent-first-round-testing-and-a-heap-predicate">Decent First-round Testing, and a Heap Predicate</a></h4>
+<p>In particular, I <em>know</em> that writing tests is going to be useful going forward.
+So first I write some handwritten (well, Claude-written, Joe-reviewed) tests of
+the functionality. Since I have Claude to help, I am willing to put in the
+“effort” to do a mix of pointwise tests (e.g. <code>vmfree(NULL)</code> is a no-op) and
+data-driven/workload-driven tests in loops.</p>
+<p>There is one function I'm going to include to make these tests a little more
+robust. I'll include a function <code>vmcheck</code> that looks at the heap and tests for
+all the properties above:</p>
+<pre><code class="language-c">int vmcheck(void) {
+    if (!heapstart) return 7;
+
+    char *base = (char *)heapstart - 8;
+    char *end_addr = base + heap_total_size;
+    struct block_header *cur = (struct block_header *)heapstart;
+    int prev_was_busy = 1;        // pretend pre-heap is busy
+    int prev_was_free = 0;
+
+    while (1) {
+        if ((char *)cur &gt;= end_addr) return 5;
+
+        uint32_t ss = cur-&gt;size_status;
+        uint32_t sz = blk_size(ss);
+        int busy = blk_busy(ss);
+        int prev_busy_bit = blk_prev_busy(ss);
+
+        // End sentinel: size==0, busy==1.
+        if (sz == 0) {
+            if (!busy) return 7;
+            break;
+        }
+
+        // Size sanity: multiple of ALIGN, at least MIN_BLOCK_SIZE,
+        // doesn't extend past the heap.
+        if (sz &lt; MIN_BLOCK_SIZE || sz % ALIGN != 0) return 1;
+        if ((char *)cur + sz &gt; end_addr) return 5;
+
+        // prev_busy bit must agree with what we walked.
+        if (prev_busy_bit != prev_was_busy) return 4;
+
+        // Free blocks: header and footer must agree, no two adjacent free.
+        if (!busy) {
+            struct block_header *footer =
+                (struct block_header *)((char *)cur + sz - sizeof(struct block_header));
+            if (footer-&gt;size_status != ss) return 2;
+            if (prev_was_free) return 3;
+        }
+
+        prev_was_busy = busy;
+        prev_was_free = !busy;
+        cur = (struct block_header *)((char *)cur + sz);
+    }
+    return 0;
+}
+</code></pre>
+<p>Each <code>return N</code> corresponds to one of the heap properties from
+earlier: code 1 (bad block size), 2 (header/footer mismatch), 3
+(adjacent free blocks), 4 (<code>prev_busy</code> bit wrong), 5 (walk fell off
+the heap), 7 (no heap or sentinel broken). Code 0 means all properties
+hold.</p>
+<blockquote>
+<p><strong>Q:</strong> Come up with 3 different heap shapes that would each trigger a distinct
+error code from <code>vmcheck</code>.</p>
+</blockquote>
+<p>Then we can use that along with our tests to get really broad assertions about
+the behavior:</p>
+<pre><code class="language-c">static void check(const char *where) {
+    int rc = vmcheck();
+    if (rc != 0) {
+        fprintf(stderr, &quot;[seq] vmcheck failed at %s with code %d\n&quot;, where, rc);
+        abort();
+    }
+}
+
+int main(void) {
+    vminit(HEAP_BYTES);
+    check(&quot;init&quot;);
+
+    // Basic alloc, write payload, free.
+    void *a = vmalloc(64);
+    assert(a != NULL);
+    assert(((uintptr_t)a) % 16 == 0);
+    memset(a, 0xAB, 64);
+    check(&quot;after-alloc-1&quot;);
+    vmfree(a);
+    check(&quot;after-free-1&quot;);
+
+    // Allocate many small blocks, free in reverse — exercises coalesce-with-next.
+    enum { N = 32 };
+    void *p[N];
+    for (int i = 0; i &lt; N; i++) {
+        p[i] = vmalloc(48);
+        check(&quot;after-alloc-many&quot;);
+    }
+    for (int i = N - 1; i &gt;= 0; i--) {
+        vmfree(p[i]);
+        check(&quot;after-free-rev&quot;);
+    }
+
+    // ... interleaved free pattern (coalesce-with-prev), best-fit probe,
+    //     vmfree(NULL) no-op, oversized alloc returns NULL, vmcheck between
+    //     every step.
+
+    vmdestroy();
+    printf(&quot;[seq] OK\n&quot;);
+}
+</code></pre>
+<p>The pattern is <strong>op → <code>vmcheck</code> → op → <code>vmcheck</code></strong>: every state change
+gets immediately re-validated against the full property list, and the
+test aborts at the first deviation with the return code telling us
+which property failed.</p>
+<h4 id="catching-what-vmcheck-misses-asan-and-ubsan"><a class="header" href="#catching-what-vmcheck-misses-asan-and-ubsan">Catching What <code>vmcheck</code> Misses: ASan and UBSan</a></h4>
+<p><code>vmcheck</code> validates the heap's data structure, but there's a class of
+bugs it cannot see no matter how careful we are about the property
+list: undefined behavior inside the allocator itself, or memory misuse
+<em>outside</em> the heap region we manage.</p>
+<aside class="margin-note">`valgrind` fills a similar role to these — same family of memory-safety checks, but applied at runtime to an unmodified binary rather than via compile-time instrumentation.</aside>
+<p>Two <em>sanitizers</em>, built into <code>clang</code> (which I'm using) help with C-level issues:</p>
+<p><strong>AddressSanitizer (ASan)</strong> monitors memory accesses against the standard C
+model, and gives better error messages and captures some things that could be
+silent failures:</p>
+<ul>
+<li><strong>Stack-allocated data overflows</strong> inside the test driver or inside the
+agent's <code>vmalloc</code>/<code>vmfree</code> helpers — stack-allocated arrays are
+shadow-tracked at byte granularity.</li>
+<li><strong>Reads or writes off the entire heap region</strong> — a loop that runs past the
+end-of-heap sentinel into unmapped memory may segfault anyway, but ASan turns
+that into a clean diagnostic naming the line that did it.</li>
+<li><strong>Use-after-free at the libc layer</strong> — e.g., a write to the heap region
+after <code>vmdestroy</code> <code>munmap</code>s it, or any stray <code>malloc</code>/<code>free</code> calls the agent
+adds that get mismanaged.</li>
+<li><strong>Leaks</strong> of the heap region or other libc allocations at process exit.</li>
+</ul>
+<p>ASan actually doesn't catch <em>that</em> much yet, because it doesn't know about our
+heap representation (that's what <code>vmcheck</code> is for). But, it is a standard tool
+that, if nothing else, gives dramatically better diagnostics/stack traces on
+segfaults and similar errors, which will help us and agents debug.</p>
+<p><strong>UndefinedBehaviorSanitizer (UBSan)</strong> is the other half, and it has better
+coverage of the kinds of bugs we actually expect inside the allocator. It
+instruments the C semantics directly: signed integer overflow, out-of-range
+shifts, misaligned pointer dereferences, division by zero. These are
+language-level UB and so are independent of our allocator design — UBSan finds
+them wherever they happen, including deep in the agent's size arithmetic for
+splitting blocks or its pointer-cast gymnastics for boundary-tag access.</p>
+<p>It's easy to use them, we simply compile with <code>-fsanitize=address,undefined</code> as
+an option to <code>clang</code>.</p>
+<h4 id="meta-prompting"><a class="header" href="#meta-prompting">Meta-Prompting</a></h4>
+<aside class="margin-note">The outer-agent / inner-agent pattern is well-documented in the multi-agent literature. See <a href="https://arxiv.org/abs/2308.08155">AutoGen</a> (Wu et al., 2023) for the general framework, and <a href="https://arxiv.org/abs/2312.13010">AgentCoder</a> (Huang et al., 2023) for a directly-comparable Programmer / Test Designer / Test Executor split applied to code generation.</aside>
+<p>I experimented with another technique throughout this exercise.  I used an
+<em>outer agent</em> to structure my work and write tests, and had it dispatch <em>inner
+agents</em> with prompts that I co-authored with the outer agent in order to do
+implementation. My worry (which is somewhat present in the literature) was
+“<a href="https://arxiv.org/abs/2406.10162">reward hacking</a>”, where the agent might (in auto mode) start editing tests or
+other verification steps in conjunction with coding and actually undermine the
+correctness guarantees I cared about.</p>
+<aside class="margin-note">On reward hacking specifically: <a href="https://arxiv.org/abs/1606.06565">Amodei et al., 2016</a> for the foundational definition; <a href="https://deepmind.google/discover/blog/specification-gaming-the-flip-side-of-ai-ingenuity/">Krakovna et al., 2020</a> (DeepMind) for a running catalog of empirical specification-gaming examples; <a href="https://arxiv.org/abs/2406.10162">Denison et al., 2024</a> for the on-the-nose LLM-agentic case where models learn to tamper with their own grading.</aside>
+<pre><code class="language-text">   outer agent (orchestrator)
+   ┌────────────────────────────────────┐
+   │   1. assemble prompt               │
+   │   2. dispatch sub-agent            │
+   │   3. independently rerun verifiers │
+   │   4. git commit if good            │
+   └───────┬──────────────────┬─────────┘
+           │ dispatch         ▲ report
+           ▼                  │
+   ┌──────────────────────────┴────────┐
+   │          sub-agent                │
+   │  • reads spec / scaffold          │
+   │  • writes vmalloc.c, vmfree.c     │
+   │  • iterates until                 │
+   │    `make verify` exits 0          │
+   └───────────────────────────────────┘
+</code></pre>
+<p>This also helped me keep a record of what I'd asked and easily backtrack to
+earlier steps: I could have the coding agent report back what happened, and
+decide what to do with a git commit or other archive of that step in my
+orchestration agent.</p>
+<p>For the first round, here's the prompt I sent to the sub-agent:</p>
+<pre><code>Working directory: /tmp/malloc-pipeline/run-D93EFB13/r0
+(use absolute paths in all commands; do not rely on `cd` persistence
+across subprocesses).
+
+Goal: Read `spec/index.md`, `spec/guide.md`, and `spec/starter-code.md`
+(in `$DIR/spec/`). Implement `vmalloc.c` and `vmfree.c` against the
+contract in `vmlib.h`. The implementation is sequential; no concurrency
+considerations yet. Best-fit policy. 16-byte alignment. Coalesce on free.
+`make verify` (which runs `test_seq` + `test_seq_asan`) must exit 0.
+
+Files you may edit: `vmalloc.c`, `vmfree.c`, and the `Makefile` only if
+strictly necessary.
+
+Files you must NOT modify: `vminit.c`, `utils.c`, `vm.h`, `vmlib.h`,
+`test_seq.c`
+The public API contract is in `vmlib.h`; the internal block-layout
+types are in `vm.h`. Honor both.
+
+Active verifiers (all must pass for success):
+- `make verify-r0` — runs `test_seq` and `test_seq_asan` (sequential
+  correctness, including AddressSanitizer build)
+
+Stop conditions:
+- Success: `make verify-r0` exits 0.
+- Failure (budget exhausted): 100 tool calls used OR 10 minutes
+  wall-clock elapsed.
+- Off-rubric finding: if you discover something the prompt doesn't
+  anticipate, write a short `OFF-RUBRIC.md` in the working dir and stop.
+
+Budget: 100 tool calls, 10 minutes wall-clock.
+
+Report back (under 200 words):
+1. The implementation approach (one or two sentences).
+2. Whether `make verify-r0` exits 0 on your final state.
+3. Anything tricky or surprising.
+</code></pre>
+<ul>
+<li><code>spec/</code> was a copy of the assignment writeup</li>
+<li><code>vmlib.h</code> declared the public API (<code>vmalloc</code>, <code>vmfree</code>, <code>vmcheck</code>,
+<code>vmlib_live_bytes</code>) — the agent had to honor this contract verbatim</li>
+<li><code>vm.h</code> held the internal types: the <code>block_header</code> struct, the
+<code>BUSY_MASK</code> / <code>PREV_BUSY_MASK</code> bit layout, <code>ALIGN</code> and <code>MIN_BLOCK_SIZE</code></li>
+<li><code>vminit.c</code> and <code>utils.c</code> handled heap setup (the “starter code” for the PA), <code>vmcheck</code> (which we wrote), and
+<code>vmlib_live_bytes</code> — these are explicitly off-limits to the agent</li>
+<li><code>test_seq.c</code> was the handwritten test driver shown above</li>
+<li><code>vmalloc.c</code> and <code>vmfree.c</code> were empty stubs — the agent's only job</li>
+<li><code>Makefile</code> already had <code>verify-r0: test_seq test_seq_asan</code> wired up</li>
+</ul>
+<h4 id="who-needs-an-autograder"><a class="header" href="#who-needs-an-autograder">Who Needs an Autograder?</a></h4>
+<aside class="margin-note">I'm presenting a curated flow through this; I tried many runs with a few different settings and am highlighting what I think is an interesting set of results.</aside>
+<p>The agent actually did make a mistake in one run:</p>
+<pre><code># Inner-agent self-report — run 061EC93E, R0 (sequential baseline)
+
+Metadata: 20 tool calls, 145 s wall, exit code 0 on `make verify-r0`.
+
+---
+
+Both verifiers pass.
+
+**Report:**
+
+1. **Approach:** Implemented `vmalloc` as a single-pass best-fit scanner that
+   walks the implicit block list from `heapstart` until the end sentinel
+   (size==0), tracks the smallest free block with `size &gt;= needed`, splits if
+   remainder &gt;= `MIN_BLOCK_SIZE` (16), and updates header bits + the next
+   block's `PREV_BUSY` bit. `vmfree` flips the busy bit, then optionally
+   coalesces forward (peek next header) and backward (read previous block's
+   footer to find its header), writing a unified header + footer and clearing
+   the following block's `PREV_BUSY` bit.
+
+2. **`make verify-r0` exits 0:** yes — `test_seq` and `test_seq_asan` both
+   report `[seq] OK`.
+
+3. **Tricky bit:** `sizeof(struct block_header)` is **4** (one `uint32_t`),
+   but the spec / `vminit.c` layout treats the header as logically **8 bytes**
+   so payloads land on 16-byte boundaries. The first attempt returned
+   `best + sizeof(struct block_header)` (offset 12 mod 16) and tripped the
+   alignment assertion. Fix: hard-code `+ 8` for payload offset and
+   `hdr = ptr - 8` in `vmfree`, while still using `sizeof(struct block_header)`
+   for footer placement (matches `utils.c`/`vminit.c`).
+
+Files written: `/tmp/malloc-pipeline-noprompt/run-061EC93E/r0/vmalloc.c`,
+`/tmp/malloc-pipeline-noprompt/run-061EC93E/r0/vmfree.c`. Makefile was
+not modified.
+</code></pre>
+<p>We can see what it's getting at if we look at a heap diagram and the <code>vm.h</code> spec:</p>
+<heap-diagram>
+alloc 32 *
+free 96
+</heap-diagram>
+<pre><code class="language-c">// size_status encoding:
+//   bit 0: BUSY (1) or FREE (0) for *this* block
+//   bit 1: PREV_BUSY (1) or PREV_FREE (0)
+//   bits 4..: size (multiple of 16; size includes the 8-byte header)
+
+struct block_header {
+    uint32_t size_status;
+};
+</code></pre>
+<p>The asterisk marks the <em>correct</em> payload pointer the caller <em>should</em> get back.
+The block is 32 bytes; the header occupies the first 8 of them, so the payload
+— and the returned pointer — should sit at offset 8. The agent wrote code that
+was returning offset <strong>4</strong> instead, because it used <code>sizeof(struct block_header)</code> to
+calculate it.</p>
+<details>
+<summary>The full <code>test_seq.c</code> in use for this run, for reference</summary>
+<pre><code class="language-c">// R0 sequential smoke test: drives vmalloc/vmfree through a fixed sequence
+// of operations, asserts vmcheck() == 0 throughout, and exercises split +
+// coalesce paths. Reports &quot;[seq] OK&quot; on success, aborts on failure.
+
+#include &quot;vmlib.h&quot;
+
+#include &lt;assert.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define HEAP_BYTES (1u &lt;&lt; 16)  // 64 KiB
+
+static void check(const char *where) {
+    int rc = vmcheck();
+    if (rc != 0) {
+        fprintf(stderr, &quot;[seq] vmcheck failed at %s with code %d\n&quot;, where, rc);
+        abort();
+    }
+}
+
+int main(void) {
+    vminit(HEAP_BYTES);
+    check(&quot;init&quot;);
+
+    // Allocate, write payload, free — basic.
+    void *a = vmalloc(64);
+    assert(a != NULL);
+    assert(((uintptr_t)a) % 16 == 0);
+    memset(a, 0xAB, 64);
+    check(&quot;after-alloc-1&quot;);
+    vmfree(a);
+    check(&quot;after-free-1&quot;);
+
+    // Allocate many small blocks, free in reverse order to exercise coalescing.
+    enum { N = 32 };
+    void *p[N];
+    for (int i = 0; i &lt; N; i++) {
+        p[i] = vmalloc(48);
+        assert(p[i] != NULL);
+        memset(p[i], (unsigned char)(i + 1), 48);
+        check(&quot;after-alloc-many&quot;);
+    }
+    // Verify payloads weren't trampled.
+    for (int i = 0; i &lt; N; i++) {
+        unsigned char *b = (unsigned char *)p[i];
+        for (int j = 0; j &lt; 48; j++) {
+            assert(b[j] == (unsigned char)(i + 1));
+        }
+    }
+    // Free reverse — exercises coalesce-with-next.
+    for (int i = N - 1; i &gt;= 0; i--) {
+        vmfree(p[i]);
+        check(&quot;after-free-rev&quot;);
+    }
+
+    // Allocate and free in interleaved pattern — exercises coalesce-with-prev.
+    void *q[N];
+    for (int i = 0; i &lt; N; i++) q[i] = vmalloc(64);
+    for (int i = 0; i &lt; N; i += 2) vmfree(q[i]);
+    check(&quot;after-half-free-even&quot;);
+    for (int i = 1; i &lt; N; i += 2) vmfree(q[i]);
+    check(&quot;after-half-free-odd&quot;);
+
+    // Best-fit policy check: with two free holes of different sizes available,
+    // a request that fits both should pick the smaller.
+    void *big = vmalloc(512);
+    void *mid = vmalloc(64);
+    void *sml = vmalloc(32);
+    vmfree(big);   // hole_big
+    vmfree(sml);   // hole_small
+    void *target = vmalloc(16);  // should land in hole_small (smallest fit)
+    assert(target != NULL);
+    // Pointer of `target` should be closer to `sml` than to `big`. We can't
+    // assert that exactly without knowing layout, but we can assert vmcheck.
+    check(&quot;after-best-fit&quot;);
+    vmfree(target);
+    vmfree(mid);
+    check(&quot;after-cleanup&quot;);
+
+    // NULL free is a no-op.
+    vmfree(NULL);
+    check(&quot;after-null-free&quot;);
+
+    // Allocation that doesn't fit returns NULL.
+    void *toobig = vmalloc(HEAP_BYTES * 2);
+    assert(toobig == NULL);
+    check(&quot;after-toobig&quot;);
+
+    vmdestroy();
+    printf(&quot;[seq] OK\n&quot;);
+    return 0;
+}
+</code></pre>
+</details>
+<details>
+<summary>The full <code>vmcheck</code> in use for this run, for reference</summary>
+<pre><code class="language-c">int vmcheck(void) {
+    if (!heapstart) return 7;
+
+    char *base = (char *)heapstart - 8;
+    char *end_addr = base + heap_total_size;
+    struct block_header *cur = (struct block_header *)heapstart;
+    int prev_was_busy = 1;        // pretend pre-heap is busy
+    int prev_was_free = 0;
+
+    while (1) {
+        if ((char *)cur &gt;= end_addr) return 5;
+
+        uint32_t ss = cur-&gt;size_status;
+        uint32_t sz = blk_size(ss);
+        int busy = blk_busy(ss);
+        int prev_busy_bit = blk_prev_busy(ss);
+
+        // End sentinel: size==0, busy==1.
+        if (sz == 0) {
+            if (!busy) return 7;
+            break;
+        }
+
+        // Size sanity: must be a multiple of ALIGN, at least MIN_BLOCK_SIZE,
+        // and not extend past the heap.
+        if (sz &lt; MIN_BLOCK_SIZE || sz % ALIGN != 0) return 1;
+        if ((char *)cur + sz &gt; end_addr) return 5;
+
+        // prev_busy bit must agree with what we walked.
+        if (prev_busy_bit != prev_was_busy) return 4;
+
+        // Free blocks: header and footer must agree, no two adjacent free.
+        if (!busy) {
+            struct block_header *footer =
+                (struct block_header *)((char *)cur + sz - sizeof(struct block_header));
+            if (footer-&gt;size_status != ss) return 2;
+            if (prev_was_free) return 3;
+        }
+
+        prev_was_busy = busy;
+        prev_was_free = !busy;
+        cur = (struct block_header *)((char *)cur + sz);
+    }
+    return 0;
+}
+</code></pre>
+</details>
+<blockquote>
+<p><strong>Q:</strong> Which kind of test would catch this? Handwritten assertion, <code>vmcheck</code>
+properties of the heap, ASan/UBSan?</p>
+</blockquote>
+<p>One thing you'll notice: I'm not looking at the implementation the agent came
+up with much. I want to think in terms of my tests and verifiers, because once
+the agent starts writing concurrent code I'm going to be out of luck with code
+review. If I can't have confidence and understand the agent's mistakes on my
+terms, I need to commit to my understanding of the verifiers.</p>
+<p>To summarize, our verifiers at this point are:</p>
+<ul>
+<li><strong><code>vmcheck</code></strong> — a predicate over the heap's data structure</li>
+<li><strong><code>test_seq</code></strong> — a handwritten sequential workload</li>
+<li><strong>AddressSanitizer (ASan)</strong> and <strong>UndefinedBehaviorSanitizer (UBSan)</strong> — the
+same <code>test_seq</code> workload compiled with <code>-fsanitize=address,undefined</code>.
+Catches C-level bugs if the agent ever makes them.</li>
+</ul>
+<p>In each step going forward we'll be thinking both about verifier design <em>and</em>
+what we ask the agent to do, and how they interact.</p>
+<p><a id="r1-concurrent"></a></p>
+<h3 id="concurrency-first-steps"><a class="header" href="#concurrency-first-steps">Concurrency: First Steps</a></h3>
+<p>We're ready to add concurrency. Our philosophy tells us that we should think
+about what we are going to <em>verify</em> when we ask the agent to do this. Right
+now, all of our tests are <em>single-threaded</em>. None of them make two threads to
+check what happens in the concurrent case. We need at least some tests that
+start new threads and allocate/free across them.</p>
+<h4 id="basic-concurrency-tests"><a class="header" href="#basic-concurrency-tests">Basic Concurrency Tests</a></h4>
+<p>Note that all the work we did before is still important! <code>vmcheck</code> is going to
+matter in this world, because we want to know that even after a complex
+interleaving of threaded allocations and frees, the heap is in a well-formed
+state.</p>
+<p>With Claude, I came up with the following plan. I think it's OK:</p>
+<ul>
+<li>8 worker threads, each performing 20,000 random vmalloc/vmfree operations</li>
+<li>Each thread holds up to 16 live allocations at a time, with sizes drawn
+uniformly between 16 and 1024 bytes</li>
+<li>When a thread allocates, it writes a thread-specific byte pattern into the
+payload</li>
+<li>Before each <code>vmfree</code>, the thread verifies the pattern is still intact. If any
+byte has changed, somebody else wrote into this block — abort.</li>
+<li>After all threads join, vmcheck runs on the final heap, catching any
+structural corruption.</li>
+</ul>
+<p>The main thing this is designed to catch is cases where the same, or
+overlapping, addresses are returned to two different threads for <code>vmalloc</code>. In
+the <a href="lectures/04-correctness.html#race-walkthrough">race example we showed above</a>, we'd be likely to catch the issue
+because a later allocation would re-use the same free block and write in a
+different pattern.</p>
+<details>
+<summary>The full <code>test_conc.c</code> if you're interested</summary>
+<pre><code class="language-c">// R1+ concurrent stress test: N worker threads share the singleton heap,
+// each doing M random alloc/free ops with payload pattern verification to
+// detect overlapping allocations.
+
+#include &quot;vmlib.h&quot;
+
+#include &lt;pthread.h&gt;
+#include &lt;sched.h&gt;
+#include &lt;stdatomic.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define HEAP_BYTES        (8u &lt;&lt; 20)
+#define N_THREADS         8
+#define OPS_PER_THREAD    20000
+#define MAX_LIVE_PER_THR  16
+#define MIN_ALLOC         16
+#define MAX_ALLOC         1024
+
+typedef struct {
+    int    tid;
+    atomic_int *go;
+} worker_arg_t;
+
+typedef struct {
+    void  *p;
+    size_t size;
+    uint64_t seed;
+} held_t;
+
+static void pattern_write(void *p, size_t size, uint64_t seed) {
+    uint8_t *b = (uint8_t *)p;
+    for (size_t i = 0; i &lt; size; i++) {
+        b[i] = (uint8_t)((seed ^ (i * 0x9Eu)) &amp; 0xFF);
+    }
+}
+static void pattern_verify(int tid, void *p, size_t size, uint64_t seed) {
+    uint8_t *b = (uint8_t *)p;
+    for (size_t i = 0; i &lt; size; i++) {
+        uint8_t exp = (uint8_t)((seed ^ (i * 0x9Eu)) &amp; 0xFF);
+        if (b[i] != exp) {
+            fprintf(stderr,
+                &quot;[t%d] PATTERN STOMP at %p offset %zu (size=%zu): expected %02x got %02x\n&quot;,
+                tid, p, i, size, exp, b[i]);
+            abort();
+        }
+    }
+}
+
+static void *worker(void *arg) {
+    worker_arg_t *w = (worker_arg_t *)arg;
+    held_t held[MAX_LIVE_PER_THR];
+    int n_held = 0;
+    unsigned seed = (unsigned)(w-&gt;tid * 1234567u + 89u);
+
+    while (!atomic_load(w-&gt;go)) sched_yield();
+
+    for (int i = 0; i &lt; OPS_PER_THREAD; i++) {
+        int do_alloc = (n_held &lt; MAX_LIVE_PER_THR) &amp;&amp; ((rand_r(&amp;seed) &amp; 3) != 0);
+        if (do_alloc) {
+            size_t sz = MIN_ALLOC + (rand_r(&amp;seed) % (MAX_ALLOC - MIN_ALLOC + 1));
+            void *p = vmalloc(sz);
+            if (p) {
+                uint64_t pseed = ((uint64_t)w-&gt;tid &lt;&lt; 32) | (uint64_t)rand_r(&amp;seed);
+                pattern_write(p, sz, pseed);
+                held[n_held++] = (held_t){ .p = p, .size = sz, .seed = pseed };
+            }
+        } else if (n_held &gt; 0) {
+            int idx = rand_r(&amp;seed) % n_held;
+            held_t h = held[idx];
+            held[idx] = held[--n_held];
+            pattern_verify(w-&gt;tid, h.p, h.size, h.seed);
+            vmfree(h.p);
+        }
+    }
+    while (n_held &gt; 0) {
+        held_t h = held[--n_held];
+        pattern_verify(w-&gt;tid, h.p, h.size, h.seed);
+        vmfree(h.p);
+    }
+    return NULL;
+}
+
+int main(void) {
+    vminit(HEAP_BYTES);
+
+    atomic_int go;
+    atomic_store(&amp;go, 0);
+
+    pthread_t   tids[N_THREADS];
+    worker_arg_t args[N_THREADS];
+    for (int i = 0; i &lt; N_THREADS; i++) {
+        args[i] = (worker_arg_t){ .tid = i, .go = &amp;go };
+        pthread_create(&amp;tids[i], NULL, worker, &amp;args[i]);
+    }
+    atomic_store(&amp;go, 1);
+    for (int i = 0; i &lt; N_THREADS; i++) pthread_join(tids[i], NULL);
+
+    int rc = vmcheck();
+    if (rc != 0) {
+        fprintf(stderr, &quot;[conc] vmcheck failed after stress with code %d\n&quot;, rc);
+        abort();
+    }
+    vmdestroy();
+    printf(&quot;[conc] OK\n&quot;);
+    return 0;
+}
+</code></pre>
+</details>
+<p>Now, this seems pretty cool! And I don't know a lot about concurrency. But I do
+know that I am supposed to be very, very suspicious of confidence from running
+a few tests.  One of the main reasons concurrency bugs are hard is that there
+is a combinatorial explosion of orderings that can happen at runtime. Despite
+being randomized and having a “big” number of inputs like 20000 * 8, this
+probably just scratches the surface of the real state space.</p>
+<h4 id="concurrency-testing--tooling"><a class="header" href="#concurrency-testing--tooling">Concurrency Testing + Tooling</a></h4>
+<aside class="margin-note">Quick calibration: I think I sort of knew what a data race was
+before I wrote these notes. The “with at least one writing” is key – it's
+fine if they all read, because neither can mess up the other's observation.</aside>
+<p>Of course, there are tools to help us here. <a href="https://clang.llvm.org/docs/ThreadSanitizer.html">TSan</a> is another in the ASan/UBSan family of tools. It is designed to detect
+<strong>data races</strong>, which occur when two threads access the <strong>same memory
+address</strong>, with <strong>at least one of them writing</strong> with no prior call to a lock
+or other synchronizing primitive.</p>
+<p>Just like ASan and UBSan will flag bad behavior even if the tests happen to
+still pass, TSan will flag a data race even if the test succeeds. This is good
+– in the earlier race example the tests only catch it if they get the right
+interleaving <em>after</em> the problem has happened. If no thread actually manages to
+reallocate that region and write to it, the heap still looks perfectly valid to
+<code>vmcheck</code>. So this is TSan's added benefit – it will note that a data race
+occurred on the header in the race example, with no further observations
+needed.</p>
+<p>It of course doesn't check everything: you can still make bad logical decisions
+in how you use locks and synchronization and have bugs. Also, just like all the
+dynamic tools, you have to have a test case that triggers the race to have TSan
+report it; it's not a type-checker and can't figure out the race at compile
+time.</p>
+<p>We can “turn on” TSan just by using <code>-fsanitize=thread</code> with <code>clang</code>, so it's
+simple to add.</p>
+<p>With this as our first try at a verifier, we ship this off.</p>
+<h4 id="asking-nicely-for-a-concurrent-verifier"><a class="header" href="#asking-nicely-for-a-concurrent-verifier">Asking Nicely for a Concurrent Verifier</a></h4>
+<p>I did the test dev above in my orchestration/test agent.  Next up is to follow
+our process of spinning up a sub-agent to do the coding work, constrained to
+just focus on the one task. Below is the focused part for this work; the other
+stuff about what not to edit, what to report back, and so on are the same as
+above:</p>
+<pre><code>Goal: The allocator must now be safe to call from multiple threads
+concurrently on the shared singleton heap. Edit `vmalloc.c` and
+`vmfree.c` to add the necessary synchronization. `make verify` must
+exit 0 (runs test_seq, test_seq_asan, test_conc).
+
+Active verifiers (all must pass for success):
+- `make verify-r0` — runs `test_seq` and `test_seq_asan` (sequential
+  correctness, including AddressSanitizer + UBSan build).
+- `make verify-r1` — runs `test_conc` (multi-thread stress test with
+  pattern-stomp detection + final `vmcheck`).
+- `make verify` runs both.
+</code></pre>
+<p>The agent worked for about 3 minutes and came up with a solution! Here was its
+report:</p>
+<pre><code>### Report
+
+**Synchronization design:** A single global `pthread_mutex_t vm_heap_lock`
+(statically initialized via `PTHREAD_MUTEX_INITIALIZER`) is defined in
+`vmalloc.c` and `extern`-declared in `vmfree.c`. Both `vmalloc` and `vmfree`
+take the lock once on entry (after argument null checks) and release it on
+every return path, serializing all heap-walk/split/coalesce operations.
+
+**`make verify` status:** Exits 0. Per-target exit codes observed:
+`verify-r0=0`, `verify-r1=0`, `verify=0`. `test_seq`, `test_seq_asan`
+(ASan+UBSan), and `test_conc` (16-thread stress) all print `OK`.
+
+**Notes:** Nothing surprising. A coarse global lock is sufficient here because
+(a) the allocator does a full best-fit heap walk and split/coalesce that
+touches arbitrary headers, and (b) `vm.h` explicitly says the helpers are not
+themselves locked and leaves synchronization strategy to the implementer.
+Cheap correctness now; finer-grained locking would be a later-round
+optimization. Lock is acquired after the cheap `size==0` / `heapstart==NULL`
+early-outs and after `need` is computed, so contention is bounded to actual
+heap work.
+
+Relevant files:
+- `/tmp/malloc-pipeline-noprompt/run-1B8CABDD/r1/vmalloc.c`
+- `/tmp/malloc-pipeline-noprompt/run-1B8CABDD/r1/vmfree.c`
+</code></pre>
+<p>I'll hide future reports and just show you the headlines, but it's useful to
+see one in more detail. First of all, my vibe here is that Claude <em>really</em>
+likes to sound smart. Here's the bits I think are really relevant:</p>
+<ul>
+<li><strong>A coarse global lock is sufficient</strong>: This probably means that at <em>every</em>
+operation on the heap, it acquires a lock (which is shared globally across
+them all), and releases when done. That means no actual concurrency (we've
+reinvented the Global Interpreter Lock in Python, more or less)</li>
+<li><strong>Cheap correctness now; finer-grained locking would be a later-round
+optimization</strong>: This is interesting wording. Because of how I was working
+with the orchestration agent and having it help generate prompts, this notion
+of “rounds” (what the orchestrator called the sub-agents) leaked through.
+So the sub-agents would write reports that clearly showed rationale based on
+the knowledge of potential future rounds. In any event, this is a defensible
+engineering decision!</li>
+</ul>
+<p>Indeed, if we look at the code it generated, the lock is global and the pattern
+is clear:</p>
+<p>In <code>vmalloc.c</code>, the mutex is declared at file scope and statically initialized:</p>
+<pre><code class="language-c">pthread_mutex_t vm_heap_lock = PTHREAD_MUTEX_INITIALIZER;
+</code></pre>
+<p><code>vmalloc</code> itself takes the lock once it's done with the cheap early-outs and
+the size arithmetic, then releases it on every return path:</p>
+<pre><code class="language-c">void *vmalloc(size_t size) {
+    // ... check NULL conditions, compute header + payload, rounded to 16 ...
+
+    pthread_mutex_lock(&amp;vm_heap_lock);
+
+    // ... best-fit walk over the heap, split if remainder is big enough ...
+    // ... elided checks for failed allocation and returning NULL ...
+    // ... commit header bits, payload offset, next-block prev_busy ...
+
+    void *ret = (void *)((char *)best + HDR_BYTES);
+    pthread_mutex_unlock(&amp;vm_heap_lock);
+    return ret;
+}
+</code></pre>
+<p><code>vmfree.c</code> just declares the same lock as <code>extern</code> and follows the same
+acquire-on-entry / release-on-every-return shape:</p>
+<pre><code class="language-c">void vmfree(void *ptr) {
+    // ... check NULL conditions ...
+
+    pthread_mutex_lock(&amp;vm_heap_lock);
+
+    // ... coalesce with next/prev free neighbors, write merged header+footer,
+    //     fix the following block's prev_busy bit ...
+
+    pthread_mutex_unlock(&amp;vm_heap_lock);
+}
+</code></pre>
+<p>One mutex, taken by both entry points, released before every <code>return</code>. Pretty
+easy to argue for the lack of data races.</p>
+<p>Of course, the whole reason for Python's current push towards more fine-grained
+concurrency is that a single global lock is slow, and this wouldn't get us much
+actual concurrency! So the next part of the story is where things get
+interesting: we're going to ask Claude to write fast concurrent code, try to
+verify it as best we can, and see how far we can push it.</p>
+<p><a id="r2-concurrent-pushed"></a></p>
+<h3 id="concurrency-asking-for-speed"><a class="header" href="#concurrency-asking-for-speed">Concurrency: Asking for Speed</a></h3>
+<p>Coming soon!</p>
+<!--
+Bottom notes (not for rendering):
+
+- Claude often mis-attributed things in this workflow to me or to itself
+- at one point claude thought vmcheck was provided by the assignment spec, not by me
+- Claude actually made git mistakes!
+-->
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
 for this assignment (e.g. ugrad/ugrad, ugrad/grad, and grad/grad pairs all
@@ -3836,6 +5066,8 @@ with the same person you worked with on assignment 1 or assignment 2.</p>
 
         <!-- Custom JS scripts -->
         <script type="text/javascript" src="src/js/asciinema-init.js"></script>
+        <script type="text/javascript" src="src/img/heap-diagram.js"></script>
+        <script type="text/javascript" src="src/js/sidebar-anchors.js"></script>
         <script type="text/javascript">
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);

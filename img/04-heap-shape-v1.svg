@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 260" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12">
+  <defs>
+    <pattern id="freeHatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#f5ecd0"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#d9c98a" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <text x="280" y="22" text-anchor="middle" font-size="14" font-weight="bold" font-family="system-ui, sans-serif">Heap layout: boundary-tag implicit list</text>
+
+  <!-- address ruler -->
+  <g stroke="#888" stroke-width="0.8" fill="#444">
+    <line x1="60" y1="50" x2="444" y2="50"/>
+    <line x1="60"  y1="46" x2="60"  y2="54"/>
+    <line x1="188" y1="46" x2="188" y2="54"/>
+    <line x1="380" y1="46" x2="380" y2="54"/>
+    <line x1="444" y1="46" x2="444" y2="54"/>
+    <text x="60"  y="40" text-anchor="middle">0x1000</text>
+    <text x="188" y="40" text-anchor="middle">0x1020</text>
+    <text x="380" y="40" text-anchor="middle">0x1050</text>
+    <text x="444" y="40" text-anchor="middle">0x1060</text>
+  </g>
+
+  <!-- BLOCK 1: allocated, size=32 (header 8B + payload 24B) -->
+  <g>
+    <rect x="60"  y="62" width="32" height="84" fill="#2c3e57" stroke="#0f1a2c"/>
+    <rect x="92"  y="62" width="96" height="84" fill="#5b8cb8" stroke="#0f1a2c"/>
+    <text x="76" y="108" text-anchor="middle" fill="#fff" font-size="10" transform="rotate(-90 76 108)">header</text>
+    <text x="140" y="100" text-anchor="middle" fill="#fff">payload</text>
+    <text x="140" y="116" text-anchor="middle" fill="#fff" font-size="10" font-style="italic">24 B</text>
+    <text x="124" y="166" text-anchor="middle">size=32</text>
+    <text x="124" y="180" text-anchor="middle" font-size="10" fill="#666">B=1, PB=?</text>
+    <text x="124" y="200" text-anchor="middle" fill="#2a567f" font-weight="bold">ALLOCATED</text>
+  </g>
+
+  <!-- BLOCK 2: free, size=48 (header 8B + 32B + footer 8B) -->
+  <g>
+    <rect x="188" y="62" width="32"  height="84" fill="#2c3e57" stroke="#0f1a2c"/>
+    <rect x="220" y="62" width="128" height="84" fill="url(#freeHatch)" stroke="#0f1a2c"/>
+    <rect x="348" y="62" width="32"  height="84" fill="#2c3e57" stroke="#0f1a2c"/>
+    <text x="204" y="108" text-anchor="middle" fill="#fff" font-size="10" transform="rotate(-90 204 108)">header</text>
+    <text x="284" y="100" text-anchor="middle" fill="#7a6a3a">free space</text>
+    <text x="284" y="116" text-anchor="middle" fill="#7a6a3a" font-size="10" font-style="italic">32 B</text>
+    <text x="364" y="108" text-anchor="middle" fill="#fff" font-size="10" transform="rotate(-90 364 108)">footer</text>
+    <text x="284" y="166" text-anchor="middle">size=48</text>
+    <text x="284" y="180" text-anchor="middle" font-size="10" fill="#666">B=0, PB=1</text>
+    <text x="284" y="200" text-anchor="middle" fill="#7a6a3a" font-weight="bold">FREE</text>
+  </g>
+
+  <!-- BLOCK 3: allocated, size=16 (header 8B + payload 8B) -->
+  <g>
+    <rect x="380" y="62" width="32" height="84" fill="#2c3e57" stroke="#0f1a2c"/>
+    <rect x="412" y="62" width="32" height="84" fill="#5b8cb8" stroke="#0f1a2c"/>
+    <text x="396" y="108" text-anchor="middle" fill="#fff" font-size="10" transform="rotate(-90 396 108)">hdr</text>
+    <text x="428" y="108" text-anchor="middle" fill="#fff" font-size="10" transform="rotate(-90 428 108)">8B</text>
+    <text x="412" y="166" text-anchor="middle">size=16</text>
+    <text x="412" y="180" text-anchor="middle" font-size="10" fill="#666">B=1, PB=0</text>
+    <text x="412" y="200" text-anchor="middle" fill="#2a567f" font-weight="bold">ALLOC</text>
+  </g>
+
+  <!-- legend -->
+  <g transform="translate(60, 222)" font-size="11" font-family="system-ui, sans-serif">
+    <rect x="0" y="0" width="14" height="14" fill="#2c3e57" stroke="#0f1a2c"/>
+    <text x="20" y="11">8-byte header (size_status: size | PB | B)</text>
+    <rect x="270" y="0" width="14" height="14" fill="#5b8cb8" stroke="#0f1a2c"/>
+    <text x="290" y="11">allocated payload</text>
+  </g>
+  <g transform="translate(60, 240)" font-size="11" font-family="system-ui, sans-serif">
+    <rect x="0" y="0" width="14" height="14" fill="url(#freeHatch)" stroke="#0f1a2c"/>
+    <text x="20" y="11">free space</text>
+    <rect x="120" y="0" width="14" height="14" fill="#2c3e57" stroke="#0f1a2c"/>
+    <text x="140" y="11">footer (free blocks only — mirrors header)</text>
+  </g>
+</svg>
