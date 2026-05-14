@@ -369,13 +369,13 @@
     const statusLine = `Status: 0x${(b.sizeStatus & 0xf).toString(16)} = 0b${bits.join('')} (${statusDescr(b.sizeStatus)})`;
 
     if (hasHeader) {
-      svg += `<rect class="header-hit" x="${hdrX}" y="${rowY}" width="${HEADER_PX}" height="${blockH}" fill="transparent" pointer-events="all" data-total="${esc(totalDesc)}" data-header="${esc(headerWord)}" data-status="${esc(statusLine)}"><title>${esc(totalDesc + '. ' + headerWord + '. ' + statusLine)}</title></rect>`;
+      svg += `<rect class="header-hit" x="${hdrX}" y="${rowY}" width="${HEADER_PX}" height="${blockH}" fill="transparent" pointer-events="all" data-total="${esc(totalDesc)}" data-header="${esc(headerWord)}" data-status="${esc(statusLine)}"/>`;
     }
 
     if (hasFooter) {
       const l1 = `Footer: marks this free block's length (${b.parentSize}),`;
       const l2 = `so it can merge with the next block when it frees.`;
-      svg += `<rect class="footer-hit" x="${footerX}" y="${rowY}" width="${HEADER_PX}" height="${blockH}" fill="transparent" pointer-events="all" data-line1="${esc(l1)}" data-line2="${esc(l2)}"><title>${esc(l1 + ' ' + l2)}</title></rect>`;
+      svg += `<rect class="footer-hit" x="${footerX}" y="${rowY}" width="${HEADER_PX}" height="${blockH}" fill="transparent" pointer-events="all" data-line1="${esc(l1)}" data-line2="${esc(l2)}"/>`;
     }
 
     // Pointer marker (drawn last so it sits on top of the outline) — first piece only
@@ -406,7 +406,7 @@
 
     const l1 = `Leading pad: ${b.parentSize} bytes of alignment so the first block's payload is 16-byte aligned.`;
     const l2 = `Implementations sometimes stash magic numbers or heap-control metadata here.`;
-    svg += `<rect class="pad-hit" x="${insetX}" y="${rowY}" width="${insetW}" height="${blockH}" fill="transparent" pointer-events="all" data-line1="${esc(l1)}" data-line2="${esc(l2)}"><title>${esc(l1 + ' ' + l2)}</title></rect>`;
+    svg += `<rect class="pad-hit" x="${insetX}" y="${rowY}" width="${insetW}" height="${blockH}" fill="transparent" pointer-events="all" data-line1="${esc(l1)}" data-line2="${esc(l2)}"/>`;
     return svg;
   }
 
@@ -433,7 +433,7 @@
 
     const l1 = `End-of-heap sentinel: header word 0x00000000.`;
     const l2 = `Size 0 + status 0 tells the allocator's heap walk to stop here.`;
-    svg += `<rect class="sentinel-hit" x="${insetX}" y="${rowY}" width="${insetW}" height="${blockH}" fill="transparent" pointer-events="all" data-line1="${esc(l1)}" data-line2="${esc(l2)}"><title>${esc(l1 + ' ' + l2)}</title></rect>`;
+    svg += `<rect class="sentinel-hit" x="${insetX}" y="${rowY}" width="${insetW}" height="${blockH}" fill="transparent" pointer-events="all" data-line1="${esc(l1)}" data-line2="${esc(l2)}"/>`;
     return svg;
   }
 
