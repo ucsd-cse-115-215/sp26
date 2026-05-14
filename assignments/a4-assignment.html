@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - UCSD GenAI and Programming SP26</title>
+        <title>Assignment 4: Student Choice - UCSD GenAI and Programming SP26</title>
         <!-- Custom HTML head -->
 <link rel="stylesheet" type="text/css" href="../js/asciinema-player.css" />
 <script src="../js/asciinema-player.min.js"></script>
@@ -78,7 +78,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="../lectures/00-intro.html" class="active"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="../lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded "><a href="../lectures/03-agents.html"><strong aria-hidden="true">5.</strong> Agents</a></li><li class="chapter-item expanded "><a href="../lectures/04-correctness.html"><strong aria-hidden="true">6.</strong> Getting Confidence in (Agentic) Code</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="../assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">7.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="../assignments/doc-scanner-assignment.html"><strong aria-hidden="true">8.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="../assignments/agent-assignment.html"><strong aria-hidden="true">9.</strong> Assignment 3: Agents</a></li><li class="chapter-item expanded "><a href="../assignments/a4-assignment.html"><strong aria-hidden="true">10.</strong> Assignment 4: Student Choice</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="../lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="../lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded "><a href="../lectures/03-agents.html"><strong aria-hidden="true">5.</strong> Agents</a></li><li class="chapter-item expanded "><a href="../lectures/04-correctness.html"><strong aria-hidden="true">6.</strong> Getting Confidence in (Agentic) Code</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="../assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">7.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="../assignments/doc-scanner-assignment.html"><strong aria-hidden="true">8.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="../assignments/agent-assignment.html"><strong aria-hidden="true">9.</strong> Assignment 3: Agents</a></li><li class="chapter-item expanded "><a href="../assignments/a4-assignment.html" class="active"><strong aria-hidden="true">10.</strong> Assignment 4: Student Choice</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -137,64 +137,106 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="unit-0-welcome-to-cse190291p"><a class="header" href="#unit-0-welcome-to-cse190291p">Unit 0: Welcome to CSE190/291P</a></h1>
-<h2 id="what-is-this-class-about"><a class="header" href="#what-is-this-class-about">What is this class about?</a></h2>
-<p>This class is about <strong>AI-powered systems</strong>:
-software systems that integrate generative AI as a core component.</p>
-<p>About 5 years ago, systems like these were
-either impossible or required a team of ML specialists:</p>
+                        <h1 id="a4--student-choice"><a class="header" href="#a4--student-choice">A4 — Student Choice</a></h1>
+<p>For the final project, you'll choose your project, make a proposal for it,
+react to our proposal feedback, then do a review/final submission workflow.
+Planned dates (we will clearly announce any deviations):</p>
 <ul>
-<li>A medical records system that <em>reads doctor's notes and extracts diagnoses</em></li>
-<li>A document scanner that <em>looks at a photo of a receipt and itemizes expenses</em></li>
-<li>A developer tool that <em>helps users navigate a complex API through conversation</em></li>
-<li>A language learning app that <em>generates exercises and evaluates free-form answers</em></li>
+<li><strong>Tuesday, May 19</strong>: Proposal due</li>
+<li><strong>Thursday, May 21</strong>: Proposal feedback from staff</li>
+<li><strong>Tuesday, May 26</strong>: Initial submission due</li>
+<li><strong>Thursday, May 28</strong>: Review day in class</li>
+<li><strong>Monday, June 1</strong>: Review feedback + staff feedback</li>
+<li><strong>Tuesday, June 9</strong>: Final submissions due</li>
 </ul>
-<p>Today, you can build these by plugging an LLM into a larger software system.
-The LLM handles the parts that require <em>understanding</em> or <em>generation</em>;
-the rest is regular software engineering.</p>
-<p>This is <strong>not</strong> a class about using ChatGPT to write code faster.
-It's about building <strong>new kinds of programs</strong> that weren't possible before —
-and we (Joe and Nadia) have been having a lot of fun building them.
-This class is about sharing that experience with you.</p>
-<hr />
-<h2 id="class-philosophy"><a class="header" href="#class-philosophy">Class philosophy</a></h2>
-<p>We don't claim to be experts — this field is evolving fast
-and we're learning alongside you.</p>
-<p>What we <em>do</em> have is experience building these applications
-and strong opinions about doing it well:
-testing, evaluation, cost management, code quality.</p>
-<p><strong>We welcome your contributions.</strong>
-If you find a better tool, a better technique, a better way to think about something —
-bring it to class.</p>
-<hr />
-<h2 id="topics"><a class="header" href="#topics">Topics</a></h2>
-<p>The class is organized around <strong>4 units</strong>,
-each dedicated to an application domain:</p>
+<h2 id="project-proposals"><a class="header" href="#project-proposals">Project Proposals</a></h2>
+<p>We recommend a few options for your project. We don't know how to do all these
+things; everything should involve some learning on your own.</p>
 <ol>
-<li><strong>Semantic text processing</strong> — classifying, extracting, summarizing text at scale</li>
-<li><strong>Image/document processing</strong> — working with PDFs, photos, scanned documents</li>
-<li><strong>Agents and tools</strong> — building conversational interfaces to existing systems</li>
-<li><em>TBD</em> — to be shaped by what we learn along the way</li>
+<li>
+<p>Run it fully locally — deploy a past project or a new one as a downloadable
+installer, with <em>no API calls leaving the device</em>. Use local models and figure
+out how to package.</p>
+</li>
+<li>
+<p>Ship with auth + live URL — deploy a past project or a new one hosted and
+public-facing. Add accounts, secrets, sessions, per-user isolation, cost
+ceiling, and anything else needed for a real deployment.</p>
+</li>
+<li>
+<p>Embed in another tool — make a past project or a new one into a
+Slack or Discord bot, browser extension, VS Code extension, other app extension.
+Get real user feedback and really integrate into the ecosystem.</p>
+</li>
+<li>
+<p>Generation as the point — Create, rather than classifying or extracting.
+Logos, art, design, music, story. Eval design is crucial. Think broadly! Could
+even be an agent (e.g. a game master for a hidden information game, a music
+improv partner, ...)</p>
+</li>
+<li>
+<p>Agentic programming — pick a <em>very</em> difficult traditional programming
+task with no existing solution. Implement it with the help of an agent,
+evaluate, and explain.</p>
+</li>
+<li>
+<p>Propose your own.</p>
+</li>
 </ol>
-<p>Each units spans 2 or 3 weeks and follows a similar structure:</p>
+<aside class="margin-note">Put your own human effort into this, don't have an agent do the thinking for you. Please don't submit a bunch of text that is indistinguishable from an agent's writing style. <a href="https://jfdi.bot/blog/ai-generated-content-broke-the-social-contract">Don't ask the recipients of your work to try harder than you did</a></aside>
+<p>Your project proposal should include the following:</p>
 <ul>
-<li><strong>~3-5 lectures</strong> of material</li>
-<li><strong>1 assignment</strong> released at the beginning of the unit</li>
-<li><strong>Demo &amp; peer review session</strong> at the end of the unit (during lecture), where you present your assignment and review each other's work</li>
+<li><strong>Title</strong></li>
+<li><strong>One sentence description</strong> – “Receipt scanner on Google Cloud (Ship it
+with auth + live URL)”, “Game Master for Werewolf (Generation as the
+point)”, “Private CSE tutor installed on ieng6 (Run it fully on your
+laptop)”. The description should make it obvious which of the above options
+you've chosen.</li>
+<li><strong>Past project reference</strong> – Indicate which assignment + student's past
+project is the base, if any. With permission from the other partner, partners
+can extend the past project submission from a group. Include a github link
+(if a truly new project, make a stub github repository and link that).</li>
+<li><strong>Planned technologies</strong> – What frameworks, platforms, etc do you plan to
+use? It's fine to give multiple options for a category.</li>
+<li><strong>First deliverable</strong> – What is the first thing you will build? Focus on a
+single user story/workflow, or as small a set of them as you can. What will
+force you to look at all the parts of your application in at least some way?</li>
+<li><strong>Rough architecture for first deliverable</strong> – What components and data will
+be involved? A component is often best described like a function call – what
+inputs does each component take, what output does it produce, what effects
+does it have?  Data could be the database shape or an application-specific
+kind of data (like the ReceiptUpdate type or the representation of git
+commands for gitbot). Don't talk about individual Python helper functions, but
+try to explain your system in terms of 5-10 major components.</li>
+<li><strong>After first deliverable goals</strong> – What else do you want to support after
+the first deliverable? Make this be a clear bulleted list of features that we
+could clearly identify in a final submission: we may add to, subtract from,
+and hold you accountable for completing things in the list.</li>
 </ul>
-<hr />
-<h2 id="logistics"><a class="header" href="#logistics">Logistics</a></h2>
-<p>See <a href="../index.html">homepage</a> for details on lectures, office hours, assignments, and more.</p>
+<p>We will give you feedback on your proposal and “lock in” what your
+expectations are. We may:</p>
+<ul>
+<li>Give pure feedback – we think XYZ tech would be better, did you think about
+ABC, etc.</li>
+<li>Extend the requirements – if we think what you've proposed is somewhat small
+or will end up being trivial, we may extend the requirements list</li>
+<li>Contract the requirements, or ask you to focus on a subset – if we think you
+need to narrow your focus at the start to make meaningful progress</li>
+</ul>
+<p>Submit your proposal to Gradescope; you'll upload a repository. A single
+markdown file is fine, you can also use PDF or images to support your plan. If
+you have supporting code, we probably won't read it, but it's fine to include
+it if you already have that structure set up alongside your proposal.</p>
+<h2 id="review-feedback--staff-feedback"><a class="header" href="#review-feedback--staff-feedback">Review Feedback &amp; Staff Feedback</a></h2>
+<p>More information coming soon – as usual staff feedback may come with extra
+work to do for the final submission.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../welcome.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../assignments/agent-assignment.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
-                            </a>
-                            <a rel="next" href="../lectures/01-semantic-text-processing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
                     </nav>
@@ -202,11 +244,8 @@ each dedicated to an application domain:</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../welcome.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../assignments/agent-assignment.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
-                    </a>
-                    <a rel="next" href="../lectures/01-semantic-text-processing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
 
