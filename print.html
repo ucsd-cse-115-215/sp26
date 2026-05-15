@@ -3761,7 +3761,7 @@ data-driven/workload-driven tests in loops.</p>
 robust. I'll include a function <code>vmcheck</code> that looks at the heap and tests for
 all the properties above:</p>
 <pre><code class="language-c">int vmcheck(void) {
-    if (!heapstart) return 7;
+    if (!heapstart) return 7;  // no heap
 
     char *base = (char *)heapstart - 8;
     char *end_addr = base + heap_total_size;
@@ -3770,7 +3770,7 @@ all the properties above:</p>
     int prev_was_free = 0;
 
     while (1) {
-        if ((char *)cur &gt;= end_addr) return 5;
+        if ((char *)cur &gt;= end_addr) return 5;  // walked off heap
 
         uint32_t ss = cur-&gt;size_status;
         uint32_t sz = blk_size(ss);
@@ -3779,31 +3779,31 @@ all the properties above:</p>
 
         // End sentinel: size==0, busy==1.
         if (sz == 0) {
-            if (!busy) return 7;
+            if (!busy) return 7;  // sentinel broken
             break;
         }
 
         // Size sanity: multiple of ALIGN, at least MIN_BLOCK_SIZE,
         // doesn't extend past the heap.
-        if (sz &lt; MIN_BLOCK_SIZE || sz % ALIGN != 0) return 1;
-        if ((char *)cur + sz &gt; end_addr) return 5;
+        if (sz &lt; MIN_BLOCK_SIZE || sz % ALIGN != 0) return 1;  // bad block size
+        if ((char *)cur + sz &gt; end_addr) return 5;  // walked off heap
 
         // prev_busy bit must agree with what we walked.
-        if (prev_busy_bit != prev_was_busy) return 4;
+        if (prev_busy_bit != prev_was_busy) return 4;  // prev_busy bit wrong
 
         // Free blocks: header and footer must agree, no two adjacent free.
         if (!busy) {
             struct block_header *footer =
                 (struct block_header *)((char *)cur + sz - sizeof(struct block_header));
-            if (footer-&gt;size_status != ss) return 2;
-            if (prev_was_free) return 3;
+            if (footer-&gt;size_status != ss) return 2;  // header/footer mismatch
+            if (prev_was_free) return 3;  // adjacent free blocks
         }
 
         prev_was_busy = busy;
         prev_was_free = !busy;
         cur = (struct block_header *)((char *)cur + sz);
     }
-    return 0;
+    return 0;  // all properties hold
 }
 </code></pre>
 <p>Each <code>return N</code> corresponds to one of the heap properties from
@@ -5056,6 +5056,8 @@ Planned dates (we will clearly announce any deviations):</p>
 <li><strong>Monday, June 1</strong>: Review feedback + staff feedback</li>
 <li><strong>Tuesday, June 9</strong>: Final submissions due</li>
 </ul>
+<p><strong>Partners</strong>: You can work with a partner on this project, and it can be the
+same as a past partner (if e.g. you want to extend a prior project).</p>
 <h2 id="project-proposals"><a class="header" href="#project-proposals">Project Proposals</a></h2>
 <p>We recommend a few options for your project. We don't know how to do all these
 things; everything should involve some learning on your own.</p>
