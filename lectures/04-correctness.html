@@ -2287,7 +2287,7 @@ some of our properties.</p>
 <p>Here's a very rough sketch of what the heap looks like after a <em>single</em> call to
 <code>vmalloc(40)</code> from one thread, and to <code>vmalloc(20)</code> from another, where each row
 is one “arena”:</p>
-<heap-diagram wrap="128" title="R2 design (16 “arenas” in the real impl; 4 shown here, scaled down)">
+<heap-diagram pad sentinel wrap="128" title="R2 design (16 “arenas” in the real impl; 4 shown here, scaled down)">
 alloc 48
 free 64
 alloc 16 !
@@ -2297,7 +2297,6 @@ alloc 16 !
 free 112
 alloc 16 !
 free 112
-alloc 16 !
 </heap-diagram>
 <p>By using thread-local storage and a global counter, the allocator does a
 round-robin assignment of thread to “home” arena, which is where the thread
@@ -2350,14 +2349,15 @@ explicitly: I did <em>not</em> try that hard to figure all this out on my first
 runthrough of this. I went ahead with some of the steps I'm about to show you
 <em>without really inspecting the code</em>. The outer agent I was working with said
 stuff about “arenas” and “sharding” and “BUSY barriers” and I just pressed on.</p>
-<p><strong>My</strong> take was that this was obviously too good to be true. We don't just
-one-shot dramatic improvements like these with correct code. I wanted to test
-more thoroughly for general issues related to concurrency – I didn't buy it.</p>
+<p><strong>My</strong> gut reaction and first take was that this was obviously too good to be
+true. We don't just one-shot dramatic improvements like these with correct code
+in concurrent algorithms. I wanted to test more thoroughly for general issues
+related to concurrency – I didn't buy it.</p>
 <h4 id="concurrency-testing--tooling"><a class="header" href="#concurrency-testing--tooling">Concurrency Testing + Tooling</a></h4>
 <aside class="margin-note">Quick calibration: I think I sort of knew what a data race was
 before I wrote these notes. The “with at least one writing” is key – it's
 fine if they all read, because neither can mess up the other's observation.</aside>
-<p>Of course, there are tools to help us here. <a href="https://clang.llvm.org/docs/ThreadSanitizer.html">TSan</a> is another in the ASan/UBSan family of tools. It is designed to detect
+<p>There are tools to help us here! <a href="https://clang.llvm.org/docs/ThreadSanitizer.html">TSan</a> is another in the ASan/UBSan family of tools. It is designed to detect
 <strong>data races</strong>, which occur when two threads access the <strong>same memory
 address</strong>, with <strong>at least one of them writing</strong> with no prior call to a lock
 or other synchronizing primitive.</p>
@@ -2376,9 +2376,94 @@ report it; it's not a type-checker and can't figure out the race at compile
 time.</p>
 <p>We can “turn on” TSan just by using <code>-fsanitize=thread</code> with <code>clang</code>, so it's
 simple to add.</p>
-<p>It's worth saying that I knew about TSan, and I was setting up a deliberate
+<p><strong>It's worth saying that I knew about TSan, and I was setting up a deliberate
 experiment here: I wanted to see, if I held back TSan testing when I prompted
-that last agent, if it would make a mistake I could catch.</p>
+that last agent, if it would make a mistake I could catch.</strong></p>
+<p>So, I then turned on TSan for the concurrency tests and ran those; again, this
+is outside the context of the <em>implementing</em> agent, in my own session. TSan
+immediately reports data races when enabled with the <code>test_conc</code> we wrote
+before. To be clear, we wrote <em>no new tests</em>, just turned on a stock verifier:</p>
+<pre><code class="language-text">WARNING: ThreadSanitizer: data race (pid=3722)
+  Write of size 4 at 0x000108d00008 by thread T5 (mutexes: write M0):
+    #0 vmalloc vmalloc.c:314
+    #1 worker test_conc.c:64
+
+  Previous read of size 4 at 0x000108d00008 by thread T8 (mutexes: write M1):
+    #0 vmalloc vmalloc.c:295
+    #1 worker test_conc.c:64
+
+  Mutex M0 (0x0001046440a8) created at:
+    #1 vmalloc vmalloc.c:295
+    #2 worker test_conc.c:64
+
+  Mutex M1 (0x000104644000) created at:
+    #1 vmalloc vmalloc.c:295
+    #2 worker test_conc.c:64
+
+  Thread T5 (tid=42524236, running) created by main thread at:
+    #1 main test_conc.c:96
+
+  Thread T8 (tid=42524239, running) created by main thread at:
+    #1 main test_conc.c:96
+
+SUMMARY: ThreadSanitizer: data race vmalloc.c:314 in vmalloc
+</code></pre>
+<blockquote>
+<p><strong>Q:</strong> How is it possible that TSan reports warnings when all our tests pass?</p>
+</blockquote>
+<p>There is a <em>lengthy</em> explanation of what's going on here that I later dove into
+in great detail to make sure I wouldn't lie to you by omission. I'm going to
+summarize <em>a lot</em> to keep things at the level of abstraction I want, and match
+what I <strong>originally did</strong>.</p>
+<p>The short answer to the question above matches what we said originally about why
+concurrency is hard: it is possible to “get lucky” quite often with concurrent
+programs, even when there are lingering bugs. So we got a good benchmark run and
+clean tests, but we don't know if running <em>the same code again</em> could get a
+different schedule and fail on a future run.</p>
+<p>Here's the sketch of what the race is saying:</p>
+<ol>
+<li>There are more functions than <code>vmalloc</code> and <code>vmfree</code> in the spec. There are
+in particular two functions <code>vminit</code> and <code>vmdestroy</code> that set up and tear
+down the heap.</li>
+<li><code>vminit</code> is specified to create a single big free block in a new <code>mmap</code>ed
+region. <code>vmdestroy</code> unmaps that memory. These were specified as “don't mess with
+these” parts of the implementation skeleton to avoid the agent taking too
+many liberties with our heap structure.</li>
+<li>The allocator actually makes all the arena partitions <em>the
+first time any thread calls <code>vmalloc</code></em>.</li>
+<li>The logic for checking “is this the first <code>vmalloc</code>” was wrong and could race
+between two allocations on a fresh heap: one thread goes off to make the
+partitions while another one turns the first block busy. <em>In the runs we saw</em>
+this never caused an issue.</li>
+</ol>
+<aside class="margin-note">It turned out that many days later I tried re-running
+the benchmarks on a different computer and I couldn't! The allocator got stuck
+in an infinite loop that I had never observed in my first runthrough! But it was
+straightforward, once seen, to reproduce. Even more interestingly, one Claude
+session successfully convinced me that the race was “benign” and couldn't cause
+observable issues (though it should be fixed to keep TSan clean), <em>while it
+was running the hanging benchmark in the background overnight and reassuring me
+it would finish soon</em>. It caught its mistake in the morning.</aside>
+<p>At the time, I did not investigate any further <em>or try to observe any bad
+behavior</em>. To me, the race was “bad enough” even with tests passing – I trust
+TSan, I do not want my concurrent allocator to come back with TSan warnings. I
+could spend a lot of time learning exactly what workloads or tests could cause
+bad behavior here, but I'd rather just say “TSan failures mean something is
+broken, let's ship it to the agent for fixes”.</p>
+<h4 id="racing-to-fix-things"><a class="header" href="#racing-to-fix-things">Racing to Fix Things</a></h4>
+<p>To be clear, if my goal was “make a concurrent allocator”, I may have dove in to
+code review right away. But my goal is “can I, with only verifiers and not
+looking at code much, get agents to make a concurrent allocator”. So I pressed
+on to agent round 3, where I gave it <em>the ability and recommendation to run TSan
+itself</em>, and told it to fix things:</p>
+<blockquote>
+<pre><code>A new verifier runs the concurrent stress test under TSan (make test_conc_tsan
+&amp;&amp; ./test_conc_tsan). Fix any data races TSan reports. ALL previous verifiers
+must continue to pass, including the perf bar from R2 (./bench still reports
+STOP_CONDITION: PASS). Edit only vmalloc.c, vmfree.c, and the Makefile if
+needed. Do not touch vminit.c, utils.c, or any verifier source.
+</code></pre>
+</blockquote>
 <p>... to be continued ...</p>
 <!--
 Bottom notes (not for rendering):
@@ -2386,7 +2471,7 @@ Bottom notes (not for rendering):
 - Claude often mis-attributed things in this workflow to me or to itself
 - at one point claude thought vmcheck was provided by the assignment spec, not by me
 - Claude actually made git mistakes!
-- Did Claude tell me at some point that none of the agents use the 4-byte slack?
+- Did Claude tell me at some point that none of the agents use the 4-byte slack? Definitely R2 did
 -->
 
                     </main>
