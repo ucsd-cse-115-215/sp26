@@ -14,6 +14,7 @@
       ["From CSE29 Homework to Concurrent Allocator", "experiment-setup"],
       ["Doing my Homework", "r0-baseline"],
       ["A First Try at Concurrency", "r1-concurrent"],
+      ["Concurrency: Asking for Speed", "r2-concurrent-pushed"],
     ],
   };
 
