@@ -2322,7 +2322,7 @@ busy block in the middle). These are the key insights driving the performance
 improvement we see in this round.</p>
 <aside class="margin-note">The linked list is solidly <a
 href="https://github.com/ucsd-cse30-f17/pa6-public#int-my_freevoid-ptr">undergraduate
-systems material</a>, just a different quarter.</a>
+systems material</a>, just a different quarter.</a></aside>
 <p>The simple baseline always walks linearly over the whole heap, including
 potentially walking <em>many consecutive adjacent busy blocks</em>. This is slow. Many
 (single-threaded or otherwise) allocators maintain a <em>linked list embedded in
