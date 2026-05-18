@@ -23,8 +23,9 @@
 //   Use `pad` for the default 8 bytes, or `pad="16"` to set a custom size.
 //
 // Attribute `sentinel` — when present, append an N-byte end-of-heap sentinel
-//   cell (an all-zeros header word, size 0 + status 0) so the allocator's heap
-//   walk knows where to stop. Use `sentinel` for the default 8 bytes, or
+//   cell. Header word has size 0 and BUSY=1 (e.g. 0x00000001): size 0 stops
+//   the allocator's heap walk, and BUSY=1 keeps a freed final block from
+//   coalescing past the heap end. Use `sentinel` for the default 8 bytes, or
 //   `sentinel="16"` to set a custom size.
 //
 // Block syntax (one per line, or separated by ";"):
@@ -154,8 +155,15 @@
 
     for (const b of all) {
       let common;
-      if (b.kind === 'pad' || b.kind === 'sentinel') {
+      if (b.kind === 'pad') {
         common = { kind: b.kind, parentSize: b.size };
+      } else if (b.kind === 'sentinel') {
+        // End-of-heap sentinel: size 0, always BUSY=1 so a freed final
+        // block can't coalesce past the heap end. prevBusy reflects the
+        // real preceding block, exactly like a normal block's header.
+        const sizeStatus = (prevBusy ? 0x2 : 0) | 0x1;
+        common = { kind: b.kind, parentSize: b.size, prevBusy, sizeStatus };
+        prevBusy = true;
       } else {
         const isBusy = b.kind === 'alloc';
         const sizeStatus = b.size | (prevBusy ? 0x2 : 0) | (isBusy ? 0x1 : 0);
@@ -426,13 +434,14 @@
     svg += `<path d="${shape}" fill="${COLORS.hdrBg}"/>`;
     if (b.isFirstPiece) svg += renderStripLines(insetX, stripY);
     svg += `<g filter="url(#rough)"><path d="${shape}" fill="none" stroke="${COLORS.hdrBg}" stroke-width="1.6"/></g>`;
+    const bits = bitsOfLowNibble(b.sizeStatus || 0x1);
     if (b.isFirstPiece) {
       svg += `<text x="${insetX + insetW / 2}" y="${rowY + 15}" text-anchor="middle" font-size="12" fill="${COLORS.textLight}">0</text>`;
-      svg += renderStripDigits(insetX, digitY, [0, 0, 0, 0]);
+      svg += renderStripDigits(insetX, digitY, bits);
     }
 
-    const l1 = `End-of-heap sentinel: header word 0x00000000.`;
-    const l2 = `Size 0 + status 0 tells the allocator's heap walk to stop here.`;
+    const l1 = `End-of-heap sentinel: header word ${hex8(b.sizeStatus || 0x1)} (size 0, BUSY=1).`;
+    const l2 = `Size 0 stops the heap walk; BUSY=1 so a freed final block won't coalesce past the heap.`;
     svg += `<rect class="sentinel-hit" x="${insetX}" y="${rowY}" width="${insetW}" height="${blockH}" fill="transparent" pointer-events="all" data-line1="${esc(l1)}" data-line2="${esc(l2)}"/>`;
     return svg;
   }
