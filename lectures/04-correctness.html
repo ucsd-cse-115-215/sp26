@@ -1753,22 +1753,27 @@ understand the workload. Look for &quot;STOP_CONDITION: PASS&quot; in bench outp
 <blockquote>
 <p><strong>Q: What do you think will happen?</strong></p>
 </blockquote>
-<p>Now, the sub-agent says some stuff back when you do this. I'm not going to say
-what it said verbatim. Two reasons:</p>
+<p>Previously I showed you the reports from the agents. For this one I'm not going
+to say what it said verbatim. Two reasons:</p>
 <ol>
-<li>I forgot to log it and it's gone (I got better at this as time went on, but
-this particular agent run made a really interesting decision I want to show)</li>
-<li>We should be <em>somewhat-to-very suspicious</em> of what the agent tells us, and
-trust our verifiers to guide us.</li>
+<li>
+<p>I forgot to log it and it's gone, but what it did was interesting enough to
+show (I got better at saving my work as time went on, this was early in my
+experiment)</p>
+</li>
+<li>
+<p>As things get more complex, we should be <em>somewhat-to-very suspicious</em> of
+what the agent tells us, and trust our verifiers to guide us.</p>
+<p>We included instructions like “don't modify the benchmark or the tests”.
+But the agent may try to find clever ways around this, or outright fabricate
+performance numbers <em>in its report to us</em>. There is no hard guarantee of
+reasonableness.</p>
+</li>
 </ol>
-<p>To expand on the second point a bit – we just told the agent to improve
-performance, and included the standard boilerplate about “don't modify the
-benchmark or the tests”. But the agent may try to find clever ways around this,
-or outright fabricate performance numbers <em>in its report to us</em>. There is no
-hard guarantee of reasonability.</p>
-<p>So, we check that our verifiers are what we expect them to be (e.g. clean git
-state with just diffs on the implementation), and run them <em>ourselves</em>. Here, we
-find something that looks remarkable:</p>
+<p>So, just like we should use hard tool guardrails and not trust an agent to
+behave based on prompting alone, we check that our verifiers are what we expect
+them to be (e.g.  clean git state with just diffs on the implementation), and
+run them <em>ourselves</em>. Here, we find something that looks remarkable:</p>
 <pre><code class="language-text"># bench (heap_bytes=8388608, ops/thread=50000, trials=5)
 # threshold: median speedup &gt;= 1.10x on &gt;= 6 of 8 cells
 
