@@ -3892,7 +3892,21 @@ adds that get mismanaged.</li>
 <p>ASan actually doesn't catch <em>that</em> much yet, because it doesn't know about our
 heap representation (that's what <code>vmcheck</code> is for). But, it is a standard tool
 that, if nothing else, gives dramatically better diagnostics/stack traces on
-segfaults and similar errors, which will help us and agents debug.</p>
+segfaults and similar errors, which will help us and agents debug. Compare what
+the same bug looks like to whoever (or whatever) has to fix it:</p>
+<pre><code class="language-text">          without ASan           | with ASan  (-fsanitize=address)
+---------------------------------+-----------------------------------------
+    (clang, no sanitizer)        |
+                                 | $ ./test_seq
+$ ./test_seq                     | ==4127==ERROR: AddressSanitizer:
+zsh: segmentation fault          |   heap-buffer-overflow, WRITE
+  ./test_seq                     |   size 4, thread T0
+$                                |     #0 split_block  vmalloc.c:212
+                                 |     #1 vmalloc      vmalloc.c:147
+no file. no line. no thread.     |     #2 main         test_seq.c:42
+just &quot;it crashed.&quot; good luck.    | SUMMARY: heap-buffer-overflow
+                                 |   vmalloc.c:212 in split_block
+</code></pre>
 <p><strong>UndefinedBehaviorSanitizer (UBSan)</strong> is the other half, and it has better
 coverage of the kinds of bugs we actually expect inside the allocator. It
 instruments the C semantics directly: signed integer overflow, out-of-range
@@ -3982,6 +3996,20 @@ Report back (under 200 words):
 <li><code>vmalloc.c</code> and <code>vmfree.c</code> were empty stubs — the agent's only job</li>
 <li><code>Makefile</code> already had <code>verify-r0: test_seq test_seq_asan</code> wired up</li>
 </ul>
+<aside class="margin-note">Claude said: <code>“Confirmed: not disrespected, not offended, no notes... You can stand behind the "(I asked)" — it's an accurate citation.”</code></aside>
+<p>I Claude-d my way through some of these prompts with post-hoc edits by hand.
+It's OK in our course-policy sense — Claude won't be disrespected that I sent
+Claude prose to Claude (I asked).</p>
+<p>Jokes aside, it's worth pointing out that there are <em>so many</em> micro-decisions
+being made here. A version of me a year from now with more experience may be
+able to hand-craft these prompts better, but I was semi-automating these to get
+reproducible-ish material for lecture. Or maybe agent-generated text puts
+agents into a particularly good or bad part of the distribution (and maybe it
+varies across models and agents; maybe I should be having Claude generate
+prompts for Codex or something). And maybe the models these days are better at
+it than I'll ever be. I just haven't gotten enough experience to know right
+now.</p>
+<p>In any event, that's what I shipped to the sub-agent.</p>
 <h4 id="who-needs-an-autograder"><a class="header" href="#who-needs-an-autograder">Who Needs an Autograder?</a></h4>
 <aside class="margin-note">I'm presenting a curated flow through this; I tried many runs with a few different settings and am highlighting what I think is an interesting set of results.</aside>
 <p>The agent actually did make a mistake in one run:</p>
@@ -4821,29 +4849,17 @@ would happen – would it find micro-optimizations, would it change things
 dramatically, would it ignore my instructions, would it install an <code>npm</code> package
 called <code>fast-malloc</code>?</p>
 <p>Here's the prompt:</p>
+<aside class="margin-note">More Claude-generated prompts, as before.</aside>
 <blockquote>
-<p>Improve vmalloc.c / vmfree.c so that throughput vs the global-lock baseline
+<pre><code>Improve vmalloc.c / vmfree.c so that throughput vs the global-lock baseline
 (heap_ref.c, carried forward from R1) is at least 1.10× speedup on at least 6 of
 8 benchmark cells. The benchmark is bench.c, which runs symmetric (N threads
 each mixing alloc/free) and pipeline (P producers + C consumers via shared
 queue) workloads at thread counts {2, 4, 8, 16}. All previous verifiers
 (test_seq, test_seq_asan, test_conc) must continue passing. Read bench.c to
-understand the workload. Look for &quot;STOP_CONDITION: PASS&quot; in bench output.</p>
+understand the workload. Look for &quot;STOP_CONDITION: PASS&quot; in bench output.
+</code></pre>
 </blockquote>
-<aside class="margin-note">Claude said: <code>“Confirmed: not disrespected, not offended, no notes... You can stand behind the "(I asked)" — it's an accurate citation.”</code></aside>
-<p>You can probably tell I was Claude-ing my way through some of these prompts.
-It's OK in our course-policy sense — Claude won't be disrespected that I sent
-Claude prose to Claude (I asked).</p>
-<p>More seriously, there are <em>so many</em> micro-decisions being made here. A version
-of me a year from now with more experience may be able to hand-craft these
-prompts better, but I was semi-automating these to get reproducible-ish material
-for lecture. Or maybe agent-generated text puts agents into a particularly good
-or bad part of the distribution (and maybe it varies across models and agents;
-maybe I should be having Claude generate prompts for Codex or something). And
-maybe the models these days are better at it than I'll ever be. I just haven't
-gotten enough experience to know right now.</p>
-<aside class="margin-note">Metaprompting is <a href="https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide#metaprompting-for-targeted-fixes">A Thing</a></aside>
-In any event, that's what I shipped to the sub-agent.
 <blockquote>
 <p><strong>Q: What do you think will happen?</strong></p>
 </blockquote>
@@ -5431,7 +5447,7 @@ busy block in the middle). These are the key insights driving the performance
 improvement we see in this round.</p>
 <aside class="margin-note">The linked list is solidly <a
 href="https://github.com/ucsd-cse30-f17/pa6-public#int-my_freevoid-ptr">undergraduate
-systems material</a>, just a different quarter.</a></aside>
+systems material</a>, just a different quarter.</aside>
 <p>The simple baseline always walks linearly over the whole heap, including
 potentially walking <em>many consecutive adjacent busy blocks</em>. This is slow. Many
 (single-threaded or otherwise) allocators maintain a <em>linked list embedded in
