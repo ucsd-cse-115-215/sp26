@@ -5603,6 +5603,41 @@ Bottom notes (not for rendering):
 - at one point claude thought vmcheck was provided by the assignment spec, not by me
 - Claude actually made git mistakes!
 - Did Claude tell me at some point that none of the agents use the 4-byte slack? Definitely R2 did
+- The PBT at R4 was a verifier-selection misfire that I should own in lecture. I
+  picked it because property-based testing has good reputation and was the next
+  obvious tool. It found nothing because R4's residual bugs were *races*, not
+  property violations on sequential inputs. A concurrent fuzz harness in the
+  same slot (i.e., what threaded libFuzzer + TSan does) catches R4's init-publish
+  races immediately — and the fix is ~10 LOC of memory ordering that doesn't
+  touch the barrier design. The lesson is "which verifier to add next" should
+  depend on what bug class the current implementation is most likely to *still
+  have*, not on which tool is the most recently-impressive thing read about. We
+  rabbit-holed at R5/R6 on barriers/live_bytes; we could have spent that budget
+  fixing the actual concurrency holes and shipping R4 essentially as-is.
+- R6's design (address-range arenas + no barriers + cross-arena coalesce) is
+  exactly what the student suggested in lecture today — drop the physical
+  barriers and use arithmetic on the address to decide which arena a block
+  belongs to. Worth showing as confirmation that the student's instinct lands
+  on a real design point that exists in the literature. Caveat to share with
+  the same breath: the threaded fuzzer (R7) turned up TSan-flagged races in
+  exactly the cross-arena reads this design introduces — vmfree.c:226 reads a
+  prev-block footer that may live in a different arena without holding that
+  arena's lock, then commits on the fast path if the racy read happens to
+  point back into the freer's own arena. We have not (yet) demonstrated this
+  is load-bearing for actual memory corruption, but we've been wrong about
+  "benign" races before. The student's design point is real *and* the
+  correctness story is unsettled in a way that's directly worth showing.
+- Backtracking is what the per-round git-repo snapshotting is *for*. The
+  threaded-libFuzzer harness was designed to scrutinize R6, but once we had
+  it, we could trivially point it at R4 too (same fuzz_conc.c, different
+  -I path in the Makefile, one compile flag for the live_bytes invariant).
+  The find that R4 has races we missed only works because R4 is preserved as
+  a buildable artifact, not just a git diff. Worth naming in lecture: a
+  verifier designed for the *current* state of the code is also a
+  retrospective verifier you can apply to any earlier state — and that lets
+  you ask counterfactual questions like "if we had this verifier at R4,
+  would we have made the same R5 choice?" The snapshotting cost (one git
+  repo per round) is the price of being able to run those counterfactuals.
 -->
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
