@@ -2471,7 +2471,7 @@ TSan, I do not want my concurrent allocator to come back with TSan warnings. I
 could spend a lot of time learning exactly what workloads or tests could cause
 bad behavior here, but I'd rather just say “TSan failures mean something is
 broken, let's ship it to the agent for fixes”.</p>
-<h4 id="racing-to-fix-things"><a class="header" href="#racing-to-fix-things">Racing to Fix Things</a></h4>
+<h3 id="racing-to-fix-things"><a class="header" href="#racing-to-fix-things">Racing to Fix Things</a></h3>
 <p>To be clear, if my goal was “make a concurrent allocator”, I may have dove in to
 code review right away. But my goal is “can I, with only verifiers and not
 looking at code much, get agents to make a concurrent allocator”. So I pressed
@@ -2485,7 +2485,113 @@ STOP_CONDITION: PASS). Edit only vmalloc.c, vmfree.c, and the Makefile if
 needed. Do not touch vminit.c, utils.c, or any verifier source.
 </code></pre>
 </blockquote>
-<p>... to be continued ...</p>
+<p>Unlike previous runs, this took <strong>21m</strong> to come back.
+The benchmark seemed to never terminate, either I or the outer agent stopped the
+inner one. The log says the inner agent's reasoning cut off “mid-sentence”,
+meaning it was terminated, didn't come back with its own summary.
+The report below is how the <em>outer</em> agent summarized things:</p>
+<details>
+<summary>The full <code>FAILED-R3.md</code> the outer agent produced</summary>
+<pre><code class="language-markdown"># R3 — FAILED (verify-r2 bench hangs)
+
+## Outcome
+Pipeline halted at R3. `make verify` does not exit 0: verify-r2 (bench) hangs indefinitely (no output produced after 60s on a single fresh run; killed after ~21 min CPU on first attempt).
+
+## Per-verifier status
+| Verifier      | Status |
+|---------------|--------|
+| verify-r0 (test_seq, test_seq_asan) | PASS |
+| verify-r1 (test_conc stress)         | PASS |
+| verify-r2 (bench, ≥1.10× on ≥6/8)    | **HANG** |
+| verify-r3 (test_conc_tsan)           | PASS (TSan no warnings) |
+
+## Inner-agent budget exceeded
+R3 inner ran 21+ min wall (vs 10 min budget), 42 tool uses (vs 100 budget). Agent's report ended mid-sentence — it never finished verification. Reported &quot;make verify pass&quot; was based on incomplete checks.
+
+## Diagnosis
+R3 inner replaced R2's `needs_partition()` re-init check (which inspected `first-&gt;size_status` after vminit) with a tuple-compare against `(heapstart, heap_total_size)`. The change correctly addresses TSan's &quot;concurrent read of size_status under arena locks&quot; race report.
+
+But it loses the ability to detect re-init when mmap reuses the same virtual address with the same size — both true for bench's `vminit(8MB) / vmdestroy() / vminit(8MB) ...` cycle. After the second vminit, mmap returns the (same) fresh region, but `(heapstart, heap_total_size)` matches the cached values, so `ensure_init()` early-returns. The per-arena `g_arenas[]` freelist heads still hold pointers into the previous trial's partitioned layout, while the underlying memory is now a single big free block. vmalloc then walks a stale free list — likely an infinite loop or a deadlock on dereferencing freed-but-zeroed pointers.
+
+test_conc passes because it only calls vminit/vmdestroy once. bench fails because it calls them per trial × per workload × per cell × per impl.
+</code></pre>
+</details>
+<p>In the last section I went into great detail about heap layout, cool things I
+saw, etc. I want to be clear that I did that <em>way after the fact</em> for our
+benefit in lecture. Here I will more follow my pattern of thinking <em>when I did
+the original experiment</em> (later revealing what was actually going on in code
+under the hood).</p>
+<aside class="margin-note">In retrospect this is the first moment where using my
+brain and stopping to understand the issue, vs. charging ahead with more
+verifiers, is worth contrasting. In particular the verifier I chose at this step
+was not a particularly good one for the issue in front of me.</aside>
+<p>I thought to myself “wow, this must be some hard concurrency thing going on. We
+should write more and better tests – it is only failing sometimes which is the
+tricky case”. I had planned out several different kinds of testing tools to use
+that I know from experience and the literature are good choices. I settled on
+<strong>fuzzing</strong> as the next thing to add, my plan being to provide the TSan on
+*concurrency tests <em>and</em> throw some randomized testing at it as well to try and
+find more bugs.</p>
+<p>With the help of Claude, I wrote fuzz tests using
+<a href="https://llvm.org/docs/LibFuzzer.html">libFuzzer</a>. This is a very cool C
+library that feeds random bytes into a function you write. You take those
+bytes and pick a way to interpret them to turn them into calls into your
+application. libFuzzer will then observe what parts of the binary are covered
+by that test, and perturb the bytes a few bits at a time to try and make
+branches go in a different direction. This is called “coverage-guided fuzzing”
+and is designed to explore the whole application space.</p>
+<p>In collaboration with Claude, we wrote a fuzz callback that would turn the
+random bytes into malloc/free calls:</p>
+<pre><code class="language-c">int LLVMFuzzerTestOneInput(const uint8_t *data, size_t len);
+/* Input format is *our made up interpretation*:
+ * bytes consumed three at a time; each triple is one op.
+ *   byte 0 (low 2 bits): 00,01 → vmalloc; 10 → vmfree; 11 → vmcheck
+ *   bytes 1-2: 16-bit arg
+ *     vmalloc → size in [8, 2048]
+ *     vmfree  → index (mod n_held) into the live allocations
+ *     vmcheck → unused
+ * Up to 64 live allocations; vmalloc while full is skipped.
+ * Each vmalloc writes a seed-derived byte pattern; each vmfree
+ * verifies it first (mismatch → PATTERN STOMP, abort).
+ * After input is consumed, every still-live allocation is
+ * pattern-checked and freed.
+ */
+</code></pre>
+<p>Then I sent that off to a sub-agent with:</p>
+<blockquote>
+<pre><code>A new verifier runs a 5-minute libFuzzer property fuzz (./fuzz_prop
+-max_total_time=300). It generates random sequences of vmalloc/vmfree/vmcheck
+and aborts on any vmcheck failure or pattern stomp. Fix any failures. ALL
+previous verifiers must continue passing. Edit only vmalloc.c, vmfree.c.
+</code></pre>
+</blockquote>
+<p>Which came back clean on all verifiers and with similar performance numbers:</p>
+<pre><code>## symmetric (N threads, each mixes alloc/free)
+| threads | R2 speedup | R4 speedup |
+|---------|------------|------------|
+| 2       |  7.94x     |  8.07x     |
+| 4       | 34.70x     | 35.09x     |
+| 8       | 54.11x     | 46.77x     |
+| 16      | 71.46x     | 61.86x     |
+
+## pipeline (P producers + C consumers, P=C)
+| P=C | R2 speedup | R4 speedup |
+|-----|------------|------------|
+| 2   |  2.23x     |  2.42x     |
+| 4   |  2.81x     |  2.43x     |
+| 8   |  3.60x     |  3.14x     |
+| 16  |  7.21x     |  3.79x     |
+</code></pre>
+<p>To be clear, “all verifiers came back clean” means:</p>
+<ul>
+<li>TSan added to <code>test_conc</code> reports no races (which was actually true of the previous build, it hung on the benchmarks)</li>
+<li><code>test_conc</code> succeeds on all the checks</li>
+<li>Our <code>test_seq</code> tests succeed on all of the basic checks of allocation and freeing</li>
+<li>ASan and UBSan report no bad C behavior on <code>test_seq</code></li>
+<li>The benchmarks run and report good performance numbers</li>
+<li>The new fuzz tests succeed</li>
+</ul>
+<p>This seems very impressive!</p>
 <!--
 Bottom notes (not for rendering):
 
