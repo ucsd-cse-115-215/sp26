@@ -2837,6 +2837,54 @@ much more faithful to the original spec and intent of CSE29 malloc.</p>
 CELLS_PASSING: 8 / 8
 STOP_CONDITION: PASS
 </code></pre>
+<p>It's worth reporting on two threads of thinking here:</p>
+<aside class="margin=note">Just imagine the shade <b>Joe in one year</b> will be
+throwing on these guys.</aside>
+<ul>
+<li><strong>Joe in the moment (shallow, overconfident, working fast)</strong>: I thought “this
+tracks. Things have to slow down when you actually catch bugs! I'm so good at
+catching bugs and writing verifiers. I am an agentic engineer.” I immediately moved on to an <strong>R6</strong> with a
+performance push. I'm not going to go into detail on that one – spoiler alert,
+performance got better, all verifiers green. In my first runthrough, it was only
+<em>then</em> that I started reflecting on actual heap shapes and re-specifying.</li>
+<li><strong>Joe a week later writing these notes (wise, reflective, thinking slow)</strong>:
+We've actually been accumulating human-spec-design decisions and thrashing
+through them a bit. Do we care about accurate reporting of live bytes? Do we
+care if it's off by a <em>constant</em>? Do we care about being able to do large
+allocations greater than 1/16 of our heap? And what else should we be thinking
+about for correctness? We've never written a test that allocates half the heap;
+it would succeed on R1 and R5 and fail on R2-4.</li>
+</ul>
+<h3 id="backtracking"><a class="header" href="#backtracking">Backtracking</a></h3>
+<p>One thing worth pointing out about my workflow here. By this point I had started
+to develop a “playbook” for introducing new rounds. The basic idea was:</p>
+<ul>
+<li>Always <em>copy</em> the previous round's code into a new directory</li>
+<li>Launch the sub-agent in that directory with necessary prompt files </li>
+<li>Make a git commit in the sub-directory (with <code>.git</code> moved to <code>.git-archive</code> to
+not mess up my outer git repo) to show exactly what changed in the agent's run</li>
+<li>Include the prompts and agent report-backs in each git repo</li>
+</ul>
+<p>FILL claude reasonable directory structure showing a fragment of this run's key files</p>
+<p>I figured this out incrementally, so there are some holes in my “lab notebook”
+of what I did, but lots is reconstructible. This is how I'm able to write these
+lecture notes, for instance: I just pull up the <code>r5</code> directory and look at the
+code, benchmark numbers, prompt, etc. and have a sense of what happened. Using
+Claude makes it <em>very</em> easy to set up new experiments; Claude will happily make
+a new directory, copy things, set up the build script for a new verifier, draft
+a prompt for me to review, etc:</p>
+<p>I realized there's another thing I can do with this structure, which is
+<em>backtrack</em> to earlier points and try experiments from earlier baselines.</p>
+<p>Here are some other things to think about:</p>
+<ul>
+<li>One thing that's clear since starting these lectures was that
+<em>the randomized testing (fuzzing) never interacted with concurrency</em>. So it's
+entirely possible that I missed bugs in earlier steps for lack of a thorough
+category of testing.</li>
+<li>Does Claude (or any model/agent) <em>always</em> pick 16-sharded, hard-BUSY-barrier
+arenas for it's first cut at the concurrency prompt? If not, what happens to the
+<em>rest</em> of the steps? Do they converge on similar designs with similar verifiers?</li>
+</ul>
 <!--
 Bottom notes (not for rendering):
 
@@ -2883,13 +2931,6 @@ Bottom notes (not for rendering):
 
 
 
-One thing worth pointing out about my workflow here. By this point I had started
-to develop a “playbook” for introducing new rounds. The basic idea was:
-
-- Always *copy* the previous round's code into a new directory
-- Launch the sub-agent in that directory with necessary prompt files 
-- Make a git commit in the sub-directory (with `.git` moved to `.git-archive` to
-not mess up my outer git repo) to show exactly what changed in the agent's run
 -->
 
                     </main>
