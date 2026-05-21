@@ -2475,8 +2475,8 @@ broken, let's ship it to the agent for fixes”.</p>
 <p>To be clear, if my goal was “make a concurrent allocator”, I may have dove in to
 code review right away. But my goal is “can I, with only verifiers and not
 looking at code much, get agents to make a concurrent allocator”. So I pressed
-on to agent round 3, where I gave it <em>the ability and recommendation to run TSan
-itself</em>, and told it to fix things:</p>
+on to agent round 3 (we'll call it <strong>R3</strong>), where I gave it <em>the ability and
+recommendation to run TSan itself</em>, and told it to fix things:</p>
 <blockquote>
 <pre><code>A new verifier runs the concurrent stress test under TSan (make test_conc_tsan
 &amp;&amp; ./test_conc_tsan). Fix any data races TSan reports. ALL previous verifiers
@@ -2566,22 +2566,29 @@ previous verifiers must continue passing. Edit only vmalloc.c, vmfree.c.
 </code></pre>
 </blockquote>
 <p>Which came back clean on all verifiers and with similar performance numbers:</p>
-<pre><code>## symmetric (N threads, each mixes alloc/free)
-| threads | R2 speedup | R4 speedup |
-|---------|------------|------------|
-| 2       |  7.94x     |  8.07x     |
-| 4       | 34.70x     | 35.09x     |
-| 8       | 54.11x     | 46.77x     |
-| 16      | 71.46x     | 61.86x     |
+<pre><code># bench (heap_bytes=8388608, ops/thread=50000, trials=5)
+# threshold: median speedup &gt;= 1.10x on &gt;= 6 of 8 cells
+
+## symmetric (N threads, each mixes alloc/free)
+| threads | speedup | pass |
+|---------|---------|------|
+| 2       |  8.07x  |  Y   |
+| 4       | 35.09x  |  Y   |
+| 8       | 46.77x  |  Y   |
+| 16      | 61.86x  |  Y   |
 
 ## pipeline (P producers + C consumers, P=C)
-| P=C | R2 speedup | R4 speedup |
-|-----|------------|------------|
-| 2   |  2.23x     |  2.42x     |
-| 4   |  2.81x     |  2.43x     |
-| 8   |  3.60x     |  3.14x     |
-| 16  |  7.21x     |  3.79x     |
+| P=C | speedup | pass |
+|-----|---------|------|
+| 2   |  2.42x  |  Y   |
+| 4   |  2.43x  |  Y   |
+| 8   |  3.14x  |  Y   |
+| 16  |  3.79x  |  Y   |
+
+CELLS_PASSING: 8 / 8
+STOP_CONDITION: PASS
 </code></pre>
+<h4 id="taking-stock"><a class="header" href="#taking-stock">Taking Stock</a></h4>
 <p>To be clear, “all verifiers came back clean” means:</p>
 <ul>
 <li>TSan added to <code>test_conc</code> reports no races (which was actually true of the previous build, it hung on the benchmarks)</li>
@@ -2591,7 +2598,245 @@ previous verifiers must continue passing. Edit only vmalloc.c, vmfree.c.
 <li>The benchmarks run and report good performance numbers</li>
 <li>The new fuzz tests succeed</li>
 </ul>
-<p>This seems very impressive!</p>
+<p>And now we've been through:</p>
+<ul>
+<li><strong>R0</strong>: Basic single-threaded implementation
+<ul>
+<li>Made a mistake on the returned pointer alignment, caught by <code>test_seq</code></li>
+</ul>
+</li>
+<li><strong>R1</strong>: Global lock, no verifier failed or reported as crucial</li>
+<li><strong>R2</strong>: Added arenas and doubly-linked free list, big performance spike
+<ul>
+<li>All verifiers succeeded at first, added TSan to catch a race after the fact</li>
+</ul>
+</li>
+<li><strong>R3</strong>: Not successful/inconclusive – hangs on benchmarks after “fixing” TSan
+<ul>
+<li>Added fuzz tests to exercise more code behavior</li>
+</ul>
+</li>
+<li><strong>R4</strong>: Successfully fixes the observed race behaveior from R2, passes all
+verifiers, similar performance to <strong>R2</strong>.</li>
+</ul>
+<p>This seems very impressive! But I was still suspicious. Not suspicious enough to
+read the code or anything, just wanting to write more thorough tests and
+verifiers still. It's also worth pointing something out: the fuzz tests didn't
+catch any apparent bugs. R4 just did better than R3 (or picked up R3's work) and
+pushed it through with successful benchmarks.</p>
+<blockquote>
+<p><strong>Q:</strong> Is there a kind of test we haven't tried, or a tool we should try and
+use? What is a meaningful <strong>R5</strong>? Can we declare victory?</p>
+</blockquote>
+<h3 id="how-spec-ific"><a class="header" href="#how-spec-ific">How Spec-ific?</a></h3>
+<p>I wanted to see how detailed of a test I could write. I felt there were things
+the R4 fuzz test could miss, because it was running a somewhat specific set of
+tests, and I wanted to leverage something like <code>vmcheck</code> or other broad,
+property-checking tests.</p>
+<p>I came up with the idea (really! Me not Claude) of running the R0 allocator and
+the current allocator on the same fuzz inputs and comparing outputs and heap
+correctness somehow.  This would require a bit of thinking, because they won't
+be at the same addresses or offsets (no guarantee of the same heap shape). But
+it would give a stronger guarantee if I could express “same”-ness well.</p>
+<p>The same-ness was defined by:</p>
+<ul>
+<li><code>vmalloc</code> returns <code>NULL</code> / non-<code>NULL</code> the same way,</li>
+<li><code>vmcheck()</code> returns 0 on both,</li>
+<li><code>vmlib_live_bytes()</code> returns the same value.</li>
+</ul>
+<p>This exploited an extra function: <code>vmlib_live_bytes</code>, which is part of the
+assignment spec but we hadn't really used or looked at yet. It's similar in
+spirit to <a href="https://www.man7.org/linux/man-pages/man3/malloc_info.3.html"><code>malloc_info</code>
+</a> – reporting
+information about the heap's free/busy data. It gave a nice property which is
+that “the current allocator is behaving like an allocator”, only referring to
+the external spec.</p>
+<p>In retrospect there are a few issues with the design here:</p>
+<ol>
+<li>Since <code>vmcheck</code> is never supposed to return non-zero, it's not very
+informative to call it on both. The “differential” isn't differentiating
+anything.</li>
+<li>The <code>NULL</code> tests <em>will</em> start to diverge under different patterns of
+fragmentation between the two allocators if the heap gets full. So this is
+really only well-defined for certain thresholds of allocation. Also not that
+interesting.</li>
+<li>The size test <em>is</em> somewhat useful. Since <code>live_bytes</code> is part of the
+external-facing API to users, it's useful to make sure it doesn't lie.</li>
+</ol>
+<details>
+<summary>The full <code>fuzz_diff.c</code> differential harness</summary>
+<pre><code class="language-c">// R5 differential fuzz harness. dlopens libvm-tut.dylib (TUT) and
+// libvm-ref.dylib (sequential reference, R0's impl carried forward) and
+// applies the same op sequence to each, comparing outcomes.
+//
+// Compared per-op:
+//   - vmalloc returns NULL or non-NULL (must agree)
+//   - vmcheck()'s return code (must be 0 on both)
+//   - vmlib_live_bytes() (must agree exactly — both impls use the same
+//     header layout, so live bytes should match if their state agrees)
+//
+// Drives sequentially (no concurrent threads in diff harness — concurrency
+// is exercised by test_conc + TSan, not here).
+
+#include &lt;dlfcn.h&gt;
+#include &lt;stddef.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+typedef struct {
+    void   (*vminit)(size_t);
+    void   (*vmdestroy)(void);
+    void  *(*vmalloc)(size_t);
+    void   (*vmfree)(void *);
+    int    (*vmcheck)(void);
+    size_t (*vmlib_live_bytes)(void);
+    void *handle;
+} vmapi_t;
+
+#define HEAP_BYTES (1u &lt;&lt; 20)
+#define MAX_LIVE   64
+#define MIN_ALLOC  8
+#define MAX_ALLOC  2048
+
+static vmapi_t tut, ref;
+static int initialized = 0;
+
+static void load_api(vmapi_t *api, const char *path) {
+    void *h = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+    if (!h) { fprintf(stderr, &quot;dlopen %s: %s\n&quot;, path, dlerror()); abort(); }
+    api-&gt;handle = h;
+    *(void **)&amp;api-&gt;vminit           = dlsym(h, &quot;vminit&quot;);
+    *(void **)&amp;api-&gt;vmdestroy        = dlsym(h, &quot;vmdestroy&quot;);
+    *(void **)&amp;api-&gt;vmalloc          = dlsym(h, &quot;vmalloc&quot;);
+    *(void **)&amp;api-&gt;vmfree           = dlsym(h, &quot;vmfree&quot;);
+    *(void **)&amp;api-&gt;vmcheck          = dlsym(h, &quot;vmcheck&quot;);
+    *(void **)&amp;api-&gt;vmlib_live_bytes = dlsym(h, &quot;vmlib_live_bytes&quot;);
+    if (!api-&gt;vminit || !api-&gt;vmalloc || !api-&gt;vmfree) {
+        fprintf(stderr, &quot;dlsym failed for %s\n&quot;, path); abort();
+    }
+}
+
+static void init_once(void) {
+    if (initialized) return;
+    load_api(&amp;tut, &quot;./libvm-tut.dylib&quot;);
+    load_api(&amp;ref, &quot;./libvm-ref.dylib&quot;);
+    tut.vminit(HEAP_BYTES);
+    ref.vminit(HEAP_BYTES);
+    initialized = 1;
+}
+
+static void diverge(const char *what, long long t, long long r) {
+    fprintf(stderr, &quot;DIFF DIVERGE: %s tut=%lld ref=%lld\n&quot;, what, t, r);
+    abort();
+}
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t len) {
+    init_once();
+
+    void *tut_held[MAX_LIVE];
+    void *ref_held[MAX_LIVE];
+    int   n_held = 0;
+
+    for (size_t i = 0; i + 2 &lt; len; i += 3) {
+        uint8_t op = data[i] &amp; 0x3;
+        uint16_t arg = ((uint16_t)data[i+1] &lt;&lt; 8) | data[i+2];
+
+        if (op &lt; 2 &amp;&amp; n_held &lt; MAX_LIVE) {
+            size_t sz = MIN_ALLOC + (arg % (MAX_ALLOC - MIN_ALLOC + 1));
+            void *pt = tut.vmalloc(sz);
+            void *pr = ref.vmalloc(sz);
+            if ((pt == NULL) != (pr == NULL)) {
+                diverge(&quot;vmalloc NULL/non-NULL&quot;, pt != NULL, pr != NULL);
+            }
+            if (pt &amp;&amp; pr) {
+                tut_held[n_held] = pt;
+                ref_held[n_held] = pr;
+                n_held++;
+            } else if (pt) {
+                tut.vmfree(pt);
+            } else if (pr) {
+                ref.vmfree(pr);
+            }
+        } else if (op == 2 &amp;&amp; n_held &gt; 0) {
+            int idx = arg % n_held;
+            tut.vmfree(tut_held[idx]);
+            ref.vmfree(ref_held[idx]);
+            tut_held[idx] = tut_held[n_held - 1];
+            ref_held[idx] = ref_held[n_held - 1];
+            n_held--;
+        } else {
+            int tc = tut.vmcheck();
+            int rc = ref.vmcheck();
+            if (tc != 0) diverge(&quot;tut vmcheck nonzero&quot;, tc, 0);
+            if (rc != 0) diverge(&quot;ref vmcheck nonzero&quot;, 0, rc);
+            size_t tlb = tut.vmlib_live_bytes ? tut.vmlib_live_bytes() : 0;
+            size_t rlb = ref.vmlib_live_bytes ? ref.vmlib_live_bytes() : 0;
+            if (tlb != rlb) diverge(&quot;vmlib_live_bytes&quot;, (long long)tlb, (long long)rlb);
+        }
+    }
+
+    while (n_held &gt; 0) {
+        n_held--;
+        tut.vmfree(tut_held[n_held]);
+        ref.vmfree(ref_held[n_held]);
+    }
+    int tc = tut.vmcheck();
+    int rc = ref.vmcheck();
+    if (tc != 0) diverge(&quot;tut vmcheck nonzero (drain)&quot;, tc, 0);
+    if (rc != 0) diverge(&quot;ref vmcheck nonzero (drain)&quot;, 0, rc);
+    return 0;
+}
+</code></pre>
+</details>
+<p>Anyway, at the time I thought I was doing a worthwhile experiment. I shipped the
+code above and this prompt as <strong>R5</strong>:</p>
+<blockquote>
+<pre><code>A new verifier runs a 5-minute differential libFuzzer harness against the R0
+sequential reference. It applies the same op sequence to both impls and aborts
+on divergence in NULL/non-NULL of vmalloc, vmcheck return codes, or
+vmlib_live_bytes. Fix any divergence. ALL previous verifiers must continue
+passing.
+</code></pre>
+</blockquote>
+<blockquote>
+<p><strong>Q:</strong> What's going to happen? Why?</p>
+</blockquote>
+<p>This round <em>immediately</em> failed on the size-differential test.  “Somehow” the
+concurrent allocator was reporting the wrong sizes. This is because <code>live_bytes</code>
+counts all the barriers as live data, but they were never allocated! So when
+checking the live_bytes sizes, there's just no way to make them line up.</p>
+<p>It gets worse: arena-based allocator is stuck. The way things are set up it's
+not allowed to change the size check, so it can't use these busy barriers as a
+solution. It changes to using <em>arithmetic-defined</em> arenas with no hard barriers.
+This results in much more complex locking logic, including sometimes locking the
+whole heap, because it tries to faithfully implement eager coalescing and large
+allocations that can span multiple arenas. The end result is that the speedups
+of R2/R4 are gone – it's still fast, but not dramatically so. However, it is
+much more faithful to the original spec and intent of CSE29 malloc.</p>
+<pre><code># bench (heap_bytes=8388608, ops/thread=50000, trials=5)
+# threshold: median speedup &gt;= 1.10x on &gt;= 6 of 8 cells
+
+## symmetric (N threads, each mixes alloc/free)
+| threads | speedup | pass |
+|---------|---------|------|
+| 2       |  1.23x  |  Y   |
+| 4       |  2.74x  |  Y   |
+| 8       |  2.89x  |  Y   |
+| 16      |  3.72x  |  Y   |
+
+## pipeline (P producers + C consumers, P=C)
+| P=C | speedup | pass |
+|-----|---------|------|
+| 2   |  1.29x  |  Y   |
+| 4   |  1.22x  |  Y   |
+| 8   |  1.21x  |  Y   |
+| 16  |  1.72x  |  Y   |
+
+CELLS_PASSING: 8 / 8
+STOP_CONDITION: PASS
+</code></pre>
 <!--
 Bottom notes (not for rendering):
 
@@ -2634,6 +2879,17 @@ Bottom notes (not for rendering):
   you ask counterfactual questions like "if we had this verifier at R4,
   would we have made the same R5 choice?" The snapshotting cost (one git
   repo per round) is the price of being able to run those counterfactuals.
+- snippet for later:
+
+
+
+One thing worth pointing out about my workflow here. By this point I had started
+to develop a “playbook” for introducing new rounds. The basic idea was:
+
+- Always *copy* the previous round's code into a new directory
+- Launch the sub-agent in that directory with necessary prompt files 
+- Make a git commit in the sub-directory (with `.git` moved to `.git-archive` to
+not mess up my outer git repo) to show exactly what changed in the agent's run
 -->
 
                     </main>
