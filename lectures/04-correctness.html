@@ -2884,6 +2884,20 @@ category of testing.</li>
 arenas for it's first cut at the concurrency prompt? If not, what happens to the
 <em>rest</em> of the steps? Do they converge on similar designs with similar verifiers?</li>
 </ul>
+<p>In the end, I have to start asking pretty deep questions about the nature of
+concurrent allocation and the related lock structures, heap structure, and code
+structure. I have much more vocabulary for talking about heaps, and verifiers,
+and tests! But I don't think I can claim anymore that I “just write verifiers
+and the agent does everything”. Instead, the agent is an accelerant on my
+ability to experiment and learn what I need to in order to understand if the
+allocators are doing anything useful.</p>
+<p><img src="../img/concurrent-allocator-engineer.jpg" alt="" /></p>
+<p>I think this is going to be a theme in my work with agents on big projects going
+forward: because details of <em>code</em> are less important (and indeed, cheap to
+experiment with), I can iterate on my understanding of the <em>problem domain</em> much
+more quickly. So when I approach a new problem where I “don't know anything”, I
+have many more tools for bootstrapping my understanding from something I know
+(e.g. allocators) to something I don't (e.g. concurrency).</p>
 <!--
 Bottom notes (not for rendering):
 
