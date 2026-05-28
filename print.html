@@ -6433,7 +6433,134 @@ or 2. A 'creative survey' prepared by the student for the purpose of the exam.&q
 </ol>
 <hr />
 <h2 id="adding-symbolic-reasoning"><a class="header" href="#adding-symbolic-reasoning">Adding Symbolic Reasoning</a></h2>
-<p><em>TODO: this section is coming soon.</em></p>
+<p>The quote-checking strategy from the previous section works for <em>lookup</em> questions — facts that live verbatim somewhere in the source. But the handbook also encodes <strong>rules</strong>, and many of the questions students actually ask are about whether some specific situation <em>satisfies</em> the rules. These need <strong>reasoning</strong>, not just retrieval, and LLMs are surprisingly unreliable at it even when the rules are right in front of them.</p>
+<p>For example, the handbook spells out the requirements for a valid thesis committee:</p>
+<blockquote>
+<ul>
+<li>Your advisor(s) as the committee (co-)chair(s).</li>
+<li>Minimum of 4 members with UC San Diego faculty appointments</li>
+<li>At least 1 member must have a primary appointment in a different department than your advisor's primary department</li>
+<li>At least 2 members must be from the student's home department or program</li>
+<li>At least 1 member must be tenured or emeritus</li>
+</ul>
+</blockquote>
+<p>Let's see what happens when a student asks ChatPHD to check a proposed committee against these rules:</p>
+<pre><code class="language-chat">chatphd&gt; Hi! I'm ChatPHD. Ask me anything about the UCSD CSE PhD program.
+
+you&gt; I want to have the following people on my committee: Zhijian Liu (my advisor),
+assistant professor at HDSI; Lilly Weng, assistant professor at HDSI;
+Mikhail Belkin, full professor at HDSI;
+Philip Guo, full professor in CogSci.
+My advisor agrees and they are all willing to serve.
+Just wanted to check if this is allowed by UCSD rules.
+
+chatphd&gt; Your proposed committee composition is compliant with UCSD regulations.
+According to the handbook, the committee must include your advisor(s) as the committee
+(co-)chair(s), a minimum of 4 members with UC San Diego faculty appointments,
+at least 1 member with a primary appointment in a different department than your
+advisor's department, and at least 2 members from your home department.
+Additionally, at least 1 member must be tenured or emeritus.
+Given that you have your advisor, Zhijian Liu, and the other members are from HDSI
+and CogSci, your committee meets these requirements.[1]
+
+[1] ✓ &quot;The committee should include: * Your advisor(s) as the committee (co-)chair(s).
+* Minimum of 4 members with UC San Diego faculty appointments
+* At least 1 member must have a primary appointment in a different department than your advisor's primary department
+* At least 2 members must be from the student's home department or program
+* At least 1 member must be tenured or emeritus.&quot;
+</code></pre>
+<p>This is <strong>wrong</strong>. The proposed committee has zero members from CSE (the student's home department), so it violates the fourth rule. The model retrieved the right rules — you can see them right there in the supporting quote — but failed to <em>apply</em> them. Reasoning, not retrieval, is what broke down.</p>
+<p>This is a known weakness of LLMs: even with the rules sitting in front of them, they are unreliable at conjunctively checking several conditions over a small set of typed records. Counting and set intersection are exactly the kinds of operations that <em>programs</em> are great at and language models are notoriously bad at.</p>
+<blockquote>
+<p><strong>Q:</strong> Assuming we really care about the model being able to answer questions about committee composition, what could we do to get more guarantees that the answer is right?</p>
+</blockquote>
+<p>The general fix is to <strong>give the model access to symbolic reasoning</strong>: a separate, deterministic component that performs the rule-checking, which the model is required to consult instead of doing the check itself.</p>
+<p>How to set this up depends on the problem:</p>
+<ul>
+<li><strong>The fancy way: constraint solvers.</strong> Encode the rules in a declarative language like <a href="https://en.wikipedia.org/wiki/Datalog">Datalog</a> or SMT (e.g. <a href="https://github.com/Z3Prover/z3">Z3</a>), and have the LLM translate the user's situation into facts for the solver to check. This pays off most when you also want the solver to <em>find</em> an answer (<em>&quot;give me a valid committee from these 20 faculty&quot;</em>), which a check-only Python predicate can't do. There is also a striking result in the <a href="https://arxiv.org/abs/2305.09656">SatLM paper</a>: LLMs are dramatically more reliable at translating a constraint-satisfaction problem into a declarative SMT formula than at translating it into imperative Python — let alone at solving it themselves. For serious reasoning workloads, this is the route worth investing in.</li>
+<li><strong>The simple way: a hard-coded Python check.</strong> Write the constraints as a Python function with a typed input. The LLM's job shrinks to extracting the facts (the committee members and their properties) from the conversation and calling the function.</li>
+</ul>
+<p>For one lecture we'll go with the simple route — our committee rules are just five conjuncts, so a Python predicate is more than enough.</p>
+<p>First, we model a committee member as a typed record using Pydantic, so that the LLM has to extract exactly the fields the check needs (and nothing else):</p>
+<pre><code class="language-python">HOME_DEPT = &quot;CSE&quot;
+
+class CommitteeMember(BaseModel):
+    name: str
+    is_advisor: bool                     # True for the student's advisor(s)
+    has_ucsd_faculty_appointment: bool
+    primary_department: str | None       # e.g. &quot;CSE&quot;, &quot;ECE&quot;; None if not UCSD faculty
+    is_tenured_or_emeritus: bool
+</code></pre>
+<p>Then the check itself is just the five rules, one per constraint:</p>
+<pre><code class="language-python">@function_tool
+def check_committee(members: list[CommitteeMember]) -&gt; dict:
+    &quot;&quot;&quot;Check whether a proposed thesis committee satisfies CSE department rules.&quot;&quot;&quot;
+    violations: list[str] = []
+    satisfied:  list[str] = []
+
+    advisors      = [m for m in members if m.is_advisor]
+    ucsd_faculty  = [m for m in members if m.has_ucsd_faculty_appointment]
+    advisor_depts = {a.primary_department for a in advisors}
+
+    # Rule 1: advisor(s) as (co-)chair(s)
+    if not advisors:
+        violations.append(&quot;Must have at least one advisor as committee (co-)chair.&quot;)
+    else:
+        satisfied.append(f&quot;Advisor(s) serving as chair: {[a.name for a in advisors]}.&quot;)
+
+    # Rule 2: &gt;= 4 UCSD faculty members
+    if len(ucsd_faculty) &lt; 4:
+        violations.append(f&quot;Must have &gt;= 4 UCSD faculty; found {len(ucsd_faculty)}.&quot;)
+    ...
+
+    # Rule 4: &gt;= 2 members from the home department
+    home = [m for m in ucsd_faculty if m.primary_department == HOME_DEPT]
+    if len(home) &lt; 2:
+        violations.append(f&quot;Must have &gt;= 2 members from {HOME_DEPT}; found {len(home)}.&quot;)
+    ...
+
+    return {&quot;ok&quot;: not violations, &quot;satisfied&quot;: satisfied, &quot;violations&quot;: violations}
+</code></pre>
+<p>(Rules 3 and 5 are elided for brevity; see the demo repo for the full version.)</p>
+<p>Finally, we extend the system prompt to tell the LLM about the new tool — and crucially, to <em>use the tool</em> rather than reason about committee rules itself:</p>
+<pre><code class="language-python">INSTRUCTIONS = (
+    ...
+    &quot;When the user asks whether a proposed thesis committee is valid, use the &quot;
+    &quot;check_committee tool to verify it against the department rules — do not &quot;
+    &quot;reason about the rules yourself. The student's home department is CSE. &quot;
+    &quot;Ask the user for any missing facts about each member (UCSD faculty? &quot;
+    &quot;primary department? tenured/emeritus? advisor?) before calling the tool.&quot;
+)
+</code></pre>
+<p>To get us closer to an actual guarantee, we can also <em>log</em> the tool calls and their outputs, so that the user can see exactly how the facts were interpreted and what the tool returned.</p>
+<p>Let's try it:</p>
+<pre><code class="language-chat">chatphd&gt; Hi! I'm ChatPHD. Ask me anything about the UCSD CSE PhD program.
+
+you&gt; I want to have the following people on my committee: Zhijian Liu (my advisor), assistant professor at HDSI; Lilly Weng, assistant professor at HDSI; Mikhail Belkin, full professor at HDSI; Philip Guo, full professor in CogSci. My advisor agrees and they are all willing to serve. Just wanted to check if this is allowed by UCSD rules.
+
+chatphd&gt; [check_committee] members:
+  - {name: &quot;Zhijian Liu&quot;,    is_advisor: True,  has_ucsd_faculty_appointment: True, primary_department: &quot;HDSI&quot;,   is_tenured_or_emeritus: False}
+  - {name: &quot;Lilly Weng&quot;,     is_advisor: False, has_ucsd_faculty_appointment: True, primary_department: &quot;HDSI&quot;,   is_tenured_or_emeritus: False}
+  - {name: &quot;Mikhail Belkin&quot;, is_advisor: False, has_ucsd_faculty_appointment: True, primary_department: &quot;HDSI&quot;,   is_tenured_or_emeritus: True}
+  - {name: &quot;Philip Guo&quot;,     is_advisor: False, has_ucsd_faculty_appointment: True, primary_department: &quot;CogSci&quot;, is_tenured_or_emeritus: True}
+[check_committee -&gt; ok=False]
+  ✓ Advisor(s) serving as (co-)chair: Zhijian Liu.
+  ✓ Has 4 UCSD faculty members (&gt;= 4 required).
+  ✓ Outside-department member(s): Philip Guo.
+  ✓ Tenured/emeritus member(s): Mikhail Belkin, Philip Guo.
+  ✗ Must have at least 2 UCSD faculty members from the home department (CSE); found 0.
+
+chatphd&gt; Your proposed thesis committee does not satisfy the requirements set by UCSD. Specifically, the rules indicate that at least two members must be from the student's home department (CSE), but your committee only includes members from HDSI and CogSci. This results in a violation of the requirement that states: &quot;At least 2 members must be from the student's home department or program&quot; [1].
+
+You do have a valid composition otherwise:
+- Your advisor, Zhijian Liu, meets the requirement of being one of the committee chairs.
+- You have four UCSD faculty members in total, which meets the requirement for a minimum of four members.
+- You also have two members that are tenured or emeritus: Mikhail Belkin and Philip Guo.
+
+[1] ✓ At least 2 members must be from the student's home department or program.
+</code></pre>
+<p>The verdict is now correct, and we can see exactly <em>why</em>: the tool reports which constraints are satisfied and which are violated, and the model is required to relay that back to the user. Notice that the LLM still does real work — it parses <em>&quot;assistant professor at HDSI&quot;</em> out of the user's free-text description into the typed <code>CommitteeMember</code> records, and it phrases the final answer in natural language. But the <em>check</em> is no longer the LLM's job, and that's what gives us the guarantee. The extracted facts are also visible right there in the tool-call log, so a careful user can inspect them and catch the LLM if it misread the question (say, marked someone as the advisor who wasn't, or got a department wrong) — the one part of the pipeline where hallucination is still possible.</p>
+<p>We pay for this guarantee in flexibility. The chatbot author has to anticipate which kinds of reasoning are worth supporting and write a tool for each — every new question shape is a new engineering task. For a small set of high-stakes questions, that's a price worth paying; for an open-ended assistant, you'd want a more general mechanism (this is where the constraint-solver route from above starts to earn its keep). As always, there's no free lunch — but there is a dial, and you get to choose where on it your application wants to sit.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
 for this assignment (e.g. ugrad/ugrad, ugrad/grad, and grad/grad pairs all
