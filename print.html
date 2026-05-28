@@ -29,6 +29,7 @@
 
         <!-- Custom theme stylesheets -->
         <link rel="stylesheet" href="src/css/margin-notes.css">
+        <link rel="stylesheet" href="src/css/chat.css">
     </head>
     <body>
         <!-- Provide site root to javascript -->
@@ -79,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded "><a href="lectures/03-agents.html"><strong aria-hidden="true">5.</strong> Agents</a></li><li class="chapter-item expanded "><a href="lectures/04-correctness.html"><strong aria-hidden="true">6.</strong> Getting Confidence in (Agentic) Code</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">7.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="assignments/doc-scanner-assignment.html"><strong aria-hidden="true">8.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="assignments/agent-assignment.html"><strong aria-hidden="true">9.</strong> Assignment 3: Agents</a></li><li class="chapter-item expanded "><a href="assignments/a4-assignment.html"><strong aria-hidden="true">10.</strong> Assignment 4: Student Choice</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Generative AI and Programming</a></li><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded affix "><li class="part-title">Lectures</li><li class="chapter-item expanded "><a href="lectures/00-intro.html"><strong aria-hidden="true">2.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="lectures/01-semantic-text-processing.html"><strong aria-hidden="true">3.</strong> Semantic Text Processing</a></li><li class="chapter-item expanded "><a href="lectures/02-document-scanner.html"><strong aria-hidden="true">4.</strong> Live-Clauding a Document Scanner</a></li><li class="chapter-item expanded "><a href="lectures/03-agents.html"><strong aria-hidden="true">5.</strong> Agents</a></li><li class="chapter-item expanded "><a href="lectures/04-correctness.html"><strong aria-hidden="true">6.</strong> Getting Confidence in (Agentic) Code</a></li><li class="chapter-item expanded "><a href="lectures/05-grounding.html"><strong aria-hidden="true">7.</strong> Getting Confidence in LLM Answers</a></li><li class="chapter-item expanded affix "><li class="part-title">Assignments</li><li class="chapter-item expanded "><a href="assignments/social-media-monitor-assignment.html"><strong aria-hidden="true">8.</strong> Assignment 1: Social Media Monitor</a></li><li class="chapter-item expanded "><a href="assignments/doc-scanner-assignment.html"><strong aria-hidden="true">9.</strong> Assignment 2: Document Scanner</a></li><li class="chapter-item expanded "><a href="assignments/agent-assignment.html"><strong aria-hidden="true">10.</strong> Assignment 3: Agents</a></li><li class="chapter-item expanded "><a href="assignments/a4-assignment.html"><strong aria-hidden="true">11.</strong> Assignment 4: Student Choice</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -6057,6 +6058,382 @@ Bottom notes (not for rendering):
 
 
 -->
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unit-5-getting-confidence-in-llm-answers"><a class="header" href="#unit-5-getting-confidence-in-llm-answers">Unit 5: Getting Confidence in LLM Answers</a></h1>
+<p>A throughline of this course has been:</p>
+<blockquote>
+<p>An LLM is like a wild horse: powerful but unpredictable. The main challenge when integrating LLMs into our software is to <strong>tame that power</strong>.</p>
+</blockquote>
+<ul>
+<li>In unit 3 we learned how to <em>guarantee</em> that an agent doesn't perform dangerous actions.</li>
+<li>In unit 4 we learned how to <em>guarantee</em> correctness properties of AI-generated code (when using AI as a coding assistant).</li>
+</ul>
+<p>One kind of LLM danger/mistake we haven't yet discussed is the problem of <strong>hallucinations</strong> in their text output.
+Although with natural-language text it's rarely possible to provide the same hard guarantees as for code,
+in this lecture we'll see how close we can get.</p>
+<blockquote>
+<p><strong>Q:</strong> Give some examples of LLM hallucinations that can have real-life consequences. Can you think of ways those hallucinations could be prevented?</p>
+</blockquote>
+<hr />
+<h2 id="outline-17"><a class="header" href="#outline-17">Outline</a></h2>
+<ol>
+<li><strong>A chatbot that couldn't</strong>: why we need grounding</li>
+<li><strong>RAG via semantic search</strong>: retrieving the right piece of the source of truth</li>
+<li><strong>Adding symbolic reasoning</strong>: when retrieval alone isn't enough</li>
+</ol>
+<hr />
+<h2 id="running-example-chatphd"><a class="header" href="#running-example-chatphd">Running Example: ChatPHD</a></h2>
+<p>This is a real-world example.
+For those of you who don't know, I'm the CSE department GradCom Chair,
+so I get a lot of questions from PhD students about how the CSE PhD program works.
+Wouldn't it be nice if I could just build a chatbot that answers those questions for me?</p>
+<hr />
+<h3 id="first-try-a-vanilla-llm"><a class="header" href="#first-try-a-vanilla-llm">First try: a vanilla LLM</a></h3>
+<p>Don't LLMs already know all this stuff?
+I can just make a simple chatbot web UI and hook it up to the chat completions API, right?
+(We'll use a CLI in the lecture notes for simplicity, but imagine this as a web UI.)</p>
+<pre><code class="language-python">MODEL = &quot;gpt-4o-mini&quot;
+SYSTEM_PROMPT = (
+    &quot;You are ChatPHD, a helpful assistant that answers questions about &quot;
+    &quot;the PhD program in Computer Science and Engineering at UC San Diego.&quot;
+)
+
+client = OpenAI()
+messages = [{&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: SYSTEM_PROMPT}]
+
+while True:
+    user_input = input(&quot;you&gt; &quot;)
+    messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: user_input})
+    response = client.chat.completions.create(model=MODEL, messages=messages)
+    reply = response.choices[0].message.content
+    messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: reply})
+    print(f&quot;chatphd&gt; {reply}&quot;)
+</code></pre>
+<p>Let's try it:</p>
+<pre><code class="language-chat">chatphd&gt; Hi! I'm ChatPHD. Ask me anything about the UCSD CSE PhD program.
+
+you&gt; Are there some quals I need to pass before my defense?
+
+chatphd&gt; Yes, the PhD program in Computer Science and Engineering at UC San Diego
+typically requires students to pass a qualifying examination. This exam is designed
+to assess your knowledge and understanding of fundamental concepts in computer
+science and engineering. It usually covers core topics such as algorithms, systems,
+and theory, among others.
+
+The format and timing of the qualifying exam can vary, so it's important to check
+the specific guidelines provided by the department. Generally, students take the
+qualifying exam after completing required coursework and before advancing to
+candidacy. It's advisable to consult your faculty advisor or the program's
+official documentation for the most accurate and detailed information regarding
+the qualifying exam.
+</code></pre>
+<p>Hm, this is not great. If you're a CSE PhD student, you probably know that there is no exam that &quot;assesses your knowledge and understanding of fundamental concepts in computer science and engineering.&quot;
+The model doesn't actually know anything specific about <em>our</em> program — it's making up plausible-sounding generalities based on what PhD programs typically look like.</p>
+<p>Luckily, we have the source of truth: the <a href="https://docs.google.com/document/d/1lhGJf5AyaQ99aRi-Z5_kar2B5ruvLHTmrGaSEaxBJ28/edit?usp=sharing">CSE PhD Student handbook</a>
+that GradCom worked very hard on.</p>
+<blockquote>
+<p><strong>Q:</strong> How can we use the handbook to improve the chatbot's answers? What are the pros and cons of different approaches?</p>
+</blockquote>
+<p><strong>Strawman solution: prepend the whole handbook text to the prompt.</strong></p>
+<ul>
+<li>Pros: very easy to implement!</li>
+<li>Cons: the whole handbook is ~22k tokens; this is wasteful (cost-wise) and the model might get confused about what to focus on. It also doesn't scale to larger documents (imagine if our &quot;handbook&quot; were a 500-page legal code).</li>
+</ul>
+<p>Instead we want to enable the model to <em>search</em> the handbook for relevant information,
+and only put the relevant pieces into the prompt.
+This pattern is called <strong>retrieval-augmented generation (RAG)</strong>.</p>
+<p>Two ways the LLM could search the handbook:</p>
+<ol>
+<li><strong>Keyword search.</strong> LLM comes up with keywords or a regex, we search the handbook text for exact matches and return the surrounding sections.
+But some information is hard to find with keyword search. For example, if the question is <em>&quot;Who is allowed to be on my committee?&quot;</em>, searching for &quot;committee&quot; yields 25 matches — and most of them are about the Graduate Committee, the DEI Committee, etc., not about thesis committees.</li>
+<li><strong>Semantic search.</strong> LLM (or rather, an <em>embedding model</em>) maps the question to a vector that captures its <em>meaning</em>, we do the same for all the sections of the handbook, and we return the sections whose vectors are closest to the question's vector.</li>
+</ol>
+<p>Semantic search is the dominant approach to RAG, so this is what we'll try next.</p>
+<hr />
+<h2 id="outline-18"><a class="header" href="#outline-18">Outline</a></h2>
+<ol>
+<li><del><strong>A chatbot that couldn't</strong>: why we need grounding</del> <strong>[done]</strong></li>
+<li><strong>RAG via semantic search</strong>: retrieving the right piece of the source of truth</li>
+<li><strong>Adding symbolic reasoning</strong>: when retrieval alone isn't enough</li>
+</ol>
+<hr />
+<h2 id="rag-via-semantic-search"><a class="header" href="#rag-via-semantic-search">RAG via Semantic Search</a></h2>
+<h3 id="background-embeddings"><a class="header" href="#background-embeddings">Background: Embeddings</a></h3>
+<p>An <strong>embedding</strong> is a function that maps a piece of text to a fixed-length vector of numbers.
+The same kind of LLM that we've been using to <em>generate</em> text can also be used to embed it
+(in fact, it's a simpler operation — we just stop before the part that turns the internal representation back into words).</p>
+<pre><code>                       ┌────────────────────┐
+&quot;Roses are red&quot;   ────▶│  embedding model   │────▶  [ 0.21, -0.04, 0.87, ..., 0.12 ]
+                       └────────────────────┘              (1536 numbers)
+</code></pre>
+<p>By itself, a vector of 1536 numbers isn't very interesting.
+What makes embeddings useful is a particular property the embedding model is trained to have:</p>
+<blockquote>
+<p><strong>Texts with similar meaning get mapped to vectors that are close together;
+texts with different meaning get mapped to vectors that are far apart.</strong></p>
+</blockquote>
+<p>We can measure how close two vectors are using <strong>cosine similarity</strong> — the cosine of the angle between them, which ranges from <code>-1</code> (opposite) to <code>1</code> (identical direction):</p>
+<pre><code>&quot;Roses are red&quot;        ────▶  [ 0.21, -0.04,  0.87, ... ]  ──┐
+                                                             ├──▶  cosine = 0.84 (close)
+&quot;Violets are blue&quot;     ────▶  [ 0.19, -0.02,  0.85, ... ]  ──┘
+
+
+&quot;Roses are red&quot;        ────▶  [ 0.21, -0.04,  0.87, ... ]  ──┐
+                                                             ├──▶  cosine = 0.15 (far)
+&quot;How do I file taxes?&quot; ────▶  [-0.81,  0.55, -0.10, ... ]  ──┘
+</code></pre>
+<p>In NumPy, cosine similarity is one line:</p>
+<pre><code class="language-python">def cosine_sim(u, v):
+    return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
+</code></pre>
+<p>And if we <strong>pre-normalize</strong> every vector to unit length (divide by its norm once, when we first compute it), then cosine similarity is just the dot product. We'll use this trick below.</p>
+<blockquote>
+<p><strong>Q:</strong> How can we use cosine similarity to search a document?</p>
+</blockquote>
+<hr />
+<h3 id="semantic-search-with-embeddings"><a class="header" href="#semantic-search-with-embeddings">Semantic search with embeddings</a></h3>
+<p>The plan: embed every section of the handbook <em>once</em>, save those vectors to disk, and then at query time embed just the user's question and find the closest sections.</p>
+<p><strong>Offline (build the index once):</strong></p>
+<pre><code>                                                                 embedding index
+                                                              ┌────────────────────┐
+                           ┌──────────────┐                   │ chunk 1   ──▶  v1  │
+                           │   chunk 1    │                   │                    │
+   handbook.md   ─────────▶│   chunk 2    │  ───▶  embed ───▶ │ chunk 2   ──▶  v2  │
+                           │   chunk N    │                   │   ...              │
+                           └──────────────┘                   │ chunk N   ──▶  vN  │
+                                                              └────────────────────┘
+</code></pre>
+<p><strong>Online (one search per query):</strong></p>
+<pre><code>                                               ┌────────────┐ cosine
+                                               │     v1     │  sim
+&quot;are there quals?&quot; ──▶ embed ──▶ u ─────▶ ┌────┤     ...    │────────▶  top-k chunks
+                                          │    │     vN     │                │
+                                          │    └────────────┘                ▼
+                                          │                              LLM context
+                                      embedding
+                                        index
+</code></pre>
+<p>The main design decision we have to make here is <strong>how to chunk the document</strong>.</p>
+<blockquote>
+<p><strong>Q:</strong> What would happen if we made each chunk really large (say, 1000 sentences)? Really small (a single sentence)?</p>
+</blockquote>
+<p>The trade-off:</p>
+<ul>
+<li>A few large chunks → back to the same problem we had with the whole document: too much irrelevant context per retrieved chunk.</li>
+<li>Many tiny chunks → each chunk lacks the surrounding context the model needs to actually understand it.</li>
+</ul>
+<p>There's also a more subtle issue: we'd like each chunk to be about <em>one</em> topic, so that its embedding actually represents something coherent. If a chunk mixes sentences about completely different things, its vector ends up somewhere in between — close to nothing in particular, and the model will struggle to find it.</p>
+<p>Lucky for us, our handbook is already organized into self-contained sections (one per topic), so we can just split along section boundaries (every <code>##</code> heading).</p>
+<hr />
+<h3 id="building-the-handbook-embedding-index"><a class="header" href="#building-the-handbook-embedding-index">Building the handbook embedding index</a></h3>
+<p>Here's the offline indexing code, in full:</p>
+<pre><code class="language-python">import json, re
+import numpy as np
+from openai import OpenAI
+
+EMBED_MODEL = &quot;text-embedding-3-small&quot;
+
+def chunk_handbook(text: str) -&gt; list[str]:
+    &quot;&quot;&quot;Split the handbook on every h1/h2 heading. Each chunk = heading + body.&quot;&quot;&quot;
+    chunks: list[str] = []
+    current: list[str] = []
+    for line in text.splitlines():
+        if re.match(r&quot;^#{1,2} &quot;, line) and current:
+            chunks.append(&quot;\n&quot;.join(current))
+            current = []
+        current.append(line)
+    if current:
+        chunks.append(&quot;\n&quot;.join(current))
+    return chunks
+
+client = OpenAI()
+chunks: list[str] = chunk_handbook(open(&quot;handbook.md&quot;).read())
+print(f&quot;Chunked handbook into {len(chunks)} sections.&quot;)  # 64 for our handbook
+
+# OpenAI's embeddings API takes a list of strings and returns a list of vectors,
+# one per input string, all in a single API call.
+response = client.embeddings.create(model=EMBED_MODEL, input=chunks)
+embeddings: np.ndarray = np.array([d.embedding for d in response.data])
+
+# Pre-normalize so cosine similarity reduces to a dot product later.
+embeddings /= np.linalg.norm(embeddings, axis=1, keepdims=True)
+
+np.save(&quot;index/embeddings.npy&quot;, embeddings)
+json.dump(chunks, open(&quot;index/chunks.json&quot;, &quot;w&quot;))
+</code></pre>
+<p>Note that we just dump the embeddings into a NumPy array and save it to disk as one big file. In production, you'd typically store them in a <strong>vector database</strong> — a specialized database for storing vectors and finding nearest neighbors efficiently. Popular options include <a href="https://github.com/facebookresearch/faiss">FAISS</a> (in-process), <a href="https://github.com/pgvector/pgvector">pgvector</a> (Postgres extension), and hosted services like <a href="https://www.trychroma.com/">Chroma</a>, <a href="https://www.pinecone.io/">Pinecone</a>, or <a href="https://weaviate.io/">Weaviate</a>. These do the same thing we're doing here, just with smarter indexing so they don't have to compare the query against <em>every</em> vector — important when you have millions of chunks. For our small handbook (~60 sections), a NumPy dot product against the whole matrix is fast enough that the extra machinery isn't worth it.</p>
+<hr />
+<h3 id="hooking-it-up-to-the-chatbot"><a class="header" href="#hooking-it-up-to-the-chatbot">Hooking it up to the chatbot</a></h3>
+<blockquote>
+<p><strong>Q:</strong> Now that we have the embedding index, how do we actually give this information to the chatbot?</p>
+</blockquote>
+<p>The simplest and most flexible way: just make semantic search a tool that the LLM can call.
+(Yes, technically our chatbot is now an <em>agent</em> — recall Unit 3.)</p>
+<p>The tool itself is short:</p>
+<pre><code class="language-python">embeddings = np.load(&quot;index/embeddings.npy&quot;)
+chunks = json.load(open(&quot;index/chunks.json&quot;))
+
+@function_tool
+def search_handbook(query: str, k: int) -&gt; list[str]:
+    &quot;&quot;&quot;Search the UCSD CSE PhD Student Handbook. Returns the top-k most relevant sections.&quot;&quot;&quot;
+    response = client.embeddings.create(model=EMBED_MODEL, input=[query])
+    q = np.array(response.data[0].embedding)
+    q /= np.linalg.norm(q)
+    scores = embeddings @ q              # cosine sim (vectors are pre-normalized)
+    top = np.argsort(-scores)[:k]
+    return [chunks[i] for i in top]
+</code></pre>
+<p>And we wire it up to an agent the same way we did in Unit 3:</p>
+<pre><code class="language-python">INSTRUCTIONS = (
+    &quot;You are ChatPHD, a helpful assistant that answers questions about &quot;
+    &quot;the PhD program in Computer Science and Engineering at UC San Diego.\n\n&quot;
+    &quot;You have access to the search_handbook tool, which searches the official &quot;
+    &quot;UCSD CSE PhD Student Handbook. You MUST use this tool to answer any &quot;
+    &quot;substantive question about the program — never answer from your own &quot;
+    &quot;knowledge. If the search results do not contain the answer, say so &quot;
+    &quot;plainly rather than guessing.&quot;
+)
+
+agent = Agent(
+    name=&quot;ChatPHD&quot;,
+    instructions=INSTRUCTIONS,
+    model=MODEL,
+    tools=[search_handbook],
+)
+
+# ... plus the usual conversation loop from Unit 3 ...
+</code></pre>
+<p>Notice the system prompt is doing some heavy lifting:
+it tells the model to <strong>always</strong> call the tool and to <strong>refuse to guess</strong> if the answer isn't there.
+This is our first attempt at grounding the model in the source of truth.</p>
+<p>Let's take it for a spin:</p>
+<pre><code class="language-chat">chatphd&gt; Hi! I'm ChatPHD. Ask me anything about the UCSD CSE PhD program.
+
+you&gt; Are there some quals I need to pass before my defense?
+
+chatphd&gt; Yes, before your defense, you need to pass the **Thesis Proposal**,
+also known as the **University Qualifying Exam**. This is a presentation to
+your thesis committee where you present your work to date and describe your
+plans for completing your Ph.D.
+
+Here are some important details:
+
+- You must complete the thesis proposal by the end of your 4th year
+  (12th quarter of enrollment, not including summers).
+- After passing the thesis proposal, you advance to candidacy for your Ph.D.
+- The committee must include your advisor as a chair, at least four members
+  from UC San Diego faculty, and meet other specific criteria.
+
+The defense presentation itself does not have strict requirements, but you'll
+need to prepare a comprehensive presentation summarizing your thesis work.
+</code></pre>
+<p>Hooray! This is the right answer.</p>
+<p>The logs show that the model made the following tool call (and got these results):</p>
+<pre><code>[search_handbook(query='qualifications before defense', k=5)]
+  - ## *The Final Defense*
+  - ## *Support eligibility*
+  - ## *Filing Fee To Complete Your Degree*
+  - ## *The Thesis Proposal (University Qualifying Exam)*
+  - # **Resources For Students with Disabilities**
+</code></pre>
+<p>Two things are worth noticing here:</p>
+<ol>
+<li>The user said <em>&quot;quals before my defense&quot;</em>, the model searched for <em>&quot;qualifications before defense&quot;</em>, and the relevant section actually talks about <em>&quot;University Qualifying Exam&quot;</em>. This is a great example of the power of semantic search: you don't need to guess the exact phrasing.</li>
+<li>The top-k results include some clearly irrelevant sections (<em>Support eligibility</em>, <em>Resources For Students with Disabilities</em>). The model handled this gracefully by simply ignoring them. This is part of why we ask for <em>several</em> results rather than just one — semantic similarity is fuzzy, and giving the model a small menu to pick from is more robust than betting everything on the single closest match.</li>
+</ol>
+<blockquote>
+<p><strong>Q:</strong> Do we have a guarantee that that model's answer matches the handbook? If not, what could we do to get one?</p>
+</blockquote>
+<hr />
+<h3 id="verifying-answers-with-quotes"><a class="header" href="#verifying-answers-with-quotes">Verifying answers with quotes</a></h3>
+<p>Not really. Our system prompt is a <em>plea</em> to the model — there is nothing in our pipeline that <em>checks</em> whether what comes out actually matches the handbook. The model could still mix in plausible-sounding details from its training data or mis-remember a number from a retrieved chunk.</p>
+<p>One particularly simple and surprisingly effective way to get a real guarantee:</p>
+<ul>
+<li>Ask the model to produce verbatim quotes from the handbook supporting each claim</li>
+<li><strong>Check</strong> (with code) that those quotes are actually present in the handbook</li>
+<li>Show the quotes to the user, marked with a ✓ if they check out and an ✗ if not</li>
+</ul>
+<p>Our modest but real guarantee is:</p>
+<blockquote>
+<p>Every quote marked with a ✓ corresponds to a verbatim span of the handbook.</p>
+</blockquote>
+<p>(It still up to the user to decide if the quoted text actually supports the claim in the model's answer, but this is arguably an easy task).</p>
+<p>To implement this, we need two things: structured output from the model (text + list of quotes), and a verifier that checks each quote against the source text.</p>
+<p>For the structured output, we use a Pydantic schema (recall Unit 1):</p>
+<pre><code class="language-python">class Answer(BaseModel):
+    text: str           # the natural-language answer, with [1], [2], ... markers
+    quotes: list[str]   # one verbatim quote per marker, in order
+</code></pre>
+<p>…and we extend the system prompt to require this format, and to be strict about <em>verbatim</em>:</p>
+<pre><code class="language-python">INSTRUCTIONS = (
+    &quot;You are ChatPHD ...\n\n&quot;
+    &quot;Your output is an Answer with `text` and `quotes`. Every substantive &quot;
+    &quot;claim in `text` must be supported by a verbatim quote from the handbook, &quot;
+    &quot;referenced by a marker like [1], [2], etc. Quotes must be a short contiguous &quot;
+    &quot;span copied EXACTLY from the handbook.&quot;
+)
+</code></pre>
+<p>For the verifier, the most naive version would just be substring search:</p>
+<pre><code class="language-python">def find_quote(quote: str) -&gt; bool:
+    return quote in handbook_text
+</code></pre>
+<p>This basically works, but it's too strict in practice. LLMs love to lightly <em>normalize</em> what they copy: they collapse runs of whitespace, straighten smart quotes (<code>&quot;foo&quot;</code> → <code>&quot;foo&quot;</code>), NFKC-normalize stray unicode, occasionally change capitalization. We don't want to flag a quote as fabricated just because the model changed a <code>&quot;</code> to a <code>&quot;</code>. So we normalize both sides before checking:</p>
+<pre><code class="language-python">def normalize(s: str) -&gt; str:
+    &quot;&quot;&quot;Lowercase, collapse whitespace, straighten smart quotes, NFKC.&quot;&quot;&quot;
+    ... # implementation left as an exercise to Claude :)
+
+NORM_HANDBOOK = normalize(handbook_text)
+
+def find_quote(quote: str) -&gt; bool:
+    return normalize(quote) in NORM_HANDBOOK
+</code></pre>
+<p>This is still quite strict — anything beyond cosmetic differences (a paraphrase, a dropped word, a wrong number) will be flagged — but that's exactly what we want. The point of the verifier is to force the model to commit to a specific span of source text.</p>
+<p>Finally, when we render the bot's answer we mark each quote with a ✓ if found in the handbook and an ✗ if not. Let's try it on a question where the model is more tempted to make things up:</p>
+<pre><code class="language-chat">chatphd&gt; Hi! I'm ChatPHD. Ask me anything about the UCSD CSE PhD program.
+
+you&gt; What's the exam I need to do in my second year?
+
+chatphd&gt; In your second year, you are required to complete the Research Exam, which is
+expected to be done by the beginning of your seventh enrolled quarter. This typically
+means that you should finish the exam by the end of the spring quarter of your second
+year [1]. The exam is an important opportunity for you to receive feedback from faculty
+other than your advisor about your work and communication skills. It includes the oral
+presentation of a written document, which can either be a draft research paper or a
+&quot;creative survey&quot; prepared by you on a defined research area [2].
+
+[1] ✓ &quot;The department expects students to complete the research exam by the beginning of
+your seventh enrolled quarter in the Ph.D. program (not counting summer quarters).
+Generally, this means you should finish it by the end of the spring quarter of your
+second year.&quot;
+[2] ✗ &quot;The research exam includes the oral presentation of a written document. The
+document can be either 1. A published or nearly publication-ready draft research paper...
+or 2. A 'creative survey' prepared by the student for the purpose of the exam.&quot;
+(not found in handbook)
+</code></pre>
+<p>…but wait. Look more carefully at the flagged quote <code>[2]</code>. If you check the handbook, the <em>content</em> the model is claiming is actually right: the research exam really does involve a written document that can be either a draft paper or a creative survey. What the model did was <em>summarize</em> a longer passage, using <code>...</code> to elide the parts it considered irrelevant. Our verifier doesn't understand <code>...</code>, so it (correctly!) reports that the exact string doesn't appear verbatim — but the underlying claim is sound.</p>
+<p>So this is a <strong>false positive</strong>: a real limitation of the simple substring check.</p>
+<blockquote>
+<p><strong>Q:</strong> How could we fix the verifier (or the quote format) to accept elided quotes like this, without giving up the guarantee that every claim is sourceable?</p>
+</blockquote>
+<p>Still, the general lesson holds. We've moved from &quot;the model said something, I hope it's right&quot; to &quot;if a quote has a checkmark and what model said agrees with the quote, then I <em>know</em> it's right&quot;. This is the recurring theme of the last three units in a new costume:</p>
+<blockquote>
+<p><strong>Real guarantees come from verifying the model's output, not from asking it nicely.</strong></p>
+</blockquote>
+<hr />
+<h2 id="outline-19"><a class="header" href="#outline-19">Outline</a></h2>
+<ol>
+<li>
+<p><del><strong>A chatbot that couldn't</strong>: why we need grounding</del> <strong>[done]</strong></p>
+</li>
+<li>
+<p><del><strong>RAG via semantic search</strong>: retrieving the right piece of the source of truth</del> <strong>[done]</strong></p>
+</li>
+<li>
+<p><strong>Adding symbolic reasoning</strong>: when retrieval alone isn't enough</p>
+</li>
+</ol>
+<hr />
+<h2 id="adding-symbolic-reasoning"><a class="header" href="#adding-symbolic-reasoning">Adding Symbolic Reasoning</a></h2>
+<p><em>TODO: this section is coming soon.</em></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="social-media-monitor-assignment"><a class="header" href="#social-media-monitor-assignment">Social Media Monitor Assignment</a></h1>
 <p>You may work solo or in pairs. You can work with anyone in either course number
 for this assignment (e.g. ugrad/ugrad, ugrad/grad, and grad/grad pairs all
@@ -6801,6 +7178,7 @@ that you're expected to respond to for the final deadline.</p>
         <script type="text/javascript" src="src/js/asciinema-init.js"></script>
         <script type="text/javascript" src="src/img/heap-diagram.js"></script>
         <script type="text/javascript" src="src/js/sidebar-anchors.js"></script>
+        <script type="text/javascript" src="src/js/chat-highlight.js"></script>
         <script type="text/javascript">
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);
