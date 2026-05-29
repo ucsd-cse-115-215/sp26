@@ -1,0 +1,67 @@
+## Pre-review by [your name], [your pid]
+## Review of [review group name(s)]
+
+### 1. Project summary/implementation
+
+#### a. Summary
+_In a few sentences: which project option is this (run-it-locally, auth + live
+URL, embed-in-a-tool, generation, agentic programming, or their own), who are
+the intended users, and what does the tool do? If you can't tell from the
+README/DESIGN.md, say so — that's useful feedback._
+
+#### b. Demo attempt
+_Follow the team's DEMO.md. Did you reach a running tool (or live URL /
+install)? Note exactly how far you got: what worked, where it broke, any error
+messages._
+
+_If you could NOT get it running, don't skip this — instead reconstruct the
+intended flow by reading the code. Pick one user story (their first
+deliverable, or what they put in their video, is a good choice), find the entry
+point, and trace it through the major components: for each step name the
+file/function, say what data goes in and out, and quote the prompt(s) sent to
+the model if any. Describe what *should* happen end to end, and flag any place
+where the code path looks broken or incomplete. No matter what, say
+specifically what blocked the demo so the team can fix it (installation, code
+bug, platform issue, etc.)._
+
+#### c. Proposal component check
+_Open the marked-up proposal in `proposal/`. Pick two components the team marked
+"implemented as written" and find them in the code — quote the file path (and
+route/function) where each lives, and say whether the code matches what the
+proposal claims. Then pick one component they marked "planned" or "no longer
+planned" and note whether that seems reasonable to you for the final deadline._
+
+_If there's no marked-up proposal (or it's too vague to use), do the mapping as
+the reviewer: take the component list from their original proposal and, for 3-4
+components, locate each in the code (file + function/route) or note that you
+can't find it. If even the original proposal isn't usable, build the inventory
+from scratch — list the 5-10 major components you can identify in the codebase
+and where each lives — and flag the missing/vague proposal as feedback._
+
+#### d. One confusing thing
+_Identify one thing you find confusing in the implementation, and describe why
+it's confusing and what you tried reading to understand it._
+
+#### e. A conversation starter for Tuesday
+_Come up with a conversation starter for Tuesday – what's something you want
+to see **them** demo, or explain, or justify in their system._
+
+### 2. Suggestions
+
+#### a. Scope feedback for the final deliverable
+_Look at the team's "after first deliverable goals." Given what's working now,
+what should they prioritize before the final deadline — and is there a gotcha
+you'd flag (e.g. sensitive data going public, a local model that may not be
+capable enough, an auth/cost-ceiling gap)? Be specific and grounded in their
+setup._
+
+#### b. One concrete suggestion
+_Suggest one improvement or extension. Give a substantive argument grounded in
+details of the implementation or the project's domain — not a generic "add
+tests" or "use a smaller model."_
+
+#### c. Something you learned or thought was cool
+_Call out one specific thing from this project you learned from or genuinely
+enjoyed — a technique, a design decision, a clever prompt, a tool or library you
+hadn't seen. Be concrete about what it was and why it stuck with you._
+
